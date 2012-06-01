@@ -6,7 +6,7 @@
  * You may obtain a copy of the License at
  *
  *    http://www.apache.org/licenses/LICENSE-2.0
-
+ 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,6 +18,16 @@
 #import "FBFrictionlessRequestSettings.h"
 #import "FBLoginDialog.h"
 #import "FBRequest.h"
+
+@interface FBRequestBlockDelegate <FBRequestDelegate>
+@property (copy) void (^completion)( id value );
+@property (copy) void (^error)( NSError *error );
+@end
+
+@implementation FBRequestBlockDelegate
+@synthesize completion;
+@synthesize error;
+@end
 
 static NSString* kDialogBaseURL = @"https://m.facebook.com/dialog/";
 static NSString* kGraphBaseURL = @"https://graph.facebook.com/";
@@ -56,11 +66,11 @@ static void *finishedContext = @"finishedContext";
 @implementation Facebook
 
 @synthesize    accessToken = _accessToken,
-            expirationDate = _expirationDate,
-           sessionDelegate = _sessionDelegate,
-               permissions = _permissions,
-           urlSchemeSuffix = _urlSchemeSuffix,
-                     appId = _appId,
+expirationDate = _expirationDate,
+sessionDelegate = _sessionDelegate,
+permissions = _permissions,
+urlSchemeSuffix = _urlSchemeSuffix,
+appId = _appId,
 extendTokenOnApplicationActive = _extendTokenOnApplicationActive;
 
 
@@ -84,20 +94,20 @@ extendTokenOnApplicationActive = _extendTokenOnApplicationActive;
 													 name:UIApplicationDidBecomeActiveNotification
 												   object:nil];
 	}
-	else {
-		[[NSNotificationCenter defaultCenter] removeObserver:self
-														name:UIApplicationDidBecomeActiveNotification
-													  object:nil];		
-	}
+else {
+	[[NSNotificationCenter defaultCenter] removeObserver:self
+													name:UIApplicationDidBecomeActiveNotification
+												  object:nil];		
+}
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // private
 
 #define FBAccessTokenKey [NSString stringWithFormat:@"com.facebook.ios.token:%@", \
-							[[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleIdentifier"]]
+[[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleIdentifier"]]
 #define FBExpirationDateKey [NSString stringWithFormat:@"com.facebook.ios.expiration:%@", \
-								[[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleIdentifier"]]
+[[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleIdentifier"]]
 
 - (void)storeAccessToken {
 	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
@@ -202,7 +212,7 @@ extendTokenOnApplicationActive = _extendTokenOnApplicationActive;
  */
 - (FBRequest*)openUrl:(NSString *)url
                params:(NSMutableDictionary *)params
-           requestMethod:(NSString *)httpMethod
+		requestMethod:(NSString *)httpMethod
              delegate:(id<FBRequestDelegate>)delegate {
     
     [params setValue:@"json" forKey:@"format"];
@@ -215,9 +225,9 @@ extendTokenOnApplicationActive = _extendTokenOnApplicationActive;
     [self extendAccessTokenIfNeeded];
     
     FBRequest* _request = [FBRequest getRequestWithParameters:params
-                                               requestMethod:httpMethod
-                                                 delegate:delegate
-                                               requestURL:url];
+												requestMethod:httpMethod
+													 delegate:delegate
+												   requestURL:url];
     [_requests addObject:_request];
     [_request addObserver:self forKeyPath:requestFinishedKeyPath options:0 context:finishedContext];
     [_request connect];
@@ -322,12 +332,12 @@ extendTokenOnApplicationActive = _extendTokenOnApplicationActive;
 	for (NSString *pair in pairs) {
 		NSArray *kv = [pair componentsSeparatedByString:@"="];
 		NSString *val =
-    [[kv objectAtIndex:1]
-     stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
-
+		[[kv objectAtIndex:1]
+		 stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+		
 		[params setObject:val forKey:[kv objectAtIndex:0]];
 	}
-  return params;
+	return params;
 }
 
 
@@ -509,26 +519,10 @@ extendTokenOnApplicationActive = _extendTokenOnApplicationActive;
  */
 - (void)logout {
     [self invalidateSession];
-        
+	
     if ([self.sessionDelegate respondsToSelector:@selector(facebookDidLogout:)]) {
         [self.sessionDelegate facebookDidLogout:self];
     }
-}
-
-/**
- * Invalidate the current user session by removing the access token in
- * memory and clearing the browser cookie.
- *
- * @deprecated Use of a single session delegate, set at app init, is preferred
- */
-- (void)logout:(id<FBSessionDelegate>)delegate {
-  [self logout];
-  // preserve deprecated callback behavior, but leave cached delegate intact
-  // avoid calling twice if the passed and cached delegates are the same
-  if (delegate != self.sessionDelegate &&
-    [delegate respondsToSelector:@selector(facebookDidLogout)]) {
-    [delegate facebookDidLogout];
-  }
 }
 
 /**
@@ -548,7 +542,7 @@ extendTokenOnApplicationActive = _extendTokenOnApplicationActive;
  *            Returns a pointer to the FBRequest object.
  */
 - (FBRequest*)requestWithParameters:(NSMutableDictionary *)params
-                    delegate:(id <FBRequestDelegate>)delegate {
+						   delegate:(id <FBRequestDelegate>)delegate {
     if ([params objectForKey:@"method"] == nil) {
         NSLog(@"API Method must be specified");
         return nil;
@@ -558,9 +552,9 @@ extendTokenOnApplicationActive = _extendTokenOnApplicationActive;
     [params removeObjectForKey:@"method"];
     
     return [self requestWithMethodName:methodName
-                             parameters:params
+							parameters:params
                          requestMethod:@"GET"
-                           delegate:delegate];
+							  delegate:delegate];
 }
 
 /**
@@ -586,16 +580,32 @@ extendTokenOnApplicationActive = _extendTokenOnApplicationActive;
  *            Returns a pointer to the FBRequest object.
  */
 - (FBRequest*)requestWithMethodName:(NSString *)methodName
-                          parameters:(NSMutableDictionary *)params
+						 parameters:(NSMutableDictionary *)params
                       requestMethod:(NSString *)httpMethod
-                        delegate:(id <FBRequestDelegate>)delegate {
+						   delegate:(id <FBRequestDelegate>)delegate {
     NSString * fullURL = [kRestserverBaseURL stringByAppendingString:methodName];
     return [self openUrl:fullURL
                   params:params
-              requestMethod:httpMethod
+		   requestMethod:httpMethod
                 delegate:delegate];
 }
 
+- (FBRequest*)requestWithMethodName:(NSString *)methodName 
+						 parameters:(NSMutableDictionary *)params 
+						 completion:(void (^)(id))completion {
+	return [self requestWithMethodName:methodName
+							parameters:params
+							completion:completion
+								 error:^(NSError *error) {
+									 NSLog(@"Error: %@", error);
+								 }];
+}
+- (FBRequest*)requestWithMethodName:(NSString *)methodName 
+						 parameters:(NSMutableDictionary *)params 
+						 completion:(void (^)(id))completion 
+							  error:(void (^)(NSError *))error {
+	
+}
 /**
  * Make a request to the Facebook Graph API without any parameters.
  *
@@ -612,12 +622,12 @@ extendTokenOnApplicationActive = _extendTokenOnApplicationActive;
  *            Returns a pointer to the FBRequest object.
  */
 - (FBRequest*)requestWithGraphPath:(NSString *)graphPath
-                       delegate:(id <FBRequestDelegate>)delegate {
+						  delegate:(id <FBRequestDelegate>)delegate {
     
     return [self requestWithGraphPath:graphPath
-                            parameters:[NSMutableDictionary dictionary]
+						   parameters:[NSMutableDictionary dictionary]
                         requestMethod:@"GET"
-                          delegate:delegate];
+							 delegate:delegate];
 }
 
 /**
@@ -643,13 +653,13 @@ extendTokenOnApplicationActive = _extendTokenOnApplicationActive;
  *            Returns a pointer to the FBRequest object.
  */
 - (FBRequest*)requestWithGraphPath:(NSString *)graphPath
-                         parameters:(NSMutableDictionary *)params
-                       delegate:(id <FBRequestDelegate>)delegate {
+						parameters:(NSMutableDictionary *)params
+						  delegate:(id <FBRequestDelegate>)delegate {
     
     return [self requestWithGraphPath:graphPath
-                            parameters:params
+						   parameters:params
                         requestMethod:@"GET"
-                          delegate:delegate];
+							 delegate:delegate];
 }
 
 /**
@@ -682,14 +692,14 @@ extendTokenOnApplicationActive = _extendTokenOnApplicationActive;
  *            Returns a pointer to the FBRequest object.
  */
 - (FBRequest*)requestWithGraphPath:(NSString *)graphPath
-                         parameters:(NSMutableDictionary *)params
+						parameters:(NSMutableDictionary *)params
                      requestMethod:(NSString *)httpMethod
-                       delegate:(id <FBRequestDelegate>)delegate {
+						  delegate:(id <FBRequestDelegate>)delegate {
     
     NSString * fullURL = [kGraphBaseURL stringByAppendingString:graphPath];
     return [self openUrl:fullURL
                   params:params
-              requestMethod:httpMethod
+		   requestMethod:httpMethod
                 delegate:delegate];
 }
 
@@ -704,7 +714,7 @@ extendTokenOnApplicationActive = _extendTokenOnApplicationActive;
  *            dialog has completed.
  */
 - (void)dialog:(NSString *)action
-   delegate:(id<FBDialogDelegate>)delegate {
+	  delegate:(id<FBDialogDelegate>)delegate {
     NSMutableDictionary * params = [NSMutableDictionary dictionary];
     [self dialog:action parameters:params delegate:delegate];
 }
@@ -722,8 +732,8 @@ extendTokenOnApplicationActive = _extendTokenOnApplicationActive;
  *            dialog has completed.
  */
 - (void)dialog:(NSString *)action
-     parameters:(NSMutableDictionary *)params
-   delegate:(id <FBDialogDelegate>)delegate {
+	parameters:(NSMutableDictionary *)params
+	  delegate:(id <FBDialogDelegate>)delegate {
     
     
     NSString *dialogURL = [kDialogBaseURL stringByAppendingString:action];
@@ -755,7 +765,7 @@ extendTokenOnApplicationActive = _extendTokenOnApplicationActive;
                 //  3. request the frictionless recipient list encoded in the success url
                 [params setValue:@"1" forKey:@"get_frictionless_recipients"];
             }
-
+			
             // set invisible if all recipients are enabled for frictionless requests
             id fbid = [params objectForKey:@"to"];
             if (fbid != nil) {

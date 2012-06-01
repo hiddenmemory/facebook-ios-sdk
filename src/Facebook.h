@@ -62,8 +62,6 @@
 
 - (void)logout;
 
-- (void)logout:(id<FBSessionDelegate>)delegate;
-
 - (FBRequest*)requestWithParameters:(NSMutableDictionary *)params
 						   delegate:(id <FBRequestDelegate>)delegate;
 
@@ -71,6 +69,15 @@
 						 parameters:(NSMutableDictionary *)params
 					  requestMethod:(NSString *)httpMethod
 						   delegate:(id <FBRequestDelegate>)delegate;
+
+- (FBRequest*)requestWithMethodName:(NSString *)methodName 
+						 parameters:(NSMutableDictionary *)params 
+						 completion:(void(^)(id result))completion;
+
+- (FBRequest*)requestWithMethodName:(NSString *)methodName 
+						 parameters:(NSMutableDictionary *)params 
+						 completion:(void(^)(id result))completion
+							  error:(void(^)(NSError*error))error;
 
 - (FBRequest*)requestWithGraphPath:(NSString *)graphPath
 						  delegate:(id <FBRequestDelegate>)delegate;
@@ -83,8 +90,6 @@
 						parameters:(NSMutableDictionary *)params
 					 requestMethod:(NSString *)httpMethod
 						  delegate:(id <FBRequestDelegate>)delegate;
-
-
 
 - (void)dialog:(NSString *)action
 	  delegate:(id<FBDialogDelegate>)delegate;
@@ -129,9 +134,7 @@
  * should overwrite the old access token with the new one in this method.
  * See extendAccessToken for more details.
  */
-- (void)facebook:(Facebook*)facebook
-  didExtendToken:(NSString*)accessToken
-	   expiresAt:(NSDate*)expiresAt;
+- (void)facebook:(Facebook*)facebook didExtendToken:(NSString*)accessToken expiresAt:(NSDate*)expiresAt;
 
 /**
  * Called when the user logged out.

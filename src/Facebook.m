@@ -727,7 +727,7 @@ static void *finishedContext = @"finishedContext";
                 // if value parses as a json array expression get the list that way
 				NSError *error = nil;
 				
-				id fbids = [NSJSONSerialization JSONObjectWithData:[fbid data]
+				id fbids = [NSJSONSerialization JSONObjectWithData:[fbid dataUsingEncoding:NSUTF8StringEncoding]
 														   options:0
 															 error:&error];
 				
@@ -740,7 +740,7 @@ static void *finishedContext = @"finishedContext";
                     // otherwise seperate by commas (handles the singleton case too)
                     fbids = [fbid componentsSeparatedByString:@","];
                 }                
-                invisible = [self isFrictiongilessEnabledForRecipients:fbids];             
+                invisible = [self isFrictionlessEnabledForRecipients:fbids];             
             }
         }
         

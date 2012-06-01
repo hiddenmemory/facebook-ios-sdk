@@ -200,13 +200,13 @@ static const NSTimeInterval kTimeoutInterval = 180.0;
         return nil;
     }
     
-	NSError *error = nil;
+	NSError *inplaceError = nil;
 	
     id result = [NSJSONSerialization JSONObjectWithData:[responseString dataUsingEncoding:NSUTF8StringEncoding]
 												options:0
-												  error:&error];
+												  error:&inplaceError];
 
-	if( error ) {
+	if( inplaceError ) {
 		NSLog(@"%s: %d: Unable to decode JSON: %@", __FILE__, __LINE__, responseString);
 		result = nil;
 	}

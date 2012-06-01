@@ -143,20 +143,6 @@
     return YES;
 }
 
-- (void)viewWillAppear:(BOOL)animated {
-	[super viewWillAppear:animated];
-	
-	[Facebook shared].requestStarted = ^{ [self showActivityIndicator]; };
-	[Facebook shared].requestFinished = ^{ [self hideActivityIndicator]; };
-}
-
-- (void)viewWillAppear:(BOOL)animated {
-	[super viewWillAppear:animated];
-	
-	[Facebook shared].requestStarted = ^{};
-	[Facebook shared].requestFinished = ^{};
-}
-
 #pragma mark - Private Helper Methods
 /*
  * This method is called to store the check-in permissions
@@ -240,12 +226,23 @@
     messageLabel.text = @"";
 }
 
+- (void)viewWillAppear:(BOOL)animated {
+	[super viewWillAppear:animated];
+	
+	[Facebook shared].requestStarted = ^{ [self showActivityIndicator]; };
+	[Facebook shared].requestFinished = ^{ [self hideActivityIndicator]; };
+}
+
 /*
  * This method handles any clean up needed if the view
  * is about to disappear.
  */
 - (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
+	
+	[Facebook shared].requestStarted = ^{};
+	[Facebook shared].requestFinished = ^{};
+	
     // Hide the activitiy indicator
     [self hideActivityIndicator];
     // Hide the message.
@@ -289,12 +286,9 @@
  * Graph API: Method to get the user's friends.
  */
 - (void)apiGraphFriends {
-    [self showActivityIndicator];
-	
 	[[Facebook shared] requestWithGraphPath:@"me/friends"
 								 parameters:[NSDictionary dictionary]
 								 completion:^(FBRequest *request, id result) {
-									 [self hideActivityIndicator];
 									 if ([result isKindOfClass:[NSArray class]] && ([result count] > 0)) {
 										 result = [result objectAtIndex:0];
 									 }
@@ -320,7 +314,6 @@
  * Graph API: Method to get the user's permissions for this app.
  */
 - (void)apiGraphUserPermissions {
-    [self showActivityIndicator];
 #warning Not implemented
     currentAPICall = kAPIGraphUserPermissions;
 	[[Facebook shared] requestWithGraphPath:@"me/permissions"
@@ -356,8 +349,6 @@
  * Graph API: App unauthorize
  */
 - (void)apiGraphUserPermissionsDelete {
-    [self showActivityIndicator];
-
 	[[Facebook shared] requestWithGraphPath:@"me/permissions"
 								 parameters:[NSDictionary dictionary]
 							  requestMethod:@"DELETE"
@@ -412,11 +403,9 @@
  */
 - (void)getFriendsCallAPIDialogFeed {
     // Call the friends API first, then set up for targeted Feed Dialog
-	[self showActivityIndicator];
 	[[Facebook shared] requestWithGraphPath:@"me/friends"
 								 parameters:[NSDictionary dictionary]
 								 completion:^(FBRequest *request, id result) {
-									 [self hideActivityIndicator];
 									 if ([result isKindOfClass:[NSArray class]] && ([result count] > 0)) {
 										 result = [result objectAtIndex:0];
 									 }
@@ -546,12 +535,10 @@
  */
 - (void)getAppUsersFriendsNotUsing {
     currentAPICall = kAPIGetAppUsersFriendsNotUsing;
-    [self showActivityIndicator];
 	
 	[[Facebook shared] requestWithMethodName:@"friends.getAppUsers"
 								  parameters:nil
 								  completion:^(FBRequest *request, id result) {
-									  [self hideActivityIndicator];
 									  if ([result isKindOfClass:[NSArray class]] && ([result count] > 0)) {
 										  result = [result objectAtIndex:0];
 									  }
@@ -566,12 +553,10 @@
 									  }
 									  
 									  // Set up to get friends
-									  [self showActivityIndicator];
 									  
 									  [[Facebook shared] requestWithGraphPath:@"me/friends"
 																   parameters:[NSDictionary dictionary]
 																   completion:^(FBRequest *request, id result) {
-																	   [self hideActivityIndicator];
 																	   if ([result isKindOfClass:[NSArray class]] && ([result count] > 0)) {
 																		   result = [result objectAtIndex:0];
 																	   }
@@ -610,11 +595,9 @@
  */
 - (void)getAppUsersFriendsUsing {
     currentAPICall = kAPIGetAppUsersFriendsUsing;
-	[self showActivityIndicator];
 	[[Facebook shared] requestWithMethodName:@"friends.getAppUsers"
 								  parameters:nil
 								  completion:^(FBRequest *request, id result) {
-									  [self hideActivityIndicator];
 									  if ([result isKindOfClass:[NSArray class]] && ([result count] > 0)) {
 										  result = [result objectAtIndex:0];
 									  }
@@ -640,11 +623,9 @@
  * pick one to send a request.
  */
 - (void)getUserFriendTargetDialogRequest {
-	[self showActivityIndicator];
 	[[Facebook shared] requestWithGraphPath:@"me/friends"
 								 parameters:[NSDictionary dictionary]
 								 completion:^(FBRequest *request, id result) {
-									 [self hideActivityIndicator];
 									 if ([result isKindOfClass:[NSArray class]] && ([result count] > 0)) {
 										 result = [result objectAtIndex:0];
 									 }
@@ -693,7 +674,6 @@
  * Graph API: Get the user's basic information, picking the name and picture fields.
  */
 - (void)apiGraphMe {
-    [self showActivityIndicator];
     currentAPICall = kAPIGraphMe;
     NSMutableDictionary *params = [NSMutableDictionary dictionaryWithObjectsAndKeys:
                                    @"name,picture",  @"fields",
@@ -702,7 +682,6 @@
 	[[Facebook shared] requestWithGraphPath:@"me"
 								 parameters:params
 								 completion:^(FBRequest *request, id result) {
-									 [self hideActivityIndicator];
 									 if ([result isKindOfClass:[NSArray class]] && ([result count] > 0)) {
 										 result = [result objectAtIndex:0];
 									 }
@@ -737,13 +716,11 @@
  * Graph API: Get the user's check-ins
  */
 - (void)apiGraphUserCheckins {
-    [self showActivityIndicator];
     currentAPICall = kAPIGraphUserCheckins;
 	
 	[[Facebook shared] requestWithGraphPath:@"me/checkins"
 								 parameters:nil
 								 completion:^(FBRequest *request, id result) {
-									 [self hideActivityIndicator];
 									 if ([result isKindOfClass:[NSArray class]] && ([result count] > 0)) {
 										 result = [result objectAtIndex:0];
 									 }
@@ -789,7 +766,6 @@
  * Graph API: Search query to get nearby location.
  */
 - (void)apiGraphSearchPlace:(CLLocation *)location {
-    [self showActivityIndicator];
     currentAPICall = kAPIGraphSearchPlace;
     NSString *centerLocation = [[NSString alloc] initWithFormat:@"%f,%f",
                                 location.coordinate.latitude,
@@ -804,7 +780,6 @@
 	[[Facebook shared] requestWithGraphPath:@"search"
 								 parameters:params
 								 completion:^(FBRequest *request, id result) {
-									 [self hideActivityIndicator];
 									 if ([result isKindOfClass:[NSArray class]] && ([result count] > 0)) {
 										 result = [result objectAtIndex:0];
 									 }
@@ -840,7 +815,6 @@
  * Helper method to kick off GPS to get the user's location.
  */
 - (void)getNearby {
-    [self showActivityIndicator];
     // A warning if the user turned off location services.
     if (![CLLocationManager locationServicesEnabled]) {
         UIAlertView *servicesDisabledAlert = [[UIAlertView alloc] initWithTitle:@"Location Services Disabled" message:@"You currently have all location services for this device disabled. If you proceed, you will be asked to confirm whether location services should be reenabled." delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
@@ -876,8 +850,6 @@
  * to the application album which is automatically created if it does not exist.
  */
 - (void)apiGraphUserPhotosPost {
-    [self showActivityIndicator];
-	
     // Download a sample photo
     NSURL *url = [NSURL URLWithString:@"http://www.facebook.com/images/devsite/iphone_connect_btn.jpg"];
     NSData *data = [NSData dataWithContentsOfURL:url];
@@ -891,7 +863,6 @@
 							  requestMethod:@"POST"
 								   finalize:^(FBRequest *request) {
 									  [request addCompletionHandler:^(FBRequest *request, id result) {
-										  [self hideActivityIndicator];
 										  [self showMessage:@"Photo uploaded successfully."];
 									  }];
 								   }];
@@ -901,7 +872,6 @@
  * Graph API: Post a video to the user's wall.
  */
 - (void)apiGraphUserVideosPost {
-    [self showActivityIndicator];
     currentAPICall = kAPIGraphUserVideosPost;
 
     // Download a sample video
@@ -919,7 +889,6 @@
 							  requestMethod:@"POST"
 								   finalize:^(FBRequest *request) {
 									   [request addCompletionHandler:^(FBRequest *request, id result) {
-										   [self hideActivityIndicator];
 										   [self showMessage:@"Video uploaded successfully."];
 									   }];
 								   }];

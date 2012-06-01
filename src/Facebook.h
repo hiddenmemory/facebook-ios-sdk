@@ -41,7 +41,6 @@ typedef enum {
     FBDialog* _loginDialog;
     FBDialog* _fbDialog;
     NSString* _appId;
-    BOOL _isExtendingAccessToken;
     NSDate* _lastAccessTokenUpdate;
     FBFrictionlessRequestSettings* _frictionlessRequestSettings;
 }

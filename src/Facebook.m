@@ -46,6 +46,7 @@ static void *finishedContext = @"finishedContext";
 	NSMutableArray *extendedTokenHandlers;
 	NSMutableArray *logoutHandlers;
 	NSMutableArray *sessionInvalidHandlers;
+	BOOL _isExtendingAccessToken;
 }
 
 // private properties
@@ -413,6 +414,7 @@ else {
                                    @"auth.extendSSOAccessToken", @"method",
                                    nil];
 	
+	_isExtendingAccessToken = YES;
 	[self requestWithParameters:params
 					   finalize:^(FBRequest *request) {
 						   [request addCompletionHandler:^(FBRequest *request, id result) {
@@ -439,6 +441,8 @@ else {
 								   void (^handler)(Facebook*,NSString*,NSDate*) = (void(^)(Facebook*,NSString*,NSDate*))obj;
 								   handler(self, accessToken, expirationDate);
 							   }];
+							   
+							   _isExtendingAccessToken = NO;
 						   }];
 					   }];
 }
@@ -456,7 +460,7 @@ else {
  * Returns YES if the last time a new token was obtained was over 24 hours ago.
  */
 - (BOOL)shouldExtendAccessToken {
-    if ([self isSessionValid]){
+    if ([self isSessionValid] && !_isExtendingAccessToken){
         NSCalendar *calendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSGregorianCalendar];
         NSDateComponents *components = [calendar components:NSHourCalendarUnit
                                                    fromDate:_lastAccessTokenUpdate

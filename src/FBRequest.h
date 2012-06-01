@@ -32,12 +32,6 @@ typedef NSUInteger FBRequestState;
  */
 @interface FBRequest : NSObject 
 
-- (void)addCompletionHandler:(void(^)(FBRequest*request,id object))completionHandler;
-- (void)addErrorHandler:(void(^)(FBRequest*request,NSError *error))errorHandler;
-- (void)addLoadHandler:(void(^)(FBRequest*request))loadHandler;
-- (void)addRawHandler:(void(^)(FBRequest*request,NSData*raw))rawHandler;
-- (void)addResponseHandler:(void(^)(FBRequest*request,NSURLResponse*))responseHandler;
-
 /**
  * The URL which will be contacted to execute the request.
  */
@@ -78,6 +72,12 @@ typedef NSUInteger FBRequestState;
 
 - (BOOL) loading;
 - (void) connect;
+
+- (void)addCompletionHandler:(void(^)(FBRequest*request,id result))completionHandler;
+- (void)addErrorHandler:(void(^)(FBRequest*request,NSError *error))errorHandler;
+- (void)addLoadHandler:(void(^)(FBRequest*request))loadHandler;
+- (void)addRawHandler:(void(^)(FBRequest*request,NSData*raw))rawHandler;
+- (void)addResponseHandler:(void(^)(FBRequest*request,NSURLResponse*))responseHandler;
 
 @end
 

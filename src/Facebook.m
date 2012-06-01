@@ -19,16 +19,6 @@
 #import "FBLoginDialog.h"
 #import "FBRequest.h"
 
-@interface FBRequestBlockDelegate <FBRequestDelegate>
-@property (copy) void (^completion)( id value );
-@property (copy) void (^error)( NSError *error );
-@end
-
-@implementation FBRequestBlockDelegate
-@synthesize completion;
-@synthesize error;
-@end
-
 static NSString* kDialogBaseURL = @"https://m.facebook.com/dialog/";
 static NSString* kGraphBaseURL = @"https://graph.facebook.com/";
 static NSString* kRestserverBaseURL = @"https://api.facebook.com/method/";
@@ -51,7 +41,12 @@ static void *finishedContext = @"finishedContext";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-@interface Facebook ()
+@interface Facebook () {
+	NSMutableArray *loginHandlers;
+	NSMutableArray *extendedTokenHandlers;
+	NSMutableArray *logoutHandlers;
+	NSMutableArray *sessionInvalidHandlers;
+}
 
 // private properties
 @property(strong, nonatomic) NSArray* permissions;
@@ -67,7 +62,6 @@ static void *finishedContext = @"finishedContext";
 
 @synthesize    accessToken = _accessToken,
 expirationDate = _expirationDate,
-sessionDelegate = _sessionDelegate,
 permissions = _permissions,
 urlSchemeSuffix = _urlSchemeSuffix,
 appId = _appId,
@@ -158,9 +152,13 @@ else {
         _lastAccessTokenUpdate = [NSDate distantPast];
         _frictionlessRequestSettings = [[FBFrictionlessRequestSettings alloc] init];
         self.appId = appId;
-        self.sessionDelegate = nil;
         self.urlSchemeSuffix = nil;
 		self.extendTokenOnApplicationActive = YES;
+		
+		loginHandlers = [NSMutableArray array];
+		extendedTokenHandlers = [NSMutableArray array];
+		logoutHandlers = [NSMutableArray array];
+		sessionInvalidHandlers = [NSMutableArray array];
 		
 		[self loadAccessToken];
     }
@@ -171,8 +169,6 @@ else {
  * Override NSObject : free the space
  */
 - (void)dealloc {
-    // this is the one case where the delegate is this object
-    _requestExtendingAccessToken.delegate = nil;
     for (FBRequest* _request in _requests) {
         [_request removeObserver:self forKeyPath:requestFinishedKeyPath];
     }
@@ -213,7 +209,7 @@ else {
 - (FBRequest*)openUrl:(NSString *)url
                params:(NSMutableDictionary *)params
 		requestMethod:(NSString *)httpMethod
-             delegate:(id<FBRequestDelegate>)delegate {
+			 finalize:(void(^)(FBRequest*))finalize {
     
     [params setValue:@"json" forKey:@"format"];
     [params setValue:kSDK forKey:@"sdk"];
@@ -226,12 +222,23 @@ else {
     
     FBRequest* _request = [FBRequest getRequestWithParameters:params
 												requestMethod:httpMethod
-													 delegate:delegate
 												   requestURL:url];
     [_requests addObject:_request];
     [_request addObserver:self forKeyPath:requestFinishedKeyPath options:0 context:finishedContext];
+	
+	if( finalize ) {
+		finalize(_request);
+	}
+	
     [_request connect];
     return _request;
+}
+
+- (void)_applyCoreHandlers:(NSArray*)list {
+	[list enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+		void (^handler)(Facebook*) = (void(^)(Facebook*))obj;
+		handler(self);
+	}];
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
@@ -241,9 +248,7 @@ else {
         if (requestState == kFBRequestStateComplete) {
             if ([_request sessionDidExpire]) {
                 [self invalidateSession];
-                if ([self.sessionDelegate respondsToSelector:@selector(facebookSessionInvalidated:)]) {
-                    [self.sessionDelegate facebookSessionInvalidated:self];
-                }
+				[self _applyCoreHandlers:sessionInvalidHandlers];
             }
             [_request removeObserver:self forKeyPath:requestFinishedKeyPath];
             [_requests removeObject:_request];
@@ -399,7 +404,35 @@ else {
     NSMutableDictionary* params = [NSMutableDictionary dictionaryWithObjectsAndKeys:
                                    @"auth.extendSSOAccessToken", @"method",
                                    nil];
-    _requestExtendingAccessToken = [self requestWithParameters:params delegate:self];
+	
+	[self requestWithParameters:params
+					   finalize:^(FBRequest *request) {
+						   [request addCompletionHandler:^(FBRequest *request, id result) {
+							   NSString* accessToken = [result objectForKey:@"access_token"];
+							   NSString* expTime = [result objectForKey:@"expires_at"];
+							   
+							   if (accessToken == nil || expTime == nil) {
+								   return;
+							   }
+							   
+							   self.accessToken = accessToken;
+							   
+							   NSTimeInterval timeInterval = [expTime doubleValue];
+							   NSDate *expirationDate = [NSDate distantFuture];
+							   if (timeInterval != 0) {
+								   expirationDate = [NSDate dateWithTimeIntervalSince1970:timeInterval];
+							   }
+							   self.expirationDate = expirationDate;
+							   _lastAccessTokenUpdate = [NSDate date];
+							   
+							   [self storeAccessToken];
+							   
+							   [extendedTokenHandlers enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+								   void (^handler)(Facebook*,NSString*,NSDate*) = (void(^)(Facebook*,NSString*,NSDate*))obj;
+								   handler(self, accessToken, expirationDate);
+							   }];
+						   }];
+					   }];
 }
 
 /**
@@ -519,10 +552,7 @@ else {
  */
 - (void)logout {
     [self invalidateSession];
-	
-    if ([self.sessionDelegate respondsToSelector:@selector(facebookDidLogout:)]) {
-        [self.sessionDelegate facebookDidLogout:self];
-    }
+	[self _applyCoreHandlers:logoutHandlers];
 }
 
 /**
@@ -542,7 +572,7 @@ else {
  *            Returns a pointer to the FBRequest object.
  */
 - (FBRequest*)requestWithParameters:(NSMutableDictionary *)params
-						   delegate:(id <FBRequestDelegate>)delegate {
+						   finalize:(void(^)(FBRequest*))finalize {
     if ([params objectForKey:@"method"] == nil) {
         NSLog(@"API Method must be specified");
         return nil;
@@ -554,7 +584,7 @@ else {
     return [self requestWithMethodName:methodName
 							parameters:params
                          requestMethod:@"GET"
-							  delegate:delegate];
+							  finalize:finalize];
 }
 
 /**
@@ -582,29 +612,40 @@ else {
 - (FBRequest*)requestWithMethodName:(NSString *)methodName
 						 parameters:(NSMutableDictionary *)params
                       requestMethod:(NSString *)httpMethod
-						   delegate:(id <FBRequestDelegate>)delegate {
+						   finalize:(void(^)(FBRequest*))finalize {
     NSString * fullURL = [kRestserverBaseURL stringByAppendingString:methodName];
     return [self openUrl:fullURL
                   params:params
 		   requestMethod:httpMethod
-                delegate:delegate];
+                finalize:finalize];
 }
 
 - (FBRequest*)requestWithMethodName:(NSString *)methodName 
 						 parameters:(NSMutableDictionary *)params 
-						 completion:(void (^)(id))completion {
+						 completion:(void (^)(FBRequest*,id))completion {
 	return [self requestWithMethodName:methodName
 							parameters:params
 							completion:completion
-								 error:^(NSError *error) {
-									 NSLog(@"Error: %@", error);
+								 error:^(FBRequest *request, NSError *error) {
+									 NSLog(@"Error: %@: %@", request, error);
 								 }];
 }
 - (FBRequest*)requestWithMethodName:(NSString *)methodName 
 						 parameters:(NSMutableDictionary *)params 
-						 completion:(void (^)(id))completion 
-							  error:(void (^)(NSError *))error {
-	
+						 completion:(void (^)(FBRequest*,id))completion 
+							  error:(void (^)(FBRequest*,NSError *))error {
+
+	return [self requestWithMethodName:methodName
+							parameters:params
+						 requestMethod:@"GET"
+							  finalize:^(FBRequest *request) {
+								  if( completion ) {
+									  [request addCompletionHandler:completion];
+								  }
+								  if( error ) {
+									  [request addErrorHandler:error];
+								  }
+							  }]; 
 }
 /**
  * Make a request to the Facebook Graph API without any parameters.
@@ -622,12 +663,12 @@ else {
  *            Returns a pointer to the FBRequest object.
  */
 - (FBRequest*)requestWithGraphPath:(NSString *)graphPath
-						  delegate:(id <FBRequestDelegate>)delegate {
+						  finalize:(void(^)(FBRequest*))finalize {
     
     return [self requestWithGraphPath:graphPath
 						   parameters:[NSMutableDictionary dictionary]
                         requestMethod:@"GET"
-							 delegate:delegate];
+							 finalize:finalize];
 }
 
 /**
@@ -654,12 +695,12 @@ else {
  */
 - (FBRequest*)requestWithGraphPath:(NSString *)graphPath
 						parameters:(NSMutableDictionary *)params
-						  delegate:(id <FBRequestDelegate>)delegate {
+						  finalize:(void(^)(FBRequest*))finalize {
     
     return [self requestWithGraphPath:graphPath
 						   parameters:params
                         requestMethod:@"GET"
-							 delegate:delegate];
+							 finalize:finalize];
 }
 
 /**
@@ -694,14 +735,44 @@ else {
 - (FBRequest*)requestWithGraphPath:(NSString *)graphPath
 						parameters:(NSMutableDictionary *)params
                      requestMethod:(NSString *)httpMethod
-						  delegate:(id <FBRequestDelegate>)delegate {
+						  finalize:(void(^)(FBRequest*))finalize {
     
     NSString * fullURL = [kGraphBaseURL stringByAppendingString:graphPath];
     return [self openUrl:fullURL
                   params:params
 		   requestMethod:httpMethod
-                delegate:delegate];
+                finalize:finalize];
 }
+
+- (FBRequest*)requestWithGraphPath:(NSString *)graphPath
+						parameters:(NSMutableDictionary *)params
+						completion:(void (^)(FBRequest*,id))completion {
+	
+	return [self requestWithGraphPath:graphPath
+						   parameters:params
+						   completion:completion
+								error:^(FBRequest *request, NSError *error) {
+									NSLog(@"Error: %@: %@", request, error);
+								}];
+}
+
+- (FBRequest*)requestWithGraphPath:(NSString *)graphPath
+						parameters:(NSMutableDictionary *)params
+						completion:(void (^)(FBRequest*,id))completion 
+							 error:(void (^)(FBRequest*,NSError *))error {
+	return [self requestWithGraphPath:graphPath
+						   parameters:params
+						requestMethod:@"GET"
+							 finalize:^(FBRequest *request) {
+								 if( completion ) {
+									 [request addCompletionHandler:completion];
+								 }
+								 if( error ) {
+									 [request addErrorHandler:error];
+								 }
+							 }];
+}
+
 
 /**
  * Generate a UI dialog for the request action.
@@ -834,6 +905,12 @@ else {
 /**
  * Set the authToken and expirationDate after login succeed
  */
+- (void)_applyLoginHandlers:(FacebookLoginState)state {
+	[loginHandlers enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+		void (^handler)(Facebook*,FacebookLoginState) = (void(^)(Facebook*,FacebookLoginState))obj;
+		handler(self, state);
+	}];
+}
 - (void)fbDialogLogin:(NSString *)token expirationDate:(NSDate *)expirationDate {
     self.accessToken = token;
     self.expirationDate = expirationDate;
@@ -842,63 +919,29 @@ else {
 	
 	[self storeAccessToken];
 	
-    if ([self.sessionDelegate respondsToSelector:@selector(facebookDidLogin:)]) {
-        [self.sessionDelegate facebookDidLogin:self];
-    }
-    
+	[self _applyLoginHandlers:FacebookLoginSuccess];
 }
 
 /**
  * Did not login call the not login delegate
  */
 - (void)fbDialogNotLogin:(BOOL)cancelled {
-    if ([self.sessionDelegate respondsToSelector:@selector(facebook:didNotLogin:)]) {
-        [self.sessionDelegate facebook:self didNotLogin:cancelled];
-    }
+	[self _applyLoginHandlers:(cancelled ? FacebookLoginCancelled : FacebookLoginFailed)];
 }
 
-#pragma mark - FBRequestDelegate Methods
-// These delegate methods are only called for requests that extendAccessToken initiated
+#pragma mark - Handlers
 
-- (void)request:(FBRequest *)request didFailWithError:(NSError *)error {
-    _isExtendingAccessToken = NO;
-    _requestExtendingAccessToken = nil;
+- (void)addLoginHandler:(void(^)(Facebook*, FacebookLoginState))handler {
+	[loginHandlers addObject:[handler copy]];
 }
-
-- (void)request:(FBRequest *)request didLoad:(id)result {
-    _isExtendingAccessToken = NO;
-    _requestExtendingAccessToken = nil;
-    NSString* accessToken = [result objectForKey:@"access_token"];
-    NSString* expTime = [result objectForKey:@"expires_at"];
-    
-    if (accessToken == nil || expTime == nil) {
-        return;
-    }
-    
-    self.accessToken = accessToken;
-    
-    NSTimeInterval timeInterval = [expTime doubleValue];
-    NSDate *expirationDate = [NSDate distantFuture];
-    if (timeInterval != 0) {
-        expirationDate = [NSDate dateWithTimeIntervalSince1970:timeInterval];
-    }
-    self.expirationDate = expirationDate;
-    _lastAccessTokenUpdate = [NSDate date];
-    
-	[self storeAccessToken];
-	
-    if ([self.sessionDelegate respondsToSelector:@selector(facebook:didExtendToken:expiresAt:)]) {
-        [self.sessionDelegate facebook:self didExtendToken:accessToken expiresAt:expirationDate];
-    }
+- (void)addExtendTokenHandler:(void(^)(Facebook *facebook, NSString *token, NSDate *expiresAt))handler {
+	[extendedTokenHandlers addObject:[handler copy]];
 }
-
-- (void)request:(FBRequest *)request didLoadRawResponse:(NSData *)data {
+- (void)addLogoutHandler:(void(^)(Facebook*))handler {
+	[logoutHandlers addObject:[handler copy]];
 }
-
-- (void)request:(FBRequest *)request didReceiveResponse:(NSURLResponse *)response{
-}
-
-- (void)requestLoading:(FBRequest *)request{
+- (void)addSessionInvalidatedHandler:(void(^)(Facebook*))handler {
+	[sessionInvalidHandlers addObject:[handler copy]];
 }
 
 @end

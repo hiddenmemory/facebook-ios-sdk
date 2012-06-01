@@ -21,6 +21,12 @@
 #define FBMethodGet    @"GET"
 #define FBMethodDelete @"DELETE"
 
+typedef enum {
+	FacebookLoginSuccess,
+	FacebookLoginCancelled,
+	FacebookLoginFailed
+} FacebookLoginState;
+
 @class FBFrictionlessRequestSettings;
 @protocol FBSessionDelegate;
 
@@ -30,20 +36,18 @@
  * and Graph APIs, and start user interface interactions (such as
  * pop-ups promoting for credentials, permissions, stream posts, etc.)
  */
-@interface Facebook : NSObject<FBLoginDialogDelegate,FBRequestDelegate>{
+@interface Facebook : NSObject<FBLoginDialogDelegate>{
     NSMutableSet* _requests;
     FBDialog* _loginDialog;
     FBDialog* _fbDialog;
     NSString* _appId;
     BOOL _isExtendingAccessToken;
-    FBRequest *_requestExtendingAccessToken;
     NSDate* _lastAccessTokenUpdate;
     FBFrictionlessRequestSettings* _frictionlessRequestSettings;
 }
 
 @property(nonatomic, copy) NSString* accessToken;
 @property(nonatomic, copy) NSDate* expirationDate;
-@property(nonatomic, assign) id<FBSessionDelegate> sessionDelegate;
 @property(nonatomic, copy) NSString* urlSchemeSuffix;
 @property(nonatomic, readonly, getter=isFrictionlessRequestsEnabled) BOOL isFrictionlessRequestsEnabled;
 @property (nonatomic, assign) BOOL extendTokenOnApplicationActive;
@@ -63,33 +67,43 @@
 - (void)logout;
 
 - (FBRequest*)requestWithParameters:(NSMutableDictionary *)params
-						   delegate:(id <FBRequestDelegate>)delegate;
+						   finalize:(void(^)(FBRequest*request))finalize;
 
 - (FBRequest*)requestWithMethodName:(NSString *)methodName
 						 parameters:(NSMutableDictionary *)params
 					  requestMethod:(NSString *)httpMethod
-						   delegate:(id <FBRequestDelegate>)delegate;
+						   finalize:(void(^)(FBRequest*request))finalize;
+
 
 - (FBRequest*)requestWithMethodName:(NSString *)methodName 
 						 parameters:(NSMutableDictionary *)params 
-						 completion:(void(^)(id result))completion;
+						 completion:(void (^)(FBRequest *request,id result))completion;
 
 - (FBRequest*)requestWithMethodName:(NSString *)methodName 
 						 parameters:(NSMutableDictionary *)params 
-						 completion:(void(^)(id result))completion
-							  error:(void(^)(NSError*error))error;
+						 completion:(void (^)(FBRequest*request,id result))completion 
+							  error:(void (^)(FBRequest*request,NSError *error))error;
 
 - (FBRequest*)requestWithGraphPath:(NSString *)graphPath
-						  delegate:(id <FBRequestDelegate>)delegate;
+						  finalize:(void(^)(FBRequest*request))finalize;
 
 - (FBRequest*)requestWithGraphPath:(NSString *)graphPath
 						parameters:(NSMutableDictionary *)params
-						  delegate:(id <FBRequestDelegate>)delegate;
+						  finalize:(void(^)(FBRequest*request))finalize;
 
 - (FBRequest*)requestWithGraphPath:(NSString *)graphPath
 						parameters:(NSMutableDictionary *)params
 					 requestMethod:(NSString *)httpMethod
-						  delegate:(id <FBRequestDelegate>)delegate;
+						  finalize:(void(^)(FBRequest*request))finalize;
+
+- (FBRequest*)requestWithGraphPath:(NSString *)graphPath
+						parameters:(NSMutableDictionary *)params
+						  completion:(void (^)(FBRequest*request,id result))completion;
+
+- (FBRequest*)requestWithGraphPath:(NSString *)graphPath
+						parameters:(NSMutableDictionary *)params
+						completion:(void (^)(FBRequest*request,id result))completion 
+							 error:(void (^)(FBRequest*request,NSError *error))error;
 
 - (void)dialog:(NSString *)action
 	  delegate:(id<FBDialogDelegate>)delegate;
@@ -108,46 +122,12 @@
 
 - (BOOL)isFrictionlessEnabledForRecipients:(NSArray*)fbids;
 
+- (void)addLoginHandler:(void(^)(Facebook*, FacebookLoginState state))handler;
+- (void)addExtendTokenHandler:(void(^)(Facebook *facebook, NSString *token, NSDate *expiresAt))handler;
+- (void)addLogoutHandler:(void(^)(Facebook*))handler;
+- (void)addSessionInvalidatedHandler:(void(^)(Facebook*))handler;
+
 @end
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/**
- * Your application should implement this delegate to receive session callbacks.
- */
-@protocol FBSessionDelegate <NSObject>
-
-/**
- * Called when the user successfully logged in.
- */
-- (void)facebookDidLogin:(Facebook*)facebook;
-
-/**
- * Called when the user dismissed the dialog without logging in.
- */
-- (void)facebook:(Facebook*)facebook didNotLogin:(BOOL)cancelled;
-
-/**
- * Called after the access token was extended. If your application has any
- * references to the previous access token (for example, if your application
- * stores the previous access token in persistent storage), your application
- * should overwrite the old access token with the new one in this method.
- * See extendAccessToken for more details.
- */
-- (void)facebook:(Facebook*)facebook didExtendToken:(NSString*)accessToken expiresAt:(NSDate*)expiresAt;
-
-/**
- * Called when the user logged out.
- */
-- (void)facebookDidLogout:(Facebook*)facebook;
-
-/**
- * Called when the current session has expired. This might happen when:
- *  - the access token expired
- *  - the app has been disabled
- *  - the user revoked the app's permissions
- *  - the user changed his or her password
- */
-- (void)facebookSessionInvalidated:(Facebook*)facebook;
-
-@end

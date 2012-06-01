@@ -289,7 +289,7 @@ static const NSTimeInterval kTimeoutInterval = 180.0;
  */
 - (void)handleResponseData:(NSData *)data {
 	[rawHandlers enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
-		void (^handler)(FBRequest*,NSData *) = (void(^)(NSError*))obj;
+		void (^handler)(FBRequest*,NSData *) = (void(^)(FBRequest*, NSData*))obj;
 		handler(self, data);
 	}];
     
@@ -303,7 +303,7 @@ static const NSTimeInterval kTimeoutInterval = 180.0;
 	else {
 		[completionHandlers enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
 			void (^handler)(FBRequest*,id) = (void(^)(FBRequest*, id))obj;
-			handler(self, data);
+			handler(self, result);
 		}];
 	}
 }
@@ -381,8 +381,8 @@ static const NSTimeInterval kTimeoutInterval = 180.0;
     NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse*)response;
 	
 	[responseHandlers enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
-		void (^handler)(FBRequest*) = (void(^)(FBRequest*))obj;
-		handler(self);
+		void (^handler)(FBRequest*,NSURLResponse*) = (void(^)(FBRequest*,NSURLResponse*))obj;
+		handler(self, httpResponse);
 	}];
 }
 

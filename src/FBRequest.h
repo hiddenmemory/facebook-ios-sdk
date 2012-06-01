@@ -68,10 +68,10 @@ typedef NSUInteger FBRequestState;
 
 + (NSString*)serializeURL:(NSString *)baseUrl
                    params:(NSDictionary *)params
-               httpMethod:(NSString *)httpMethod;
+               requestMethod:(NSString *)httpMethod;
 
-+ (FBRequest*)getRequestWithParams:(NSMutableDictionary *) params
-                        httpMethod:(NSString *) httpMethod
++ (FBRequest*)getRequestWithParameters:(NSMutableDictionary *) params
+                        requestMethod:(NSString *) httpMethod
                           delegate:(id<FBRequestDelegate>)delegate
                         requestURL:(NSString *) url;
 - (BOOL) loading;

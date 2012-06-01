@@ -138,9 +138,9 @@
                                    @"", @"message",
                                    nil];
     [[delegate facebook] requestWithGraphPath:@"me/checkins"
-                                    andParams:params
-                                andHttpMethod:@"POST"
-                                  andDelegate:self];
+                                    parameters:params
+                                requestMethod:@"POST"
+                                  delegate:self];
 }
 
 

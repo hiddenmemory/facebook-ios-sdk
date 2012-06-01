@@ -54,7 +54,7 @@
 - (void)reloadRecipientCacheWithFacebook:(Facebook *)facebook {
     // request the list of frictionless recipients from the server
     id request = [facebook requestWithGraphPath:@"me/apprequestformerrecipients"
-                                    andDelegate:self];
+                                    delegate:self];
     if (request) {
         self.activeRequest = request;
     }    

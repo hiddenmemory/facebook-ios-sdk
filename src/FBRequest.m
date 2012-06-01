@@ -48,8 +48,8 @@ static const NSTimeInterval kTimeoutInterval = 180.0;
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // class public
 
-+ (FBRequest *)getRequestWithParams:(NSMutableDictionary *) params
-                         httpMethod:(NSString *) httpMethod
++ (FBRequest *)getRequestWithParameters:(NSMutableDictionary *) params
+                         requestMethod:(NSString *) httpMethod
                            delegate:(id<FBRequestDelegate>) delegate
                          requestURL:(NSString *) url {
     
@@ -69,7 +69,7 @@ static const NSTimeInterval kTimeoutInterval = 180.0;
 
 + (NSString *)serializeURL:(NSString *)baseUrl
                     params:(NSDictionary *)params {
-    return [self serializeURL:baseUrl params:params httpMethod:@"GET"];
+    return [self serializeURL:baseUrl params:params requestMethod:@"GET"];
 }
 
 /**
@@ -77,7 +77,7 @@ static const NSTimeInterval kTimeoutInterval = 180.0;
  */
 + (NSString*)serializeURL:(NSString *)baseUrl
                    params:(NSDictionary *)params
-               httpMethod:(NSString *)httpMethod {
+               requestMethod:(NSString *)httpMethod {
     
     NSURL* parsedURL = [NSURL URLWithString:baseUrl];
     NSString* queryPrefix = parsedURL.query ? @"&" : @"?";
@@ -308,15 +308,15 @@ static const NSTimeInterval kTimeoutInterval = 180.0;
         [_delegate requestLoading:self];
     }
     
-    NSString* url = [[self class] serializeURL:_url params:_params httpMethod:_httpMethod];
+    NSString* url = [[self class] serializeURL:_url params:_params requestMethod:_httpMethod];
     NSMutableURLRequest* request =
     [NSMutableURLRequest requestWithURL:[NSURL URLWithString:url]
                             cachePolicy:NSURLRequestReloadIgnoringLocalCacheData
                         timeoutInterval:kTimeoutInterval];
+	
     [request setValue:kUserAgent forHTTPHeaderField:@"User-Agent"];
-
-
     [request setHTTPMethod:self.httpMethod];
+	
     if ([self.httpMethod isEqualToString: @"POST"]) {
         NSString* contentType = [NSString
                              stringWithFormat:@"multipart/form-data; boundary=%@", kStringBoundary];

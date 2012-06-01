@@ -17,6 +17,10 @@
 #import "FBLoginDialog.h"
 #import "FBRequest.h"
 
+#define FBMethodPost   @"POST"
+#define FBMethodGet    @"GET"
+#define FBMethodDelete @"DELETE"
+
 @class FBFrictionlessRequestSettings;
 @protocol FBSessionDelegate;
 
@@ -60,34 +64,34 @@
 
 - (void)logout:(id<FBSessionDelegate>)delegate;
 
-- (FBRequest*)requestWithParams:(NSMutableDictionary *)params
-                    andDelegate:(id <FBRequestDelegate>)delegate;
+- (FBRequest*)requestWithParameters:(NSMutableDictionary *)params
+					   delegate:(id <FBRequestDelegate>)delegate;
 
 - (FBRequest*)requestWithMethodName:(NSString *)methodName
-                          andParams:(NSMutableDictionary *)params
-                      andHttpMethod:(NSString *)httpMethod
-                        andDelegate:(id <FBRequestDelegate>)delegate;
+						 parameters:(NSMutableDictionary *)params
+						 requestMethod:(NSString *)httpMethod
+						   delegate:(id <FBRequestDelegate>)delegate;
 
 - (FBRequest*)requestWithGraphPath:(NSString *)graphPath
-                       andDelegate:(id <FBRequestDelegate>)delegate;
+						  delegate:(id <FBRequestDelegate>)delegate;
 
 - (FBRequest*)requestWithGraphPath:(NSString *)graphPath
-                         andParams:(NSMutableDictionary *)params
-                       andDelegate:(id <FBRequestDelegate>)delegate;
+						parameters:(NSMutableDictionary *)params
+						  delegate:(id <FBRequestDelegate>)delegate;
 
 - (FBRequest*)requestWithGraphPath:(NSString *)graphPath
-                         andParams:(NSMutableDictionary *)params
-                     andHttpMethod:(NSString *)httpMethod
-                       andDelegate:(id <FBRequestDelegate>)delegate;
+						parameters:(NSMutableDictionary *)params
+						requestMethod:(NSString *)httpMethod
+						  delegate:(id <FBRequestDelegate>)delegate;
 
 
 
 - (void)dialog:(NSString *)action
-   andDelegate:(id<FBDialogDelegate>)delegate;
+	  delegate:(id<FBDialogDelegate>)delegate;
 
 - (void)dialog:(NSString *)action
-     andParams:(NSMutableDictionary *)params
-   andDelegate:(id <FBDialogDelegate>)delegate;
+	parameters:(NSMutableDictionary *)params
+	  delegate:(id <FBDialogDelegate>)delegate;
 
 - (BOOL)isSessionValid;
 

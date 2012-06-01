@@ -202,7 +202,7 @@ extendTokenOnApplicationActive = _extendTokenOnApplicationActive;
  */
 - (FBRequest*)openUrl:(NSString *)url
                params:(NSMutableDictionary *)params
-           httpMethod:(NSString *)httpMethod
+           requestMethod:(NSString *)httpMethod
              delegate:(id<FBRequestDelegate>)delegate {
     
     [params setValue:@"json" forKey:@"format"];
@@ -214,8 +214,8 @@ extendTokenOnApplicationActive = _extendTokenOnApplicationActive;
     
     [self extendAccessTokenIfNeeded];
     
-    FBRequest* _request = [FBRequest getRequestWithParams:params
-                                               httpMethod:httpMethod
+    FBRequest* _request = [FBRequest getRequestWithParameters:params
+                                               requestMethod:httpMethod
                                                  delegate:delegate
                                                requestURL:url];
     [_requests addObject:_request];
@@ -389,7 +389,7 @@ extendTokenOnApplicationActive = _extendTokenOnApplicationActive;
     NSMutableDictionary* params = [NSMutableDictionary dictionaryWithObjectsAndKeys:
                                    @"auth.extendSSOAccessToken", @"method",
                                    nil];
-    _requestExtendingAccessToken = [self requestWithParams:params andDelegate:self];
+    _requestExtendingAccessToken = [self requestWithParameters:params delegate:self];
 }
 
 /**
@@ -547,8 +547,8 @@ extendTokenOnApplicationActive = _extendTokenOnApplicationActive;
  * @return FBRequest*
  *            Returns a pointer to the FBRequest object.
  */
-- (FBRequest*)requestWithParams:(NSMutableDictionary *)params
-                    andDelegate:(id <FBRequestDelegate>)delegate {
+- (FBRequest*)requestWithParameters:(NSMutableDictionary *)params
+                    delegate:(id <FBRequestDelegate>)delegate {
     if ([params objectForKey:@"method"] == nil) {
         NSLog(@"API Method must be specified");
         return nil;
@@ -558,9 +558,9 @@ extendTokenOnApplicationActive = _extendTokenOnApplicationActive;
     [params removeObjectForKey:@"method"];
     
     return [self requestWithMethodName:methodName
-                             andParams:params
-                         andHttpMethod:@"GET"
-                           andDelegate:delegate];
+                             parameters:params
+                         requestMethod:@"GET"
+                           delegate:delegate];
 }
 
 /**
@@ -586,13 +586,13 @@ extendTokenOnApplicationActive = _extendTokenOnApplicationActive;
  *            Returns a pointer to the FBRequest object.
  */
 - (FBRequest*)requestWithMethodName:(NSString *)methodName
-                          andParams:(NSMutableDictionary *)params
-                      andHttpMethod:(NSString *)httpMethod
-                        andDelegate:(id <FBRequestDelegate>)delegate {
+                          parameters:(NSMutableDictionary *)params
+                      requestMethod:(NSString *)httpMethod
+                        delegate:(id <FBRequestDelegate>)delegate {
     NSString * fullURL = [kRestserverBaseURL stringByAppendingString:methodName];
     return [self openUrl:fullURL
                   params:params
-              httpMethod:httpMethod
+              requestMethod:httpMethod
                 delegate:delegate];
 }
 
@@ -612,12 +612,12 @@ extendTokenOnApplicationActive = _extendTokenOnApplicationActive;
  *            Returns a pointer to the FBRequest object.
  */
 - (FBRequest*)requestWithGraphPath:(NSString *)graphPath
-                       andDelegate:(id <FBRequestDelegate>)delegate {
+                       delegate:(id <FBRequestDelegate>)delegate {
     
     return [self requestWithGraphPath:graphPath
-                            andParams:[NSMutableDictionary dictionary]
-                        andHttpMethod:@"GET"
-                          andDelegate:delegate];
+                            parameters:[NSMutableDictionary dictionary]
+                        requestMethod:@"GET"
+                          delegate:delegate];
 }
 
 /**
@@ -643,13 +643,13 @@ extendTokenOnApplicationActive = _extendTokenOnApplicationActive;
  *            Returns a pointer to the FBRequest object.
  */
 - (FBRequest*)requestWithGraphPath:(NSString *)graphPath
-                         andParams:(NSMutableDictionary *)params
-                       andDelegate:(id <FBRequestDelegate>)delegate {
+                         parameters:(NSMutableDictionary *)params
+                       delegate:(id <FBRequestDelegate>)delegate {
     
     return [self requestWithGraphPath:graphPath
-                            andParams:params
-                        andHttpMethod:@"GET"
-                          andDelegate:delegate];
+                            parameters:params
+                        requestMethod:@"GET"
+                          delegate:delegate];
 }
 
 /**
@@ -682,14 +682,14 @@ extendTokenOnApplicationActive = _extendTokenOnApplicationActive;
  *            Returns a pointer to the FBRequest object.
  */
 - (FBRequest*)requestWithGraphPath:(NSString *)graphPath
-                         andParams:(NSMutableDictionary *)params
-                     andHttpMethod:(NSString *)httpMethod
-                       andDelegate:(id <FBRequestDelegate>)delegate {
+                         parameters:(NSMutableDictionary *)params
+                     requestMethod:(NSString *)httpMethod
+                       delegate:(id <FBRequestDelegate>)delegate {
     
     NSString * fullURL = [kGraphBaseURL stringByAppendingString:graphPath];
     return [self openUrl:fullURL
                   params:params
-              httpMethod:httpMethod
+              requestMethod:httpMethod
                 delegate:delegate];
 }
 
@@ -704,9 +704,9 @@ extendTokenOnApplicationActive = _extendTokenOnApplicationActive;
  *            dialog has completed.
  */
 - (void)dialog:(NSString *)action
-   andDelegate:(id<FBDialogDelegate>)delegate {
+   delegate:(id<FBDialogDelegate>)delegate {
     NSMutableDictionary * params = [NSMutableDictionary dictionary];
-    [self dialog:action andParams:params andDelegate:delegate];
+    [self dialog:action parameters:params delegate:delegate];
 }
 
 /**
@@ -722,8 +722,8 @@ extendTokenOnApplicationActive = _extendTokenOnApplicationActive;
  *            dialog has completed.
  */
 - (void)dialog:(NSString *)action
-     andParams:(NSMutableDictionary *)params
-   andDelegate:(id <FBDialogDelegate>)delegate {
+     parameters:(NSMutableDictionary *)params
+   delegate:(id <FBDialogDelegate>)delegate {
     
     
     NSString *dialogURL = [kDialogBaseURL stringByAppendingString:action];

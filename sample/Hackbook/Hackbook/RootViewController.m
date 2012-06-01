@@ -49,14 +49,14 @@
                                    nil];
     HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
     [[delegate facebook] requestWithMethodName:@"fql.query"
-                                     andParams:params
-                                 andHttpMethod:@"POST"
-                                   andDelegate:self];
+                                     parameters:params
+                                 requestMethod:@"POST"
+                                   delegate:self];
 }
 
 - (void)apiGraphUserPermissions {
     HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
-    [[delegate facebook] requestWithGraphPath:@"me/permissions" andDelegate:self];
+    [[delegate facebook] requestWithGraphPath:@"me/permissions" delegate:self];
 }
 
 

@@ -278,7 +278,7 @@
     [self showActivityIndicator];
     // Do not set current API as this is commonly called by other methods
     HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
-    [[delegate facebook] requestWithGraphPath:@"me/friends" andDelegate:self];
+    [[delegate facebook] requestWithGraphPath:@"me/friends" delegate:self];
 }
 
 /*
@@ -288,7 +288,7 @@
     [self showActivityIndicator];
     currentAPICall = kAPIGraphUserPermissions;
     HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
-    [[delegate facebook] requestWithGraphPath:@"me/permissions" andDelegate:self];
+    [[delegate facebook] requestWithGraphPath:@"me/permissions" delegate:self];
 }
 
 /*
@@ -326,9 +326,9 @@
     // add a permission parameter with the name of the permission to revoke.
     NSMutableDictionary *params = [NSMutableDictionary dictionaryWithObjectsAndKeys:nil];
     [[delegate facebook] requestWithGraphPath:@"me/permissions"
-                                    andParams:params
-                                andHttpMethod:@"DELETE"
-                                  andDelegate:self];
+                                    parameters:params
+                                requestMethod:@"DELETE"
+                                  delegate:self];
 }
 
 /*
@@ -369,8 +369,8 @@
 
     HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
     [[delegate facebook] dialog:@"feed"
-            andParams:params
-          andDelegate:self];
+            parameters:params
+          delegate:self];
 
 }
 
@@ -406,8 +406,8 @@
 
     HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
     [[delegate facebook] dialog:@"feed"
-                      andParams:params
-                    andDelegate:self];
+                      parameters:params
+                    delegate:self];
 
 }
 
@@ -436,8 +436,8 @@
 
     HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
     [[delegate facebook] dialog:@"apprequests"
-                      andParams:params
-                    andDelegate:self];
+                      parameters:params
+                    delegate:self];
 }
 
 /*
@@ -450,8 +450,8 @@
     NSMutableDictionary *params = [NSMutableDictionary dictionaryWithObjectsAndKeys:
                                    @"friends.getAppUsers", @"method",
                                    nil];
-    [[delegate facebook] requestWithParams:params
-                               andDelegate:self];
+    [[delegate facebook] requestWithParameters:params
+                               delegate:self];
 }
 
 /*
@@ -468,8 +468,8 @@
 
     HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
     [[delegate facebook] dialog:@"apprequests"
-                      andParams:params
-                    andDelegate:self];
+                      parameters:params
+                    delegate:self];
 }
 
 /*
@@ -486,8 +486,8 @@
 
     HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
     [[delegate facebook] dialog:@"apprequests"
-                      andParams:params
-                    andDelegate:self];
+                      parameters:params
+                    delegate:self];
 }
 
 /*
@@ -502,8 +502,8 @@
 
     HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
     [[delegate facebook] dialog:@"apprequests"
-                      andParams:params
-                    andDelegate:self];
+                      parameters:params
+                    delegate:self];
 }
 
 /*
@@ -571,7 +571,7 @@
     NSMutableDictionary *params = [NSMutableDictionary dictionaryWithObjectsAndKeys:
                                    @"name,picture",  @"fields",
                                    nil];
-    [[delegate facebook] requestWithGraphPath:@"me" andParams:params andDelegate:self];
+    [[delegate facebook] requestWithGraphPath:@"me" parameters:params delegate:self];
 }
 
 /*
@@ -589,7 +589,7 @@
     [self showActivityIndicator];
     currentAPICall = kAPIGraphUserCheckins;
     HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
-    [[delegate facebook] requestWithGraphPath:@"me/checkins" andDelegate:self];
+    [[delegate facebook] requestWithGraphPath:@"me/checkins" delegate:self];
 }
 
 /*
@@ -623,7 +623,7 @@
                                    @"1000",  @"distance",
                                    nil];
 
-    [[delegate facebook] requestWithGraphPath:@"search" andParams:params andDelegate:self];
+    [[delegate facebook] requestWithGraphPath:@"search" parameters:params delegate:self];
 }
 
 /*
@@ -692,9 +692,9 @@
                                    nil];
     
     [[delegate facebook] requestWithGraphPath:@"me/photos"
-                          andParams:params
-                      andHttpMethod:@"POST"
-                        andDelegate:self];
+                          parameters:params
+                      requestMethod:@"POST"
+                        delegate:self];
 }
 
 /*
@@ -715,9 +715,9 @@
                                    @"Video Test Description", @"description",
 								   nil];
 	[[delegate facebook] requestWithGraphPath:@"me/videos"
-                         andParams:params
-                     andHttpMethod:@"POST"
-                       andDelegate:self];
+                         parameters:params
+                     requestMethod:@"POST"
+                       delegate:self];
 }
 
 #pragma mark - UITableViewDatasource and UITableViewDelegate Methods

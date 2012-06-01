@@ -15,7 +15,6 @@
  */
 
 #import "FBRequest.h"
-#import "JSON.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // global
@@ -201,11 +200,17 @@ static const NSTimeInterval kTimeoutInterval = 180.0;
         return nil;
     }
     
-    
-    SBJSON *jsonParser = [[SBJSON alloc] init];
-    id result = [jsonParser objectWithString:responseString];
-    [jsonParser release];
+	NSError *error = nil;
+	
+    id result = [NSJSONSerialization JSONObjectWithData:[responseString dataUsingEncoding:NSUTF8StringEncoding]
+												options:0
+												  error:&error];
 
+	if( error ) {
+		NSLog(@"%s: %d: Unable to decode JSON: %@", __FILE__, __LINE__, responseString);
+		result = nil;
+	}
+	
     if (result == nil) {
         return responseString;
     }

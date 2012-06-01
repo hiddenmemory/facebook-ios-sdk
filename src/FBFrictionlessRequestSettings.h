@@ -26,8 +26,8 @@
  */
 @interface FBFrictionlessRequestSettings : NSObject<FBRequestDelegate> {
 @private
-    NSArray*            _allowedRecipients;
-    FBRequest*          _activeRequest;
+    NSArray*            __weak _allowedRecipients;
+    FBRequest*          __weak _activeRequest;
     BOOL                _enabled;
 }
 

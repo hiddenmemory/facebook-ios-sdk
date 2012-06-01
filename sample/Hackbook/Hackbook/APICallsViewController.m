@@ -347,20 +347,6 @@
  * --------------------------------------------------------------------------
  */
 
-- (NSString*)stringWithObject:(id)source {
-	NSError *error = nil;
-	NSString *result = [[NSString alloc] initWithData:[NSJSONSerialization dataWithJSONObject:source
-																					  options:0
-																						error:&error]
-											 encoding:NSUTF8StringEncoding];
-	
-	if( error ) {
-		NSLog(@"Unable to convert object %@ source", source);
-	}
-	
-	return result;
-}
-
 /*
  * Dialog: Feed for the user
  */

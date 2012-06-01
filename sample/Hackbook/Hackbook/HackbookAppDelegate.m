@@ -49,15 +49,10 @@ static NSString* kAppId = @"210849718975311";
     self.navigationController = navController;
     
     // Initialize Facebook
-    facebook = [[Facebook alloc] initWithAppId:kAppId andDelegate:rootViewController];
+    facebook = [Facebook shared:kAppId];
     
-    // Check and retrieve authorization information
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    if ([defaults objectForKey:@"FBAccessTokenKey"] && [defaults objectForKey:@"FBExpirationDateKey"]) {
-        facebook.accessToken = [defaults objectForKey:@"FBAccessTokenKey"];
-        facebook.expirationDate = [defaults objectForKey:@"FBExpirationDateKey"];
-    }
-    
+	facebook.sessionDelegate = rootViewController;
+	    
     // Initialize API data (for views, etc.)
     apiData = [[DataSet alloc] init];
     
@@ -124,7 +119,6 @@ static NSString* kAppId = @"210849718975311";
     // it's a good practice to refresh the access token also when the app becomes active.
     // This gives apps that seldom make api calls a higher chance of having a non expired
     // access token.
-    [[self facebook] extendAccessTokenIfNeeded];
 }
 
 - (BOOL)application:(UIApplication *)application handleOpenURL:(NSURL *)url {

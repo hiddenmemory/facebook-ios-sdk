@@ -44,8 +44,10 @@ static void *finishedContext = @"finishedContext";
 @interface Facebook ()
 
 // private properties
-@property(weak, weak, nonatomic) NSArray* permissions;
+@property(strong, nonatomic) NSArray* permissions;
 @property(nonatomic, copy) NSString* appId;
+
+- (id)initWithAppID:(NSString*)appID;
 
 @end
 
@@ -58,17 +60,59 @@ static void *finishedContext = @"finishedContext";
            sessionDelegate = _sessionDelegate,
                permissions = _permissions,
            urlSchemeSuffix = _urlSchemeSuffix,
-                     appId = _appId;
+                     appId = _appId,
+extendTokenOnApplicationActive = _extendTokenOnApplicationActive;
 
+
++ (Facebook*)shared:(NSString *)appID {
+	static dispatch_once_t pred = 0; \
+	__strong static Facebook *_sharedObject = nil;
+	dispatch_once(&pred, ^{
+		_sharedObject = [[Facebook alloc] initWithAppID:appID];
+	});
+	return _sharedObject;
+}
+
+- (void)applicationDidBecomeActive:(NSNotification*)notification {
+	[self extendAccessTokenIfNeeded];
+}
+
+- (void)setExtendTokenOnApplicationActive:(BOOL)_ {
+	if( _ ) {
+		[[NSNotificationCenter defaultCenter] addObserver:self
+												 selector:@selector(applicationDidBecomeActive:)
+													 name:UIApplicationDidBecomeActiveNotification
+												   object:nil];
+	}
+	else {
+		[[NSNotificationCenter defaultCenter] removeObserver:self
+														name:UIApplicationDidBecomeActiveNotification
+													  object:nil];		
+	}
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // private
 
+#define FBAccessTokenKey [NSString stringWithFormat:@"com.facebook.ios.token:%@", \
+							[[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleIdentifier"]]
+#define FBExpirationDateKey [NSString stringWithFormat:@"com.facebook.ios.expiration:%@", \
+								[[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleIdentifier"]]
 
-- (id)initWithAppId:(NSString *)appId
-        andDelegate:(id<FBSessionDelegate>)delegate {
-  self = [self initWithAppId:appId urlSchemeSuffix:nil andDelegate:delegate];
-  return self;
+- (void)storeAccessToken {
+	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    [defaults setObject:self.accessToken forKey:FBAccessTokenKey];
+    [defaults setObject:self.expirationDate forKey:FBExpirationDateKey];
+    [defaults synchronize];
+}
+
+- (void)loadAccessToken {
+	// Check and retrieve authorization information
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    if ([defaults objectForKey:FBAccessTokenKey] && [defaults objectForKey:FBExpirationDateKey]) {
+        self.accessToken = [defaults objectForKey:FBAccessTokenKey];
+        self.expirationDate = [defaults objectForKey:FBExpirationDateKey];
+    }
 }
 
 /**
@@ -96,18 +140,19 @@ static void *finishedContext = @"finishedContext";
  *   and redirect the user to Safari.
  * @param delegate the FBSessionDelegate
  */
-- (id)initWithAppId:(NSString *)appId
-    urlSchemeSuffix:(NSString *)urlSchemeSuffix
-        andDelegate:(id<FBSessionDelegate>)delegate {
+- (id)initWithAppID:(NSString *)appId {
     
     self = [super init];
     if (self) {
-        _requests = [[NSMutableSet alloc] init];
+        _requests = [NSMutableSet set];
         _lastAccessTokenUpdate = [NSDate distantPast];
         _frictionlessRequestSettings = [[FBFrictionlessRequestSettings alloc] init];
         self.appId = appId;
-        self.sessionDelegate = delegate;
-        self.urlSchemeSuffix = urlSchemeSuffix;
+        self.sessionDelegate = nil;
+        self.urlSchemeSuffix = nil;
+		self.extendTokenOnApplicationActive = YES;
+		
+		[self loadAccessToken];
     }
     return self;
 }
@@ -126,6 +171,9 @@ static void *finishedContext = @"finishedContext";
 - (void)invalidateSession {
     self.accessToken = nil;
     self.expirationDate = nil;
+	
+	[[NSUserDefaults standardUserDefaults] removeObjectForKey:FBAccessTokenKey];
+	[[NSUserDefaults standardUserDefaults] removeObjectForKey:FBExpirationDateKey];
     
     NSHTTPCookieStorage* cookies = [NSHTTPCookieStorage sharedHTTPCookieStorage];
     NSArray* facebookCookies = [cookies cookiesForURL:
@@ -781,6 +829,9 @@ static void *finishedContext = @"finishedContext";
     self.expirationDate = expirationDate;
     _lastAccessTokenUpdate = [NSDate date];
     [self reloadFrictionlessRecipientCache];
+	
+	[self storeAccessToken];
+	
     if ([self.sessionDelegate respondsToSelector:@selector(fbDidLogin)]) {
         [self.sessionDelegate fbDidLogin];
     }
@@ -824,6 +875,8 @@ static void *finishedContext = @"finishedContext";
     self.expirationDate = expirationDate;
     _lastAccessTokenUpdate = [NSDate date];
     
+	[self storeAccessToken];
+	
     if ([self.sessionDelegate respondsToSelector:@selector(fbDidExtendToken:expiresAt:)]) {
         [self.sessionDelegate fbDidExtendToken:accessToken expiresAt:expirationDate];
     }

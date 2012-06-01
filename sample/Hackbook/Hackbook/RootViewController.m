@@ -293,29 +293,18 @@
     
 }
 
-- (void)storeAuthData:(NSString *)accessToken expiresAt:(NSDate *)expiresAt {
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    [defaults setObject:accessToken forKey:@"FBAccessTokenKey"];
-    [defaults setObject:expiresAt forKey:@"FBExpirationDateKey"];
-    [defaults synchronize];
-}
-
 #pragma mark - FBSessionDelegate Methods
 /**
  * Called when the user has logged in successfully.
  */
 - (void)fbDidLogin {
     [self showLoggedIn];
-    
-    HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
-    [self storeAuthData:[[delegate facebook] accessToken] expiresAt:[[delegate facebook] expirationDate]];
         
     [pendingApiCallsController userDidGrantPermission];
 }
 
 -(void)fbDidExtendToken:(NSString *)accessToken expiresAt:(NSDate *)expiresAt {
     NSLog(@"token extended");
-    [self storeAuthData:accessToken expiresAt:expiresAt];
 }
 
 /**

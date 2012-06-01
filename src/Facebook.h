@@ -42,13 +42,9 @@
 @property(nonatomic, assign) id<FBSessionDelegate> sessionDelegate;
 @property(nonatomic, copy) NSString* urlSchemeSuffix;
 @property(nonatomic, readonly, getter=isFrictionlessRequestsEnabled) BOOL isFrictionlessRequestsEnabled;
+@property (nonatomic, assign) BOOL extendTokenOnApplicationActive;
 
-- (id)initWithAppId:(NSString *)appId
-        andDelegate:(id<FBSessionDelegate>)delegate;
-
-- (id)initWithAppId:(NSString *)appId
-    urlSchemeSuffix:(NSString *)urlSchemeSuffix
-        andDelegate:(id<FBSessionDelegate>)delegate;
++ (Facebook*)shared:(NSString*)appID;
 
 - (void)authorize:(NSArray *)permissions;
 
@@ -83,6 +79,8 @@
                          andParams:(NSMutableDictionary *)params
                      andHttpMethod:(NSString *)httpMethod
                        andDelegate:(id <FBRequestDelegate>)delegate;
+
+
 
 - (void)dialog:(NSString *)action
    andDelegate:(id<FBDialogDelegate>)delegate;

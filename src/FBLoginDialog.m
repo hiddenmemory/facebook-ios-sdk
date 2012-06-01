@@ -33,7 +33,7 @@
     
     self = [super init];
     _serverURL = loginURL;
-    _params = params;
+    self.params = params;
     _loginDelegate = delegate;
     return self;
 }

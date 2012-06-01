@@ -30,32 +30,10 @@
         if (nil != data) {
             myData = [[NSMutableArray alloc] initWithArray:data copyItems:YES];
         }
-        self.navigationItem.title = [title retain];
-        self.myAction = [action retain];
+        self.navigationItem.title = title;
+        self.myAction = action;
     }
     return self;
-}
-
-- (void)dealloc {
-    [myData release];
-    [myAction release];
-    [messageLabel release];
-    [messageView release];
-    [super dealloc];
-}
-
-- (NSString*)stringWithObject:(id)source {
-	NSError *error = nil;
-	NSString *result = [[NSString alloc] initWithData:[NSJSONSerialization dataWithJSONObject:source
-																					  options:0
-																						error:&error]
-											 encoding:NSUTF8StringEncoding];
-	
-	if( error ) {
-		NSLog(@"Unable to convert object %@ source", source);
-	}
-	
-	return result;
 }
 
 - (void)didReceiveMemoryWarning {
@@ -65,6 +43,20 @@
     // Release any cached data, images, etc that aren't in use.
 }
 
+- (NSString*)stringWithObject:(id)source {
+	NSError *error = nil;
+	NSString *result = [[NSString alloc] initWithData:[NSJSONSerialization dataWithJSONObject:source 
+																					  options:0
+																						error:&error]
+											 encoding:NSUTF8StringEncoding];
+	if( error ) {
+		NSLog(@"Error serializing object: %@", source);
+		return nil;
+	}
+	
+	return result;
+}
+
 #pragma mark - View lifecycle
 
 - (void)loadView {
@@ -72,7 +64,6 @@
                                                   mainScreen].applicationFrame];
     [view setBackgroundColor:[UIColor whiteColor]];
     self.view = view;
-    [view release];
 
     // Main Menu Table
     UITableView *myTableView = [[UITableView alloc] initWithFrame:self.view.bounds
@@ -82,8 +73,7 @@
     myTableView.delegate = self;
     myTableView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     if ([self.myAction isEqualToString:@"places"]) {
-        UILabel *headerLabel = [[[UILabel alloc]
-                                 initWithFrame:CGRectMake(0, 0, self.view.bounds.size.width, 30)] autorelease];
+        UILabel *headerLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, self.view.bounds.size.width, 30)];
         headerLabel.text = @"  Tap selection to check in";
         headerLabel.font = [UIFont fontWithName:@"Helvetica" size:14.0];
         headerLabel.backgroundColor = [UIColor colorWithRed:255.0/255.0
@@ -93,7 +83,6 @@
         myTableView.tableHeaderView = headerLabel;
     }
     [self.view addSubview:myTableView];
-    [myTableView release];
 
     // Message Label for showing confirmation and status messages
     CGFloat yLabelViewOffset = self.view.bounds.size.height-self.navigationController.navigationBar.frame.size.height-30;
@@ -116,7 +105,6 @@
                                                    alpha:0.6];
     [messageInsetView addSubview:messageLabel];
     [messageView addSubview:messageInsetView];
-    [messageInsetView release];
     messageView.hidden = YES;
     [self.view addSubview:messageView];
 }
@@ -165,7 +153,6 @@
     // Get the object image
     NSString *url = [[NSString alloc] initWithFormat:@"https://graph.facebook.com/%@/picture",objectID];
     UIImage *image = [UIImage imageWithData:[NSData dataWithContentsOfURL:[NSURL URLWithString:url]]];
-    [url release];
     return image;
 }
 
@@ -248,7 +235,7 @@
 
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
     if (cell == nil) {
-        cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:CellIdentifier] autorelease];
+        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:CellIdentifier];
         // Show disclosure only if this view is related to showing nearby places, thus allowing
         // the user to check-in.
         if ([self.myAction isEqualToString:@"places"]) {

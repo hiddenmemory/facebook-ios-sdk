@@ -218,15 +218,14 @@ params   = _params;
         NSMutableArray* pairs = [NSMutableArray array];
         for (NSString* key in params.keyEnumerator) {
             NSString* value = [params objectForKey:key];
-            NSString* escaped_value = (NSString *)CFURLCreateStringByAddingPercentEscapes(
+            NSString* escaped_value = (__bridge_transfer NSString *)CFURLCreateStringByAddingPercentEscapes(
                                                                                           NULL, /* allocator */
-                                                                                          (CFStringRef)value,
+                                                                                          (__bridge CFStringRef)value,
                                                                                           NULL, /* charactersToLeaveUnescaped */
                                                                                           (CFStringRef)@"!*'();:@&=+$,/?%#[]",
                                                                                           kCFStringEncodingUTF8);
             
             [pairs addObject:[NSString stringWithFormat:@"%@=%@", key, escaped_value]];
-            [escaped_value release];
         }
         
         NSString* query = [pairs componentsJoinedByString:@"&"];
@@ -271,7 +270,6 @@ params   = _params;
                                              selector:@selector(showWebView)
                                                object:nil];
 
-    [_loadingURL release];
     _loadingURL = nil;
     
     if (animated) {
@@ -315,9 +313,8 @@ params   = _params;
 
         // if we got something usable, copy the ids out and update the cache
         if ([recipients isKindOfClass:[NSArray class]]) { 
-            NSMutableArray *ids = [[[NSMutableArray alloc]
-                                    initWithCapacity:[recipients count]]
-                                   autorelease];
+            NSMutableArray *ids = [[NSMutableArray alloc]
+                                    initWithCapacity:[recipients count]];
             for (id recipient in recipients) {
                 NSString *fbid = [NSString stringWithFormat:@"%@", recipient];
                 [ids addObject:fbid];
@@ -351,7 +348,7 @@ params   = _params;
         UIImage* closeImage = [UIImage imageNamed:@"FBDialog.bundle/images/close.png"];
         
         UIColor* color = [UIColor colorWithRed:167.0/255 green:184.0/255 blue:216.0/255 alpha:1];
-        _closeButton = [[UIButton buttonWithType:UIButtonTypeCustom] retain];
+        _closeButton = [UIButton buttonWithType:UIButtonTypeCustom];
         [_closeButton setImage:closeImage forState:UIControlStateNormal];
         [_closeButton setTitleColor:color forState:UIControlStateNormal];
         [_closeButton setTitleColor:[UIColor whiteColor] forState:UIControlStateHighlighted];
@@ -388,15 +385,6 @@ params   = _params;
 
 - (void)dealloc {
     _webView.delegate = nil;
-    [_webView release];
-    [_params release];
-    [_serverURL release];
-    [_spinner release];
-    [_closeButton release];
-    [_loadingURL release];
-    [_modalBackgroundView release];
-    [_frictionlessSettings release];
-    [super dealloc];
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -600,11 +588,11 @@ params   = _params;
          delegate: (id <FBDialogDelegate>) delegate {
     
     self = [self init];
-    _serverURL = [serverURL retain];
-    _params = [params retain];    
+    _serverURL = serverURL;
+    _params = params;    
     _delegate = delegate;
     _isViewInvisible = isViewInvisible;
-    _frictionlessSettings = [frictionlessSettings retain];
+    _frictionlessSettings = frictionlessSettings;
     
     return self;
 }
@@ -615,8 +603,7 @@ params   = _params;
 
 - (void)loadURL:(NSString*)url get:(NSDictionary*)getParams {
 
-    [_loadingURL release];
-    _loadingURL = [[self generateURL:url params:getParams] retain];
+    _loadingURL = [self generateURL:url params:getParams];
     NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:_loadingURL];
     
     [_webView loadRequest:request];

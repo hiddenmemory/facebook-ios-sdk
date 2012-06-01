@@ -29,13 +29,13 @@
 @interface Facebook : NSObject<FBLoginDialogDelegate,FBRequestDelegate>{
     NSString* _accessToken;
     NSDate* _expirationDate;
-    id<FBSessionDelegate> _sessionDelegate;
+    id<FBSessionDelegate> __weak _sessionDelegate;
     NSMutableSet* _requests;
     FBDialog* _loginDialog;
     FBDialog* _fbDialog;
     NSString* _appId;
     NSString* _urlSchemeSuffix;
-    NSArray* _permissions;
+    NSArray* __weak _permissions;
     BOOL _isExtendingAccessToken;
     FBRequest *_requestExtendingAccessToken;
     NSDate* _lastAccessTokenUpdate;
@@ -44,7 +44,7 @@
 
 @property(nonatomic, copy) NSString* accessToken;
 @property(nonatomic, copy) NSDate* expirationDate;
-@property(nonatomic, assign) id<FBSessionDelegate> sessionDelegate;
+@property(nonatomic, weak) id<FBSessionDelegate> sessionDelegate;
 @property(nonatomic, copy) NSString* urlSchemeSuffix;
 @property(nonatomic, readonly, getter=isFrictionlessRequestsEnabled) 
     BOOL isFrictionlessRequestsEnabled;

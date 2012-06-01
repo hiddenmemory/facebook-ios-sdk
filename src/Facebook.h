@@ -52,6 +52,9 @@ typedef enum {
 @property(nonatomic, readonly, getter=isFrictionlessRequestsEnabled) BOOL isFrictionlessRequestsEnabled;
 @property (nonatomic, assign) BOOL extendTokenOnApplicationActive;
 
+@property (copy) void (^requestStarted)();
+@property (copy) void (^requestFinished)();
+
 + (Facebook*)shared:(NSString*)appID;
 + (Facebook*)shared;
 

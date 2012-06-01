@@ -69,6 +69,7 @@ urlSchemeSuffix = _urlSchemeSuffix,
 appId = _appId,
 extendTokenOnApplicationActive = _extendTokenOnApplicationActive;
 
+@synthesize requestStarted, requestFinished;
 
 + (Facebook*)shared:(NSString *)appID {
 	static dispatch_once_t pred = 0; \
@@ -405,10 +406,6 @@ else {
  * applicationDidBecomeActive: UIApplicationDelegate method.
  */
 - (void)extendAccessToken {
-    if (_isExtendingAccessToken) {
-        return;
-    }
-    _isExtendingAccessToken = YES;
     NSMutableDictionary* params = [NSMutableDictionary dictionaryWithObjectsAndKeys:
                                    @"auth.extendSSOAccessToken", @"method",
                                    nil];
@@ -562,6 +559,8 @@ else {
     [self invalidateSession];
 	[self _applyCoreHandlers:logoutHandlers];
 }
+
+#pragma mark - Requests
 
 /**
  * Make a request to Facebook's REST API with the given
@@ -787,6 +786,8 @@ else {
 							 }];
 }
 
+#pragma mark - Dialog handlers
+
 /**
  * Generate a UI dialog for the request action.
  *
@@ -883,26 +884,6 @@ else {
     [_fbDialog show];
 }
 
-- (BOOL)isFrictionlessRequestsEnabled {
-    return _frictionlessRequestSettings.enabled;
-}
-
-- (void)enableFrictionlessRequests {
-    [_frictionlessRequestSettings enableWithFacebook:self];
-}
-
-- (void)reloadFrictionlessRecipientCache {
-    [_frictionlessRequestSettings reloadRecipientCacheWithFacebook:self];
-}
-
-- (BOOL)isFrictionlessEnabledForRecipient:(NSString*)fbid {
-    return [_frictionlessRequestSettings isFrictionlessEnabledForRecipient:fbid];
-}
-
-- (BOOL)isFrictionlessEnabledForRecipients:(NSArray*)fbids {
-    return [_frictionlessRequestSettings isFrictionlessEnabledForRecipients:fbids];
-}
-
 /**
  * @return boolean - whether this object has an non-expired session token
  */
@@ -941,6 +922,30 @@ else {
 - (void)facebookbDialogDidNotLogin:(BOOL)cancelled {
 	[self _applyLoginHandlers:(cancelled ? FacebookLoginCancelled : FacebookLoginFailed)];
 }
+
+#pragma mark - Friction
+
+
+- (BOOL)isFrictionlessRequestsEnabled {
+    return _frictionlessRequestSettings.enabled;
+}
+
+- (void)enableFrictionlessRequests {
+    [_frictionlessRequestSettings enableWithFacebook:self];
+}
+
+- (void)reloadFrictionlessRecipientCache {
+    [_frictionlessRequestSettings reloadRecipientCacheWithFacebook:self];
+}
+
+- (BOOL)isFrictionlessEnabledForRecipient:(NSString*)fbid {
+    return [_frictionlessRequestSettings isFrictionlessEnabledForRecipient:fbid];
+}
+
+- (BOOL)isFrictionlessEnabledForRecipients:(NSArray*)fbids {
+    return [_frictionlessRequestSettings isFrictionlessEnabledForRecipients:fbids];
+}
+
 
 #pragma mark - Handlers
 

@@ -67,21 +67,21 @@ typedef enum {
 
 - (void)logout;
 
-- (FBRequest*)requestWithParameters:(NSMutableDictionary *)params
+- (FBRequest*)requestWithParameters:(NSDictionary *)params
 						   finalize:(void(^)(FBRequest*request))finalize;
 
 - (FBRequest*)requestWithMethodName:(NSString *)methodName
-						 parameters:(NSMutableDictionary *)params
+						 parameters:(NSDictionary *)params
 					  requestMethod:(NSString *)httpMethod
 						   finalize:(void(^)(FBRequest*request))finalize;
 
 
 - (FBRequest*)requestWithMethodName:(NSString *)methodName 
-						 parameters:(NSMutableDictionary *)params 
+						 parameters:(NSDictionary *)params 
 						 completion:(void (^)(FBRequest *request,id result))completion;
 
 - (FBRequest*)requestWithMethodName:(NSString *)methodName 
-						 parameters:(NSMutableDictionary *)params 
+						 parameters:(NSDictionary *)params 
 						 completion:(void (^)(FBRequest*request,id result))completion 
 							  error:(void (^)(FBRequest*request,NSError *error))error;
 
@@ -89,20 +89,20 @@ typedef enum {
 						  finalize:(void(^)(FBRequest*request))finalize;
 
 - (FBRequest*)requestWithGraphPath:(NSString *)graphPath
-						parameters:(NSMutableDictionary *)params
+						parameters:(NSDictionary *)params
 						  finalize:(void(^)(FBRequest*request))finalize;
 
 - (FBRequest*)requestWithGraphPath:(NSString *)graphPath
-						parameters:(NSMutableDictionary *)params
+						parameters:(NSDictionary *)params
 					 requestMethod:(NSString *)httpMethod
 						  finalize:(void(^)(FBRequest*request))finalize;
 
 - (FBRequest*)requestWithGraphPath:(NSString *)graphPath
-						parameters:(NSMutableDictionary *)params
+						parameters:(NSDictionary *)params
 						  completion:(void (^)(FBRequest*request,id result))completion;
 
 - (FBRequest*)requestWithGraphPath:(NSString *)graphPath
-						parameters:(NSMutableDictionary *)params
+						parameters:(NSDictionary *)params
 						completion:(void (^)(FBRequest*request,id result))completion 
 							 error:(void (^)(FBRequest*request,NSError *error))error;
 
@@ -110,7 +110,7 @@ typedef enum {
 	  delegate:(id<FBDialogDelegate>)delegate;
 
 - (void)dialog:(NSString *)action
-	parameters:(NSMutableDictionary *)params
+	parameters:(NSDictionary *)params
 	  delegate:(id <FBDialogDelegate>)delegate;
 
 - (BOOL)isSessionValid;

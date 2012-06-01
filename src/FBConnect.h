@@ -15,7 +15,8 @@
  */
 
 
-#include "Facebook.h"
-#include "FBDialog.h"
-#include "FBLoginDialog.h"
-#include "FBRequest.h"
+#import "Facebook.h"
+#import "FBDialog.h"
+#import "FBLoginDialog.h"
+#import "FBRequest.h"
+#import "Facebook+Delegate.h"

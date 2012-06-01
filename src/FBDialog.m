@@ -582,14 +582,14 @@ params   = _params;
 }
 
 - (id)initWithURL: (NSString *) serverURL
-           params: (NSMutableDictionary *) params
+	   parameters: (NSDictionary *) params
   isViewInvisible: (BOOL)isViewInvisible
-     frictionlessSettings: (FBFrictionlessRequestSettings*) frictionlessSettings
+frictionlessSettings: (FBFrictionlessRequestSettings*) frictionlessSettings
          delegate: (id <FBDialogDelegate>) delegate {
     
     self = [self init];
     _serverURL = serverURL;
-    _params = params;    
+    _params = (params ? [NSMutableDictionary dictionaryWithDictionary:params] : [NSMutableDictionary dictionary]);    
     _delegate = delegate;
     _isViewInvisible = isViewInvisible;
     _frictionlessSettings = frictionlessSettings;

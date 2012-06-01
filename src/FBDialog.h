@@ -54,9 +54,9 @@
 - (NSString *) getStringFromUrl: (NSString*) url needle:(NSString *) needle;
 
 - (id)initWithURL: (NSString *) loadingURL
-           params: (NSMutableDictionary *) params
+	   parameters: (NSDictionary *) params
   isViewInvisible: (BOOL) isViewInvisible
-    frictionlessSettings: (FBFrictionlessRequestSettings *) frictionlessSettings
+frictionlessSettings: (FBFrictionlessRequestSettings *) frictionlessSettings
          delegate: (id <FBDialogDelegate>) delegate;
 
 /**

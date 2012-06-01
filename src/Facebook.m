@@ -211,10 +211,14 @@ else {
  *            the request has received response
  */
 - (FBRequest*)openUrl:(NSString *)url
-               params:(NSMutableDictionary *)params
+               params:(NSDictionary *)_params
 		requestMethod:(NSString *)httpMethod
 			 finalize:(void(^)(FBRequest*))finalize {
     
+	NSMutableDictionary *params = (_params 
+								   ? [NSMutableDictionary dictionaryWithDictionary:_params]
+								   : [NSMutableDictionary dictionary]);
+	
     [params setValue:@"json" forKey:@"format"];
     [params setValue:kSDK forKey:@"sdk"];
     [params setValue:kSDKVersion forKey:@"sdk_version"];
@@ -575,8 +579,10 @@ else {
  * @return FBRequest*
  *            Returns a pointer to the FBRequest object.
  */
-- (FBRequest*)requestWithParameters:(NSMutableDictionary *)params
+- (FBRequest*)requestWithParameters:(NSDictionary *)_params
 						   finalize:(void(^)(FBRequest*))finalize {
+	NSMutableDictionary *params = (_params ? [NSMutableDictionary dictionaryWithDictionary:_params] : [NSMutableDictionary dictionary]);
+	
     if ([params objectForKey:@"method"] == nil) {
         NSLog(@"API Method must be specified");
         return nil;
@@ -614,7 +620,7 @@ else {
  *            Returns a pointer to the FBRequest object.
  */
 - (FBRequest*)requestWithMethodName:(NSString *)methodName
-						 parameters:(NSMutableDictionary *)params
+						 parameters:(NSDictionary *)params
                       requestMethod:(NSString *)httpMethod
 						   finalize:(void(^)(FBRequest*))finalize {
     NSString * fullURL = [kRestserverBaseURL stringByAppendingString:methodName];
@@ -625,17 +631,19 @@ else {
 }
 
 - (FBRequest*)requestWithMethodName:(NSString *)methodName 
-						 parameters:(NSMutableDictionary *)params 
+						 parameters:(NSDictionary *)params 
 						 completion:(void (^)(FBRequest*,id))completion {
 	return [self requestWithMethodName:methodName
 							parameters:params
 							completion:completion
 								 error:^(FBRequest *request, NSError *error) {
-									 NSLog(@"Error: %@: %@", request, error);
+									 NSLog(@"Error %@: message: %@", request, [[error userInfo] objectForKey:@"error_msg"]);
+									 NSLog(@"Errpr %@: code: %d", request, [error code]);
+									 NSLog(@"Error %@: complete error: %@", request, error);								
 								 }];
 }
 - (FBRequest*)requestWithMethodName:(NSString *)methodName 
-						 parameters:(NSMutableDictionary *)params 
+						 parameters:(NSDictionary *)params 
 						 completion:(void (^)(FBRequest*,id))completion 
 							  error:(void (^)(FBRequest*,NSError *))error {
 
@@ -698,7 +706,7 @@ else {
  *            Returns a pointer to the FBRequest object.
  */
 - (FBRequest*)requestWithGraphPath:(NSString *)graphPath
-						parameters:(NSMutableDictionary *)params
+						parameters:(NSDictionary *)params
 						  finalize:(void(^)(FBRequest*))finalize {
     
     return [self requestWithGraphPath:graphPath
@@ -737,7 +745,7 @@ else {
  *            Returns a pointer to the FBRequest object.
  */
 - (FBRequest*)requestWithGraphPath:(NSString *)graphPath
-						parameters:(NSMutableDictionary *)params
+						parameters:(NSDictionary *)params
                      requestMethod:(NSString *)httpMethod
 						  finalize:(void(^)(FBRequest*))finalize {
     
@@ -749,14 +757,16 @@ else {
 }
 
 - (FBRequest*)requestWithGraphPath:(NSString *)graphPath
-						parameters:(NSMutableDictionary *)params
+						parameters:(NSDictionary *)params
 						completion:(void (^)(FBRequest*,id))completion {
 	
 	return [self requestWithGraphPath:graphPath
 						   parameters:params
 						   completion:completion
 								error:^(FBRequest *request, NSError *error) {
-									NSLog(@"Error: %@: %@", request, error);
+									NSLog(@"Error %@: message: %@", request, [[error userInfo] objectForKey:@"error_msg"]);
+									NSLog(@"Errpr %@: code: %d", request, [error code]);
+									NSLog(@"Error %@: complete error: %@", request, error);								
 								}];
 }
 
@@ -776,7 +786,6 @@ else {
 								 }
 							 }];
 }
-
 
 /**
  * Generate a UI dialog for the request action.
@@ -807,10 +816,10 @@ else {
  *            dialog has completed.
  */
 - (void)dialog:(NSString *)action
-	parameters:(NSMutableDictionary *)params
+	parameters:(NSDictionary *)_params
 	  delegate:(id <FBDialogDelegate>)delegate {
-    
-    
+	NSMutableDictionary *params = (_params ? [NSMutableDictionary dictionaryWithDictionary:_params] : [NSMutableDictionary dictionary]);
+
     NSString *dialogURL = [kDialogBaseURL stringByAppendingString:action];
     [params setObject:@"touch" forKey:@"display"];
     [params setObject:kSDKVersion forKey:@"sdk"];
@@ -865,7 +874,7 @@ else {
         }
         
         _fbDialog = [[FBDialog alloc] initWithURL:dialogURL
-                                           params:params
+									   parameters:params
                                   isViewInvisible:invisible
                              frictionlessSettings:_frictionlessRequestSettings 
                                          delegate:delegate];

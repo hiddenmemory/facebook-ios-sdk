@@ -124,8 +124,6 @@
  * Graph API: Check in a user to the location selected in the previous view.
  */
 - (void)apiGraphUserCheckins:(NSUInteger)index {
-    HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
-
     NSDictionary *coordinates = [NSDictionary dictionaryWithObjectsAndKeys:
                                   [[[myData objectAtIndex:index] objectForKey:@"location"] objectForKey:@"latitude"],@"latitude",
                                   [[[myData objectAtIndex:index] objectForKey:@"location"] objectForKey:@"longitude"],@"longitude",
@@ -137,10 +135,20 @@
                                    coordinatesStr, @"coordinates",
                                    @"", @"message",
                                    nil];
-    [[delegate facebook] requestWithGraphPath:@"me/checkins"
-                                    parameters:params
-                                requestMethod:@"POST"
-                                  delegate:self];
+	
+	[[Facebook shared] requestWithGraphPath:@"me/checkins"
+								 parameters:params
+							  requestMethod:@"POST"
+								   finalize:^(FBRequest *request) {
+									   [request addCompletionHandler:^(FBRequest *request, id result) {
+										   [self showMessage:@"Checked in successfully"];
+										   
+									   }];
+									   
+									   [request addErrorHandler:^(FBRequest *request, NSError *error) {
+										   [self showMessage:@"Oops, something went haywire."];
+									   }];
+								   }];
 }
 
 
@@ -269,37 +277,5 @@
     [tableView deselectRowAtIndexPath:indexPath animated:NO];
 }
 
-#pragma mark - FBRequestDelegate Methods
-/**
- * Called when the Facebook API request has returned a response. This callback
- * gives you access to the raw response. It's called before
- * (void)request:(FBRequest *)request didLoad:(id)result,
- * which is passed the parsed response object.
- */
-- (void)request:(FBRequest *)request didReceiveResponse:(NSURLResponse *)response {
-    //NSLog(@"received response");
-}
-
-/**
- * Called when a request returns and its response has been parsed into
- * an object. The resulting object may be a dictionary, an array, a string,
- * or a number, depending on the format of the API response. If you need access
- * to the raw response, use:
- *
- * (void)request:(FBRequest *)request
- *      didReceiveResponse:(NSURLResponse *)response
- */
-- (void)request:(FBRequest *)request didLoad:(id)result {
-    [self showMessage:@"Checked in successfully"];
-}
-
-/**
- * Called when an error prevents the Facebook API request from completing
- * successfully.
- */
-- (void)request:(FBRequest *)request didFailWithError:(NSError *)error {
-    NSLog(@"Error message: %@", [[error userInfo] objectForKey:@"error_msg"]);
-    [self showMessage:@"Oops, something went haywire."];
-}
 
 @end

@@ -18,12 +18,12 @@
 #import "APICallsViewController.h"
 #import "FBConnect.h"
 
-@interface RootViewController : UIViewController
-<FBRequestDelegate,
-FBDialogDelegate,
-FBSessionDelegate,
-UITableViewDataSource,
-UITableViewDelegate>{
+@interface RootViewController : UIViewController <
+	FBSessionDelegate,
+	FBDialogDelegate,
+	UITableViewDataSource,
+	UITableViewDelegate
+> {
     NSArray *permissions;
 
     UIImageView *backgroundImageView;

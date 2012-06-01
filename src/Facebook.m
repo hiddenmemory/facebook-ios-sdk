@@ -165,6 +165,9 @@ else {
 		logoutHandlers = [NSMutableArray array];
 		sessionInvalidHandlers = [NSMutableArray array];
 		
+		self.requestStarted = ^{};
+		self.requestFinished = ^{};
+		
 		[self loadAccessToken];
     }
     return self;

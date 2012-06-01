@@ -143,6 +143,20 @@
     return YES;
 }
 
+- (void)viewWillAppear:(BOOL)animated {
+	[super viewWillAppear:animated];
+	
+	[Facebook shared].requestStarted = ^{ [self showActivityIndicator]; };
+	[Facebook shared].requestFinished = ^{ [self hideActivityIndicator]; };
+}
+
+- (void)viewWillAppear:(BOOL)animated {
+	[super viewWillAppear:animated];
+	
+	[Facebook shared].requestStarted = ^{};
+	[Facebook shared].requestFinished = ^{};
+}
+
 #pragma mark - Private Helper Methods
 /*
  * This method is called to store the check-in permissions

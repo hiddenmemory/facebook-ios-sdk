@@ -527,7 +527,7 @@ else {
         
         BOOL userDidCancel =
         !errorCode && (!errorReason || [errorReason isEqualToString:@"access_denied"]);
-        [self fbDialogNotLogin:userDidCancel];
+        [self facebookbDialogDidNotLogin:userDidCancel];
         return YES;
     }
     
@@ -541,7 +541,7 @@ else {
         }
     }
     
-    [self fbDialogLogin:accessToken expirationDate:expirationDate];
+    [self facebookDialogDidLogin:accessToken expirationDate:expirationDate];
     return YES;
 }
 
@@ -915,7 +915,7 @@ else {
 		handler(self, state);
 	}];
 }
-- (void)fbDialogLogin:(NSString *)token expirationDate:(NSDate *)expirationDate {
+- (void)facebookDialogDidLogin:(NSString *)token expirationDate:(NSDate *)expirationDate {
     self.accessToken = token;
     self.expirationDate = expirationDate;
     _lastAccessTokenUpdate = [NSDate date];
@@ -929,7 +929,7 @@ else {
 /**
  * Did not login call the not login delegate
  */
-- (void)fbDialogNotLogin:(BOOL)cancelled {
+- (void)facebookbDialogDidNotLogin:(BOOL)cancelled {
 	[self _applyLoginHandlers:(cancelled ? FacebookLoginCancelled : FacebookLoginFailed)];
 }
 

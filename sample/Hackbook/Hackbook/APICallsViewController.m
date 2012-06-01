@@ -1149,7 +1149,7 @@
  * instead of dialogDidComplete: to properly handle successful shares/sends
  * that return ID data back.
  */
-- (void)dialogCompleteWithUrl:(NSURL *)url {
+- (void)dialog:(FBDialog*)dialog didCompleteWithURL:(NSURL *)url {
     if (![url query]) {
         NSLog(@"User canceled dialog or there was an error");
         return;
@@ -1191,7 +1191,7 @@
     }
 }
 
-- (void)dialogDidNotComplete:(FBDialog *)dialog {
+- (void)dialogWasCancelled:(FBDialog *)dialog {
     NSLog(@"Dialog dismissed.");
 }
 

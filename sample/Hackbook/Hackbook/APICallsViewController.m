@@ -47,21 +47,8 @@
 }
 
 - (void)dealloc {
-    [apiTableView release];
-    [apiMenuItems release];
-    [apiHeader release];
-    [savedAPIResult release];
-
     [locationManager stopUpdatingLocation];
     locationManager.delegate = nil;
-    [locationManager release];
-
-    [mostRecentLocation release];
-    [activityIndicator release];
-    [messageLabel release];
-    [messageView release];
-
-    [super dealloc];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -71,6 +58,20 @@
     // Release any cached data, images, etc that aren't in use.
 }
 
+- (NSString*)stringWithObject:(id)source {
+	NSError *error = nil;
+	NSString *result = [[NSString alloc] initWithData:[NSJSONSerialization dataWithJSONObject:source 
+																					  options:0
+																						error:&error]
+											 encoding:NSUTF8StringEncoding];
+	if( error ) {
+		NSLog(@"Error serializing object: %@", source);
+		return nil;
+	}
+	
+	return result;
+}
+
 #pragma mark - View lifecycle
 
 - (void)loadView {
@@ -78,19 +79,18 @@
                                                   mainScreen].applicationFrame];
     [view setBackgroundColor:[UIColor whiteColor]];
     self.view = view;
-    [view release];
 
     HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
     NSDictionary *apiData = [[[delegate apiData] apiConfigData] objectAtIndex:childIndex];
     self.navigationItem.title = [apiData objectForKey:@"title"];
-    apiMenuItems = [[NSArray arrayWithArray:[apiData objectForKey:@"menu"]] retain];
-    apiHeader = [[apiData objectForKey:@"description"] retain];
+    apiMenuItems = [NSArray arrayWithArray:[apiData objectForKey:@"menu"]];
+    apiHeader = [apiData objectForKey:@"description"];
 
     self.navigationItem.backBarButtonItem =
-    [[[UIBarButtonItem alloc] initWithTitle:@"Back"
+    [[UIBarButtonItem alloc] initWithTitle:@"Back"
                                       style:UIBarButtonItemStyleBordered
                                      target:nil
-                                     action:nil] autorelease];
+                                     action:nil];
 
     // Main Menu Table
     apiTableView = [[UITableView alloc] initWithFrame:self.view.bounds
@@ -129,7 +129,6 @@
                                                   alpha:0.6];
     [messageInsetView addSubview:messageLabel];
     [messageView addSubview:messageInsetView];
-    [messageInsetView release];
     messageView.hidden = YES;
     [self.view addSubview:messageView];
 }
@@ -259,7 +258,7 @@
  */
 - (NSDictionary *)parseURLParams:(NSString *)query {
 	NSArray *pairs = [query componentsSeparatedByString:@"&"];
-	NSMutableDictionary *params = [[[NSMutableDictionary alloc] init] autorelease];
+	NSMutableDictionary *params = [NSMutableDictionary dictionary];
 	for (NSString *pair in pairs) {
 		NSArray *kv = [pair componentsSeparatedByString:@"="];
 		NSString *val =
@@ -299,7 +298,6 @@
     HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
     NSArray *checkinPermissions = [[NSArray alloc] initWithObjects:@"user_checkins", @"publish_checkins", nil];
     [[delegate facebook] authorize:checkinPermissions];
-    [checkinPermissions release];
 }
 
 /*
@@ -341,7 +339,6 @@
     HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
     NSArray *extendedPermissions = [[NSArray alloc] initWithObjects:@"user_likes", nil];
     [[delegate facebook] authorize:extendedPermissions];
-    [extendedPermissions release];
 }
 
 /**
@@ -355,12 +352,11 @@
  */
 - (void)apiDialogFeedUser {
     currentAPICall = kDialogFeedUser;
-    SBJSON *jsonWriter = [[SBJSON new] autorelease];
-
+	
     // The action links to be shown with the post in the feed
     NSArray* actionLinks = [NSArray arrayWithObjects:[NSDictionary dictionaryWithObjectsAndKeys:
                                                            @"Get Started",@"name",@"http://m.facebook.com/apps/hackbookios/",@"link", nil], nil];
-    NSString *actionLinksStr = [jsonWriter stringWithObject:actionLinks];
+    NSString *actionLinksStr = [self stringWithObject:actionLinks];
     // Dialog parameters
     NSMutableDictionary *params = [NSMutableDictionary dictionaryWithObjectsAndKeys:
                                    @"I'm using the Hackbook for iOS app", @"name",
@@ -393,11 +389,10 @@
  */
 - (void)apiDialogFeedFriend:(NSString *)friendID {
     currentAPICall = kDialogFeedFriend;
-    SBJSON *jsonWriter = [[SBJSON new] autorelease];
 
     NSArray* actionLinks = [NSArray arrayWithObjects:[NSDictionary dictionaryWithObjectsAndKeys:
                                                            @"Get Started",@"name",@"http://m.facebook.com/apps/hackbookios/",@"link", nil], nil];
-    NSString *actionLinksStr = [jsonWriter stringWithObject:actionLinks];
+    NSString *actionLinksStr = [self stringWithObject:actionLinks];
     // The "to" parameter targets the post to a friend
     NSMutableDictionary *params = [NSMutableDictionary dictionaryWithObjectsAndKeys:
                                    friendID, @"to",
@@ -427,13 +422,12 @@
  */
 - (void)apiDialogRequestsSendToMany {
     currentAPICall = kDialogRequestsSendToMany;
-    SBJSON *jsonWriter = [[SBJSON new] autorelease];
     NSDictionary *gift = [NSDictionary dictionaryWithObjectsAndKeys:
                                  @"5", @"social_karma",
                                  @"1", @"badge_of_awesomeness",
                                  nil];
 
-    NSString *giftStr = [jsonWriter stringWithObject:gift];
+    NSString *giftStr = [self stringWithObject:gift];
     NSMutableDictionary* params = [NSMutableDictionary dictionaryWithObjectsAndKeys:
                                    @"Learn how to make your iOS apps social.",  @"message",
                                    @"Check this out", @"notification_text",
@@ -559,7 +553,6 @@
                               otherButtonTitles:nil,
                               nil];
     [alertView show];
-    [alertView release];
 }
 
 /*
@@ -629,7 +622,7 @@
                                    centerLocation, @"center",
                                    @"1000",  @"distance",
                                    nil];
-    [centerLocation release];
+
     [[delegate facebook] requestWithGraphPath:@"search" andParams:params andDelegate:self];
 }
 
@@ -655,10 +648,9 @@
     if (![CLLocationManager locationServicesEnabled]) {
         UIAlertView *servicesDisabledAlert = [[UIAlertView alloc] initWithTitle:@"Location Services Disabled" message:@"You currently have all location services for this device disabled. If you proceed, you will be asked to confirm whether location services should be reenabled." delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
         [servicesDisabledAlert show];
-        [servicesDisabledAlert release];
     }
     // Start the location manager
-    self.locationManager = [[[CLLocationManager alloc] init] autorelease];
+    self.locationManager = [[CLLocationManager alloc] init];
     locationManager.delegate = self;
     locationManager.desiredAccuracy = kCLLocationAccuracyBest;
     [locationManager startUpdatingLocation];
@@ -698,7 +690,6 @@
     NSMutableDictionary *params = [NSMutableDictionary dictionaryWithObjectsAndKeys:
                                    img, @"picture",
                                    nil];
-    [img release];
     
     [[delegate facebook] requestWithGraphPath:@"me/photos"
                           andParams:params
@@ -732,8 +723,7 @@
 #pragma mark - UITableViewDatasource and UITableViewDelegate Methods
 - (UIView *)tableView:(UITableView *)tableView viewForFooterInSection:(NSInteger)section {
     if (section == 0) {
-        UITextView *headerTextView = [[[UITextView alloc]
-                     initWithFrame:CGRectMake(10, 10, tableView.bounds.size.width, 60.0)] autorelease];
+        UITextView *headerTextView = [[UITextView alloc] initWithFrame:CGRectMake(10, 10, tableView.bounds.size.width, 60.0)];
         headerTextView.textAlignment = UITextAlignmentLeft;
         headerTextView.backgroundColor = [UIColor colorWithRed:0.9
                                                          green:0.9
@@ -809,18 +799,18 @@
     static NSString *CellIdentifier = @"Cell";
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
     if (cell == nil) {
-        cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier] autorelease];
+        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
         cell.selectionStyle = UITableViewCellSelectionStyleNone;
 
         // Initialize API title UILabel
-        textLabel = [[[UILabel alloc] initWithFrame:CGRectZero] autorelease];
+        textLabel = [[UILabel alloc] initWithFrame:CGRectZero];
         textLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleRightMargin;
         textLabel.tag = TITLE_TAG;
         textLabel.font = cellFont;
         [cell.contentView addSubview:textLabel];
 
         // Initialize API description UILabel
-        detailTextLabel = [[[UILabel alloc] initWithFrame:CGRectZero] autorelease];
+        detailTextLabel = [[UILabel alloc] initWithFrame:CGRectZero];
         detailTextLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleRightMargin;
         detailTextLabel.tag = DESCRIPTION_TAG;
         detailTextLabel.font = detailCellFont;
@@ -979,7 +969,6 @@
         case kAPIGetAppUsersFriendsNotUsing:
         {
             // Save friend results
-            [savedAPIResult release];
             savedAPIResult = nil;
             // Many results
             if ([result isKindOfClass:[NSArray class]]) {
@@ -1008,8 +997,6 @@
             } else {
                 [self showMessage:@"None of your friends are using the app."];
             }
-            
-            [friendsWithApp release];
             break;
         }
         case kAPIFriendsForDialogRequests:
@@ -1037,7 +1024,6 @@
                 } else {
                     [self showMessage:@"All your friends are using the app."];
                 }
-                [friendsWithoutApp release];
             }
             break;
         }
@@ -1073,9 +1059,6 @@
                                                 data:userData
                                                 action:@""];
             [self.navigationController pushViewController:controller animated:YES];
-            [controller release];
-            [userData release];
-            [nameID release];
             break;
         }
         case kAPIGraphUserFriends:
@@ -1091,11 +1074,9 @@
                                                         initWithTitle:@"Friends"
                                                         data:friends action:@""];
                 [self.navigationController pushViewController:controller animated:YES];
-                [controller release];
             } else {
                 [self showMessage:@"You have no friends."];
             }
-            [friends release];
             break;
         }
         case kAPIGraphUserCheckins:
@@ -1119,8 +1100,6 @@
                                                 data:places
                                                 action:@"recentcheckins"];
             [self.navigationController pushViewController:controller animated:YES];
-            [controller release];
-            [places release];
             break;
         }
         case kAPIGraphSearchPlace:
@@ -1136,8 +1115,6 @@
                                                 data:places
                                                 action:@"places"];
             [self.navigationController pushViewController:controller animated:YES];
-            [controller release];
-            [places release];
             break;
         }
         case kAPIGraphUserPhotosPost:
@@ -1197,7 +1174,7 @@
             // Successful requests return one or more request_ids.
             // Get any request IDs, will be in the URL in the form
             // request_ids[0]=1001316103543&request_ids[1]=10100303657380180
-            NSMutableArray *requestIDs = [[[NSMutableArray alloc] init] autorelease];
+            NSMutableArray *requestIDs = [[NSMutableArray alloc] init];
             for (NSString *paramKey in params) {
                 if ([paramKey hasPrefix:@"request_ids"]) {
                     [requestIDs addObject:[params objectForKey:paramKey]];

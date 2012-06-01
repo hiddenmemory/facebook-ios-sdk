@@ -878,6 +878,7 @@
 							  requestMethod:@"POST"
 								   finalize:^(FBRequest *request) {
 									  [request addCompletionHandler:^(FBRequest *request, id result) {
+										  [self hideActivityIndicator];
 										  [self showMessage:@"Photo uploaded successfully."];
 									  }];
 								   }];
@@ -905,6 +906,7 @@
 							  requestMethod:@"POST"
 								   finalize:^(FBRequest *request) {
 									   [request addCompletionHandler:^(FBRequest *request, id result) {
+										   [self hideActivityIndicator];
 										   [self showMessage:@"Video uploaded successfully."];
 									   }];
 								   }];

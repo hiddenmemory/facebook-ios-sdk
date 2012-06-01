@@ -17,10 +17,10 @@
 #import <UIKit/UIKit.h>
 #import "FBConnect.h"
 
-@interface APIResultsViewController : UIViewController
-<FBRequestDelegate,
-UITableViewDataSource,
-UITableViewDelegate>{
+@interface APIResultsViewController : UIViewController <
+	UITableViewDataSource,
+	UITableViewDelegate
+> {
     NSMutableArray *myData;
     NSString *myAction;
     UILabel *messageLabel;

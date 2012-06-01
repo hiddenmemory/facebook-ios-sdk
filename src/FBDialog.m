@@ -582,14 +582,14 @@ params   = _params;
 }
 
 - (id)initWithURL: (NSString *) serverURL
-           params: (NSMutableDictionary *) params
+	   parameters: (NSDictionary *) params
   isViewInvisible: (BOOL)isViewInvisible
-     frictionlessSettings: (FBFrictionlessRequestSettings*) frictionlessSettings
+frictionlessSettings: (FBFrictionlessRequestSettings*) frictionlessSettings
          delegate: (id <FBDialogDelegate>) delegate {
     
     self = [self init];
     _serverURL = serverURL;
-    _params = params;    
+    _params = (params ? [NSMutableDictionary dictionaryWithDictionary:params] : [NSMutableDictionary dictionary]);    
     _delegate = delegate;
     _isViewInvisible = isViewInvisible;
     _frictionlessSettings = frictionlessSettings;
@@ -640,8 +640,8 @@ params   = _params;
             [_delegate dialogDidComplete:self];
         }
     } else {
-        if ([_delegate respondsToSelector:@selector(dialogDidNotComplete:)]) {
-            [_delegate dialogDidNotComplete:self];
+        if ([_delegate respondsToSelector:@selector(dialogWasCancelled:)]) {
+            [_delegate dialogWasCancelled:self];
         }
     }
     
@@ -664,15 +664,15 @@ params   = _params;
 
 - (void)dialogDidSucceed:(NSURL *)url {
     
-    if ([_delegate respondsToSelector:@selector(dialogCompleteWithUrl:)]) {
-        [_delegate dialogCompleteWithUrl:url];
+    if ([_delegate respondsToSelector:@selector(dialog:didCompleteWithURL:)]) {
+        [_delegate dialog:self didCompleteWithURL:url];
     }
     [self dismissWithSuccess:YES animated:YES];
 }
 
 - (void)dialogDidCancel:(NSURL *)url {
-    if ([_delegate respondsToSelector:@selector(dialogDidNotCompleteWithUrl:)]) {
-        [_delegate dialogDidNotCompleteWithUrl:url];
+    if ([_delegate respondsToSelector:@selector(dialog:didNotCompleteWithURL:)]) {
+        [_delegate dialog:self didNotCompleteWithURL:url];
     }
     [self dismissWithSuccess:NO animated:YES];
 }

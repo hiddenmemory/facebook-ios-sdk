@@ -44,12 +44,12 @@ typedef enum apiCall {
     kAPIGraphUserVideosPost,
 } apiCall;
 
-@interface APICallsViewController : UIViewController
-<FBRequestDelegate,
-FBDialogDelegate,
-UITableViewDataSource,
-UITableViewDelegate,
-CLLocationManagerDelegate>{
+@interface APICallsViewController : UIViewController < 
+	FBDialogDelegate,
+	UITableViewDataSource,
+	UITableViewDelegate,
+	CLLocationManagerDelegate
+> {
     int currentAPICall;
     NSUInteger childIndex;
     UITableView *apiTableView;

@@ -54,9 +54,9 @@
 - (NSString *) getStringFromUrl: (NSString*) url needle:(NSString *) needle;
 
 - (id)initWithURL: (NSString *) loadingURL
-           params: (NSMutableDictionary *) params
+	   parameters: (NSDictionary *) params
   isViewInvisible: (BOOL) isViewInvisible
-    frictionlessSettings: (FBFrictionlessRequestSettings *) frictionlessSettings
+frictionlessSettings: (FBFrictionlessRequestSettings *) frictionlessSettings
          delegate: (id <FBDialogDelegate>) delegate;
 
 /**
@@ -131,17 +131,17 @@
 /**
  * Called when the dialog succeeds with a returning url.
  */
-- (void)dialogCompleteWithUrl:(NSURL *)url;
+- (void)dialog:(FBDialog*)dialog didCompleteWithURL:(NSURL *)url;
 
 /**
  * Called when the dialog get canceled by the user.
  */
-- (void)dialogDidNotCompleteWithUrl:(NSURL *)url;
+- (void)dialog:(FBDialog*)dialog didNotCompleteWithURL:(NSURL *)url;
 
 /**
  * Called when the dialog is cancelled and is about to be dismissed.
  */
-- (void)dialogDidNotComplete:(FBDialog *)dialog;
+- (void)dialogWasCancelled:(FBDialog *)dialog;
 
 /**
  * Called when dialog failed to load due to an error.

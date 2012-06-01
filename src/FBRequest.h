@@ -32,9 +32,6 @@ typedef NSUInteger FBRequestState;
  */
 @interface FBRequest : NSObject 
 
-
-@property(nonatomic,weak) id<FBRequestDelegate> delegate;
-
 /**
  * The URL which will be contacted to execute the request.
  */
@@ -62,71 +59,26 @@ typedef NSUInteger FBRequestState;
  */
 @property(weak, nonatomic) NSError* error;
 
-
 + (NSString*)serializeURL:(NSString *)baseUrl
                    params:(NSDictionary *)params;
 
 + (NSString*)serializeURL:(NSString *)baseUrl
                    params:(NSDictionary *)params
-               httpMethod:(NSString *)httpMethod;
+			requestMethod:(NSString *)httpMethod;
 
-+ (FBRequest*)getRequestWithParams:(NSMutableDictionary *) params
-                        httpMethod:(NSString *) httpMethod
-                          delegate:(id<FBRequestDelegate>)delegate
-                        requestURL:(NSString *) url;
++ (FBRequest*)getRequestWithParameters:(NSMutableDictionary *) params
+						 requestMethod:(NSString *) httpMethod
+							requestURL:(NSString *) url;
+
 - (BOOL) loading;
-
 - (void) connect;
+
+- (void)addCompletionHandler:(void(^)(FBRequest*request,id result))completionHandler;
+- (void)addErrorHandler:(void(^)(FBRequest*request,NSError *error))errorHandler;
+- (void)addLoadHandler:(void(^)(FBRequest*request))loadHandler;
+- (void)addRawHandler:(void(^)(FBRequest*request,NSData*raw))rawHandler;
+- (void)addResponseHandler:(void(^)(FBRequest*request,NSURLResponse*))responseHandler;
 
 @end
 
 ////////////////////////////////////////////////////////////////////////////////
-
-/*
- *Your application should implement this delegate
- */
-@protocol FBRequestDelegate <NSObject>
-
-@optional
-
-/**
- * Called just before the request is sent to the server.
- */
-- (void)requestLoading:(FBRequest *)request;
-
-/**
- * Called when the Facebook API request has returned a response.
- *
- * This callback gives you access to the raw response. It's called before
- * (void)request:(FBRequest *)request didLoad:(id)result,
- * which is passed the parsed response object.
- */
-- (void)request:(FBRequest *)request didReceiveResponse:(NSURLResponse *)response;
-
-/**
- * Called when an error prevents the request from completing successfully.
- */
-- (void)request:(FBRequest *)request didFailWithError:(NSError *)error;
-
-/**
- * Called when a request returns and its response has been parsed into
- * an object.
- *
- * The resulting object may be a dictionary, an array or a string, depending
- * on the format of the API response. If you need access to the raw response,
- * use:
- *
- * (void)request:(FBRequest *)request
- *      didReceiveResponse:(NSURLResponse *)response
- */
-- (void)request:(FBRequest *)request didLoad:(id)result;
-
-/**
- * Called when a request returns a response.
- *
- * The result object is the raw response from the server of type NSData
- */
-- (void)request:(FBRequest *)request didLoadRawResponse:(NSData *)data;
-
-@end
-

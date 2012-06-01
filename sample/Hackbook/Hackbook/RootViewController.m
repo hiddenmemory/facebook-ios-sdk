@@ -47,16 +47,70 @@
     NSMutableDictionary *params = [NSMutableDictionary dictionaryWithObjectsAndKeys:
                                    @"SELECT uid, name, pic FROM user WHERE uid=me()", @"query",
                                    nil];
-    HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
-    [[delegate facebook] requestWithMethodName:@"fql.query"
-                                     andParams:params
-                                 andHttpMethod:@"POST"
-                                   andDelegate:self];
+	
+	[[Facebook shared] requestWithMethodName:@"fql.query"
+								  parameters:params
+							   requestMethod:@"POST"
+									finalize:^(FBRequest *request) {
+										[request addCompletionHandler:^(FBRequest *request, id result) {
+											if ([result isKindOfClass:[NSArray class]]) {
+												result = [result objectAtIndex:0];
+											}
+											// This callback can be a result of getting the user's basic
+											// information or getting the user's permissions.
+											if ([result objectForKey:@"name"]) {
+												// If basic information callback, set the UI objects to
+												// display this.
+												nameLabel.text = [result objectForKey:@"name"];
+												// Get the profile image
+												UIImage *image = [UIImage imageWithData:[NSData dataWithContentsOfURL:[NSURL URLWithString:[result objectForKey:@"pic"]]]];
+												
+												// Resize, crop the image to make sure it is square and renders
+												// well on Retina display
+												float ratio;
+												float delta;
+												float px = 100; // Double the pixels of the UIImageView (to render on Retina)
+												CGPoint offset;
+												CGSize size = image.size;
+												if (size.width > size.height) {
+													ratio = px / size.width;
+													delta = (ratio*size.width - ratio*size.height);
+													offset = CGPointMake(delta/2, 0);
+												} else {
+													ratio = px / size.height;
+													delta = (ratio*size.height - ratio*size.width);
+													offset = CGPointMake(0, delta/2);
+												}
+												CGRect clipRect = CGRectMake(-offset.x, -offset.y,
+																			 (ratio * size.width) + delta,
+																			 (ratio * size.height) + delta);
+												UIGraphicsBeginImageContext(CGSizeMake(px, px));
+												UIRectClip(clipRect);
+												[image drawInRect:clipRect];
+												UIImage *imgThumb = UIGraphicsGetImageFromCurrentImageContext();
+												UIGraphicsEndImageContext();
+												[profilePhotoImageView setImage:imgThumb];
+												
+												[self apiGraphUserPermissions];
+											}
+											else {
+												NSLog(@"Something went wrong.");
+											}
+										}];
+									}];
 }
 
 - (void)apiGraphUserPermissions {
-    HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
-    [[delegate facebook] requestWithGraphPath:@"me/permissions" andDelegate:self];
+	[[Facebook shared] requestWithGraphPath:@"me/permissions"
+								   finalize:^(FBRequest *request) {
+									   [request addCompletionHandler:^(FBRequest *request, id result) {
+										   if ([result isKindOfClass:[NSArray class]]) {
+											   result = [result objectAtIndex:0];
+										   }
+										   HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
+										   [delegate setUserPermissions:[[result objectForKey:@"data"] objectAtIndex:0]];
+									   }];
+								   }];
 }
 
 
@@ -294,46 +348,39 @@
 }
 
 #pragma mark - FBSessionDelegate Methods
+
 /**
  * Called when the user has logged in successfully.
  */
-- (void)fbDidLogin {
+- (void)facebookDidLogin:(Facebook*)facebook {
     [self showLoggedIn];
         
     [pendingApiCallsController userDidGrantPermission];
 }
 
--(void)fbDidExtendToken:(NSString *)accessToken expiresAt:(NSDate *)expiresAt {
+-(void)facebook:(Facebook*)facebook didExtendToken:(NSString *)accessToken expiresAt:(NSDate *)expiresAt {
     NSLog(@"token extended");
 }
 
 /**
  * Called when the user canceled the authorization dialog.
  */
--(void)fbDidNotLogin:(BOOL)cancelled {
+-(void)facebook:(Facebook*)facebook didNotLogin:(BOOL)cancelled {
     [pendingApiCallsController userDidNotGrantPermission];
 }
 
 /**
  * Called when the request logout has succeeded.
  */
-- (void)fbDidLogout {
-    pendingApiCallsController = nil;
-    
-    // Remove saved authorization information if it exists and it is
-    // ok to clear it (logout, session invalid, app unauthorized)
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    [defaults removeObjectForKey:@"FBAccessTokenKey"];
-    [defaults removeObjectForKey:@"FBExpirationDateKey"];
-    [defaults synchronize];
-    
+- (void)facebookDidLogout:(Facebook*)facebook {
+    pendingApiCallsController = nil;    
     [self showLoggedOut];
 }
 
 /**
  * Called when the session has expired.
  */
-- (void)fbSessionInvalidated {
+- (void)facebookSessionInvalidated:(Facebook*)facebook {
     UIAlertView *alertView = [[UIAlertView alloc]
                               initWithTitle:@"Auth Exception"
                               message:@"Your session has expired."
@@ -342,87 +389,7 @@
                               otherButtonTitles:nil,
                               nil];
     [alertView show];
-    [self fbDidLogout];
-}
-
-#pragma mark - FBRequestDelegate Methods
-/**
- * Called when the Facebook API request has returned a response.
- *
- * This callback gives you access to the raw response. It's called before
- * (void)request:(FBRequest *)request didLoad:(id)result,
- * which is passed the parsed response object.
- */
-- (void)request:(FBRequest *)request didReceiveResponse:(NSURLResponse *)response {
-    //NSLog(@"received response");
-}
-
-/**
- * Called when a request returns and its response has been parsed into
- * an object.
- *
- * The resulting object may be a dictionary, an array or a string, depending
- * on the format of the API response. If you need access to the raw response,
- * use:
- *
- * (void)request:(FBRequest *)request
- *      didReceiveResponse:(NSURLResponse *)response
- */
-- (void)request:(FBRequest *)request didLoad:(id)result {
-    if ([result isKindOfClass:[NSArray class]]) {
-        result = [result objectAtIndex:0];
-    }
-    // This callback can be a result of getting the user's basic
-    // information or getting the user's permissions.
-    if ([result objectForKey:@"name"]) {
-        // If basic information callback, set the UI objects to
-        // display this.
-        nameLabel.text = [result objectForKey:@"name"];
-        // Get the profile image
-        UIImage *image = [UIImage imageWithData:[NSData dataWithContentsOfURL:[NSURL URLWithString:[result objectForKey:@"pic"]]]];
-        
-        // Resize, crop the image to make sure it is square and renders
-        // well on Retina display
-        float ratio;
-        float delta;
-        float px = 100; // Double the pixels of the UIImageView (to render on Retina)
-        CGPoint offset;
-        CGSize size = image.size;
-        if (size.width > size.height) {
-            ratio = px / size.width;
-            delta = (ratio*size.width - ratio*size.height);
-            offset = CGPointMake(delta/2, 0);
-        } else {
-            ratio = px / size.height;
-            delta = (ratio*size.height - ratio*size.width);
-            offset = CGPointMake(0, delta/2);
-        }
-        CGRect clipRect = CGRectMake(-offset.x, -offset.y,
-                                     (ratio * size.width) + delta,
-                                     (ratio * size.height) + delta);
-        UIGraphicsBeginImageContext(CGSizeMake(px, px));
-        UIRectClip(clipRect);
-        [image drawInRect:clipRect];
-        UIImage *imgThumb = UIGraphicsGetImageFromCurrentImageContext();
-        UIGraphicsEndImageContext();
-        [profilePhotoImageView setImage:imgThumb];
-        
-        [self apiGraphUserPermissions];
-    } else {
-        // Processing permissions information
-        HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
-        [delegate setUserPermissions:[[result objectForKey:@"data"] objectAtIndex:0]];
-    }
-}
-
-/**
- * Called when an error prevents the Facebook API request from completing
- * successfully.
- */
-- (void)request:(FBRequest *)request didFailWithError:(NSError *)error {
-    NSLog(@"Err message: %@", [[error userInfo] objectForKey:@"error_msg"]);
-    NSLog(@"Err code: %d", [error code]);
-	NSLog(@"Complete error: %@", error);
+    [self facebookDidLogout:facebook];
 }
 
 @end

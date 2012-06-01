@@ -50,9 +50,8 @@ static NSString* kAppId = @"210849718975311";
     
     // Initialize Facebook
     facebook = [Facebook shared:kAppId];
-    
-	facebook.sessionDelegate = rootViewController;
-	    
+	facebook.delegate = rootViewController;
+	
     // Initialize API data (for views, etc.)
     apiData = [[DataSet alloc] init];
     

@@ -23,7 +23,6 @@
 @interface FBFrictionlessRequestSettings ()
 
 @property (weak, weak, readwrite) NSArray *     allowedRecipients;
-@property (weak, weak, readwrite) FBRequest*    activeRequest;
 
 @end
 
@@ -53,17 +52,24 @@
 
 - (void)reloadRecipientCacheWithFacebook:(Facebook *)facebook {
     // request the list of frictionless recipients from the server
-    id request = [facebook requestWithGraphPath:@"me/apprequestformerrecipients"
-                                    andDelegate:self];
-    if (request) {
-        self.activeRequest = request;
-    }    
+   [facebook requestWithGraphPath:@"me/apprequestformerrecipients"
+                                    finalize:^(FBRequest *request) {
+										[request addCompletionHandler:^(FBRequest *request, id result) {
+											int items = [[result objectForKey: @"data"] count];
+											NSMutableArray* recipients = [[NSMutableArray alloc] initWithCapacity: items];
+											
+											for (int i = 0; i < items; i++) {
+												[recipients addObject: [[[result objectForKey: @"data"] 
+																		 objectAtIndex: i] 
+																		objectForKey: @"recipient_id"]] ;
+											}
+											
+											self.allowedRecipients = recipients; 
+										}];
+									}];
 }
 
 - (void)updateRecipientCacheWithRecipients:(NSArray*)ids {
-    // if setting recipients directly, no need to complete pending request
-    self.activeRequest = nil;
-    
     if (ids == nil) {
         self.allowedRecipients = [[NSArray alloc] init];
     } else {
@@ -113,45 +119,9 @@
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-// FBRequestDelegate
-
-- (void)request:(FBRequest *)request
-        didLoad:(id)result {
-
-    // a little request bookkeeping
-    self.activeRequest = nil;
-
-    int items = [[result objectForKey: @"data"] count];
-    NSMutableArray* recipients = [[NSMutableArray alloc] initWithCapacity: items];
-        
-    for (int i = 0; i < items; i++) {
-        [recipients addObject: [[[result objectForKey: @"data"] 
-                                 objectAtIndex: i] 
-                                objectForKey: @"recipient_id"]] ;
-    }
-        
-    self.allowedRecipients = recipients;        
-}
-
-- (void)request:(FBRequest *)request didFailWithError:(NSError *)error {
-    // if the request to load the frictionless recipients fails, proceed without updating 
-    // the recipients cache; the cache may become invalid due to a failed update or other reasons
-    // (e.g. simultaneous use of the same app from multiple devices), in the case of an invalid
-    // cache, a request dialog may either appear a moment later than it usually would, or appear
-    // briefly when it should not appear at all; in either case the correct request behavior 
-    // occurs, and the cache is updated
-    self.activeRequest = nil;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// NSObject
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
 // private helpers
 // 
 
 @synthesize allowedRecipients = _allowedRecipients;
-@synthesize activeRequest = _activeRequest;
 
 @end

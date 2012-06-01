@@ -28,15 +28,20 @@ static const NSTimeInterval kTimeoutInterval = 180.0;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-@interface FBRequest ()
+@interface FBRequest () {
+	NSMutableArray *completionHandlers;
+	NSMutableArray *errorHandlers;
+	NSMutableArray *loadHandlers;
+	NSMutableArray *rawHandlers;
+	NSMutableArray *responseHandlers;
+}
 @property (nonatomic,readwrite) FBRequestState state;
 @property (nonatomic,readwrite) BOOL sessionDidExpire;
 @end
 
 @implementation FBRequest
 
-@synthesize delegate = _delegate,
-            url = _url,
+@synthesize url = _url,
             httpMethod = _httpMethod,
             params = _params,
             connection = _connection,
@@ -48,13 +53,11 @@ static const NSTimeInterval kTimeoutInterval = 180.0;
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // class public
 
-+ (FBRequest *)getRequestWithParams:(NSMutableDictionary *) params
-                         httpMethod:(NSString *) httpMethod
-                           delegate:(id<FBRequestDelegate>) delegate
++ (FBRequest *)getRequestWithParameters:(NSMutableDictionary *) params
+                         requestMethod:(NSString *) httpMethod
                          requestURL:(NSString *) url {
     
     FBRequest* request = [[FBRequest alloc] init];
-    request.delegate = delegate;
     request.url = url;
     request.httpMethod = httpMethod;
     request.params = params;
@@ -69,7 +72,7 @@ static const NSTimeInterval kTimeoutInterval = 180.0;
 
 + (NSString *)serializeURL:(NSString *)baseUrl
                     params:(NSDictionary *)params {
-    return [self serializeURL:baseUrl params:params httpMethod:@"GET"];
+    return [self serializeURL:baseUrl params:params requestMethod:@"GET"];
 }
 
 /**
@@ -77,7 +80,7 @@ static const NSTimeInterval kTimeoutInterval = 180.0;
  */
 + (NSString*)serializeURL:(NSString *)baseUrl
                    params:(NSDictionary *)params
-               httpMethod:(NSString *)httpMethod {
+               requestMethod:(NSString *)httpMethod {
     
     NSURL* parsedURL = [NSURL URLWithString:baseUrl];
     NSString* queryPrefix = parsedURL.query ? @"&" : @"?";
@@ -104,6 +107,22 @@ static const NSTimeInterval kTimeoutInterval = 180.0;
     NSString* query = [pairs componentsJoinedByString:@"&"];
     
     return [NSString stringWithFormat:@"%@%@%@", baseUrl, queryPrefix, query];
+}
+
+- (void)addCompletionHandler:(void(^)(FBRequest*,id))completionHandler {
+	[completionHandlers addObject:[completionHandler copy]];
+}
+- (void)addErrorHandler:(void(^)(FBRequest*,NSError *))errorHandler {
+	[errorHandlers addObject:[errorHandler copy]];
+}
+- (void)addLoadHandler:(void(^)(FBRequest*))loadHandler {
+	[loadHandlers addObject:[loadHandler copy]];
+}
+- (void)addRawHandler:(void(^)(FBRequest*,NSData*))rawHandler {
+	[rawHandlers addObject:[rawHandler copy]];
+}
+- (void)addResponseHandler:(void(^)(FBRequest*,NSURLResponse*))responseHandler {
+	[completionHandlers addObject:[responseHandler copy]];
 }
 
 /**
@@ -250,41 +269,43 @@ static const NSTimeInterval kTimeoutInterval = 180.0;
  * private helper function: call the delegate function when the request
  *                          fails with error
  */
+
+- (void)_reportError:(NSError*)error {
+	[errorHandlers enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+		void (^handler)(FBRequest*,NSError *) = (void(^)(FBRequest*,NSError*))obj;
+		handler(self, error);
+	}];
+}
+
 - (void)failWithError:(NSError *)error {
     if ([error code] == kRESTAPIAccessTokenErrorCode) {
         self.sessionDidExpire = YES;
     }
-    if ([_delegate respondsToSelector:@selector(request:didFailWithError:)]) {
-        [_delegate request:self didFailWithError:error];
-    }
+	[self _reportError:error];
 }
 
 /*
  * private helper function: handle the response data
  */
 - (void)handleResponseData:(NSData *)data {
-    if ([_delegate respondsToSelector:
-         @selector(request:didLoadRawResponse:)]) {
-        [_delegate request:self didLoadRawResponse:data];
-    }
+	[rawHandlers enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+		void (^handler)(FBRequest*,NSData *) = (void(^)(FBRequest*, NSData*))obj;
+		handler(self, data);
+	}];
     
     NSError* error = nil;
     id result = [self parseJsonResponse:data error:&error];
     self.error = error;  
     
-    if ([_delegate respondsToSelector:@selector(request:didLoad:)] ||
-        [_delegate respondsToSelector:
-         @selector(request:didFailWithError:)]) {
-            
-            if (error) {
-                [self failWithError:error];
-            } else if ([_delegate respondsToSelector:
-                        @selector(request:didLoad:)]) {
-                [_delegate request:self didLoad:result];
-            }
-            
-        }
-    
+	if( error ) {
+		[self _reportError:error];
+	}
+	else {
+		[completionHandlers enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+			void (^handler)(FBRequest*,id) = (void(^)(FBRequest*, id))obj;
+			handler(self, result);
+		}];
+	}
 }
 
 
@@ -303,20 +324,20 @@ static const NSTimeInterval kTimeoutInterval = 180.0;
  * make the Facebook request
  */
 - (void)connect {
+	[loadHandlers enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+		void (^handler)(FBRequest*) = (void(^)(FBRequest*))obj;
+		handler(self);
+	}];
     
-    if ([_delegate respondsToSelector:@selector(requestLoading:)]) {
-        [_delegate requestLoading:self];
-    }
-    
-    NSString* url = [[self class] serializeURL:_url params:_params httpMethod:_httpMethod];
+    NSString* url = [[self class] serializeURL:_url params:_params requestMethod:_httpMethod];
     NSMutableURLRequest* request =
     [NSMutableURLRequest requestWithURL:[NSURL URLWithString:url]
                             cachePolicy:NSURLRequestReloadIgnoringLocalCacheData
                         timeoutInterval:kTimeoutInterval];
+	
     [request setValue:kUserAgent forHTTPHeaderField:@"User-Agent"];
-
-
     [request setHTTPMethod:self.httpMethod];
+	
     if ([self.httpMethod isEqualToString: @"POST"]) {
         NSString* contentType = [NSString
                              stringWithFormat:@"multipart/form-data; boundary=%@", kStringBoundary];
@@ -330,6 +351,18 @@ static const NSTimeInterval kTimeoutInterval = 180.0;
     self.sessionDidExpire = NO;
 }
 
+- (id)init {
+	self = [super init];
+	if( self ) {
+		completionHandlers = [NSMutableArray array];
+		errorHandlers = [NSMutableArray array];
+		rawHandlers = [NSMutableArray array];
+		responseHandlers = [NSMutableArray array];
+		loadHandlers = [NSMutableArray array];
+	}
+	return self;
+}
+
 /**
  * Free internal structure
  */
@@ -340,14 +373,17 @@ static const NSTimeInterval kTimeoutInterval = 180.0;
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // NSURLConnectionDelegate
 
+#pragma mark - NSURLConnection Delegate
+
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
     _responseText = [[NSMutableData alloc] init];
     
     NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse*)response;
-    if ([_delegate respondsToSelector:
-         @selector(request:didReceiveResponse:)]) {
-        [_delegate request:self didReceiveResponse:httpResponse];
-    }
+	
+	[responseHandlers enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+		void (^handler)(FBRequest*,NSURLResponse*) = (void(^)(FBRequest*,NSURLResponse*))obj;
+		handler(self, httpResponse);
+	}];
 }
 
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {

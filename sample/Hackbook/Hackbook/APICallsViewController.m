@@ -276,9 +276,30 @@
  */
 - (void)apiGraphFriends {
     [self showActivityIndicator];
-    // Do not set current API as this is commonly called by other methods
-    HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
-    [[delegate facebook] requestWithGraphPath:@"me/friends" andDelegate:self];
+	
+	[[Facebook shared] requestWithGraphPath:@"me/friends"
+								 parameters:[NSDictionary dictionary]
+								 completion:^(FBRequest *request, id result) {
+									 [self hideActivityIndicator];
+									 if ([result isKindOfClass:[NSArray class]] && ([result count] > 0)) {
+										 result = [result objectAtIndex:0];
+									 }
+									 
+									 NSMutableArray *friends = [[NSMutableArray alloc] initWithCapacity:1];
+									 NSArray *resultData = [result objectForKey:@"data"];
+									 if ([resultData count] > 0) {
+										 for (NSUInteger i=0; i<[resultData count] && i < 25; i++) {
+											 [friends addObject:[resultData objectAtIndex:i]];
+										 }
+										 // Show the friend information in a new view controller
+										 APIResultsViewController *controller = [[APIResultsViewController alloc]
+																				 initWithTitle:@"Friends"
+																				 data:friends action:@""];
+										 [self.navigationController pushViewController:controller animated:YES];
+									 } else {
+										 [self showMessage:@"You have no friends."];
+									 }
+								 }];
 }
 
 /*
@@ -286,18 +307,21 @@
  */
 - (void)apiGraphUserPermissions {
     [self showActivityIndicator];
+#warning Not implemented
     currentAPICall = kAPIGraphUserPermissions;
-    HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
-    [[delegate facebook] requestWithGraphPath:@"me/permissions" andDelegate:self];
+	[[Facebook shared] requestWithGraphPath:@"me/permissions"
+								 parameters:[NSDictionary dictionary]
+								 completion:^(FBRequest *request, id result) {
+									 
+								 }];
 }
 
 /*
  * Dialog: Authorization to grant the app check-in permissions.
  */
 - (void)apiPromptCheckinPermissions {
-    HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
     NSArray *checkinPermissions = [[NSArray alloc] initWithObjects:@"user_checkins", @"publish_checkins", nil];
-    [[delegate facebook] authorize:checkinPermissions];
+    [[Facebook shared] authorize:checkinPermissions];
 }
 
 /*
@@ -311,8 +335,7 @@
  */
 - (void)apiLogout {
     currentAPICall = kAPILogout;
-    HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
-    [[delegate facebook] logout];
+    [[Facebook shared] logout];
 }
 
 /*
@@ -320,15 +343,15 @@
  */
 - (void)apiGraphUserPermissionsDelete {
     [self showActivityIndicator];
-    currentAPICall = kAPIGraphUserPermissionsDelete;
-    HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
-    // Passing empty (no) parameters unauthorizes the entire app. To revoke individual permissions
-    // add a permission parameter with the name of the permission to revoke.
-    NSMutableDictionary *params = [NSMutableDictionary dictionaryWithObjectsAndKeys:nil];
-    [[delegate facebook] requestWithGraphPath:@"me/permissions"
-                                    andParams:params
-                                andHttpMethod:@"DELETE"
-                                  andDelegate:self];
+
+	[[Facebook shared] requestWithGraphPath:@"me/permissions"
+								 parameters:[NSDictionary dictionary]
+							  requestMethod:@"DELETE"
+								   finalize:^(FBRequest *request) {
+									   [request addCompletionHandler:^(FBRequest *request, id result) {
+										   [[Facebook shared] logout];
+									   }];
+								   }];
 }
 
 /*
@@ -336,9 +359,8 @@
  */
 - (void)apiPromptExtendedPermissions {
     currentAPICall = kDialogPermissionsExtended;
-    HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
     NSArray *extendedPermissions = [[NSArray alloc] initWithObjects:@"user_likes", nil];
-    [[delegate facebook] authorize:extendedPermissions];
+    [[Facebook shared] authorize:extendedPermissions];
 }
 
 /**
@@ -367,11 +389,7 @@
                                    actionLinksStr, @"actions",
                                    nil];
 
-    HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
-    [[delegate facebook] dialog:@"feed"
-            andParams:params
-          andDelegate:self];
-
+	[[Facebook shared] dialog:@"feed" parameters:params delegate:self];
 }
 
 /*
@@ -380,8 +398,26 @@
  */
 - (void)getFriendsCallAPIDialogFeed {
     // Call the friends API first, then set up for targeted Feed Dialog
-    currentAPICall = kAPIFriendsForDialogFeed;
-    [self apiGraphFriends];
+	[self showActivityIndicator];
+	[[Facebook shared] requestWithGraphPath:@"me/friends"
+								 parameters:[NSDictionary dictionary]
+								 completion:^(FBRequest *request, id result) {
+									 [self hideActivityIndicator];
+									 if ([result isKindOfClass:[NSArray class]] && ([result count] > 0)) {
+										 result = [result objectAtIndex:0];
+									 }
+									 
+									 NSArray *resultData = [result objectForKey: @"data"];
+									 // Check that the user has friends
+									 if ([resultData count] > 0) {
+										 // Pick a random friend to post the feed to
+										 int randomNumber = arc4random() % [resultData count];
+										 [self apiDialogFeedFriend: 
+										  [[resultData objectAtIndex: randomNumber] objectForKey: @"id"]];
+									 } else {
+										 [self showMessage:@"You do not have any friends to post to."];
+									 }
+								 }];
 }
 
 /*
@@ -404,11 +440,7 @@
                                    actionLinksStr, @"actions",
                                    nil];
 
-    HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
-    [[delegate facebook] dialog:@"feed"
-                      andParams:params
-                    andDelegate:self];
-
+	[[Facebook shared] dialog:@"feed" parameters:params delegate:self];
 }
 
 /*
@@ -434,25 +466,13 @@
                                    giftStr, @"data",
                                    nil];
 
-    HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
-    [[delegate facebook] dialog:@"apprequests"
-                      andParams:params
-                    andDelegate:self];
+	[[Facebook shared] dialog:@"apprequests" parameters:params delegate:self];
 }
 
 /*
  * API: Legacy REST for getting the friends using the app. This is a helper method
  * being used to target app requests in follow-on examples.
  */
-- (void)apiRESTGetAppUsers {
-    [self showActivityIndicator];
-    HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
-    NSMutableDictionary *params = [NSMutableDictionary dictionaryWithObjectsAndKeys:
-                                   @"friends.getAppUsers", @"method",
-                                   nil];
-    [[delegate facebook] requestWithParams:params
-                               andDelegate:self];
-}
 
 /*
  * Dialog: Requests - send to friends not currently using the app.
@@ -468,8 +488,8 @@
 
     HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
     [[delegate facebook] dialog:@"apprequests"
-                      andParams:params
-                    andDelegate:self];
+                      parameters:params
+                    delegate:self];
 }
 
 /*
@@ -486,8 +506,8 @@
 
     HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
     [[delegate facebook] dialog:@"apprequests"
-                      andParams:params
-                    andDelegate:self];
+                      parameters:params
+                    delegate:self];
 }
 
 /*
@@ -502,8 +522,8 @@
 
     HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
     [[delegate facebook] dialog:@"apprequests"
-                      andParams:params
-                    andDelegate:self];
+                      parameters:params
+                    delegate:self];
 }
 
 /*
@@ -512,7 +532,62 @@
  */
 - (void)getAppUsersFriendsNotUsing {
     currentAPICall = kAPIGetAppUsersFriendsNotUsing;
-    [self apiRESTGetAppUsers];
+    [self showActivityIndicator];
+	
+	[[Facebook shared] requestWithMethodName:@"friends.getAppUsers"
+								  parameters:nil
+								  completion:^(FBRequest *request, id result) {
+									  [self hideActivityIndicator];
+									  if ([result isKindOfClass:[NSArray class]] && ([result count] > 0)) {
+										  result = [result objectAtIndex:0];
+									  }
+
+									  // Save friend results
+									  savedAPIResult = nil;
+									  // Many results
+									  if ([result isKindOfClass:[NSArray class]]) {
+										  savedAPIResult = [[NSMutableArray alloc] initWithArray:result copyItems:YES];
+									  } else if ([result isKindOfClass:[NSDecimalNumber class]]) {
+										  savedAPIResult = [[NSMutableArray alloc] initWithObjects:[result stringValue], nil];
+									  }
+									  
+									  // Set up to get friends
+									  [self showActivityIndicator];
+									  
+									  [[Facebook shared] requestWithGraphPath:@"me/friends"
+																   parameters:[NSDictionary dictionary]
+																   completion:^(FBRequest *request, id result) {
+																	   [self hideActivityIndicator];
+																	   if ([result isKindOfClass:[NSArray class]] && ([result count] > 0)) {
+																		   result = [result objectAtIndex:0];
+																	   }
+																	   
+																	   NSArray *resultData = [result objectForKey:@"data"];
+																	   if ([resultData count] == 0) {
+																		   [self showMessage:@"You have no friends to select."];
+																	   } else {
+																		   NSMutableArray *friendsWithoutApp = [[NSMutableArray alloc] initWithCapacity:1];
+																		   // Loop through friends and find those who do not have the app
+																		   for (NSDictionary *friendObject in resultData) {
+																			   BOOL foundFriend = NO;
+																			   for (NSString *friendWithApp in savedAPIResult) {
+																				   if ([[friendObject objectForKey:@"id"] isEqualToString:friendWithApp]) {
+																					   foundFriend = YES;
+																					   break;
+																				   }
+																			   }
+																			   if (!foundFriend) {
+																				   [friendsWithoutApp addObject:[friendObject objectForKey:@"id"]];
+																			   }
+																		   }
+																		   if ([friendsWithoutApp count] > 0) {
+																			   [self apiDialogRequestsSendToNonUsers:friendsWithoutApp];
+																		   } else {
+																			   [self showMessage:@"All your friends are using the app."];
+																		   }
+																	   }
+																   }];
+								  }];
 }
 
 /*
@@ -521,7 +596,29 @@
  */
 - (void)getAppUsersFriendsUsing {
     currentAPICall = kAPIGetAppUsersFriendsUsing;
-    [self apiRESTGetAppUsers];
+	[self showActivityIndicator];
+	[[Facebook shared] requestWithMethodName:@"friends.getAppUsers"
+								  parameters:nil
+								  completion:^(FBRequest *request, id result) {
+									  [self hideActivityIndicator];
+									  if ([result isKindOfClass:[NSArray class]] && ([result count] > 0)) {
+										  result = [result objectAtIndex:0];
+									  }
+									  
+									  NSMutableArray *friendsWithApp = [[NSMutableArray alloc] initWithCapacity:1];
+									  // Many results
+									  if ([result isKindOfClass:[NSArray class]]) {
+										  [friendsWithApp addObjectsFromArray:result];
+									  } else if ([result isKindOfClass:[NSDecimalNumber class]]) {
+										  [friendsWithApp addObject: [result stringValue]];
+									  }
+									  
+									  if ([friendsWithApp count] > 0) {
+										  [self apiDialogRequestsSendToUsers:friendsWithApp];
+									  } else {
+										  [self showMessage:@"None of your friends are using the app."];
+									  }
+								  }];
 }
 
 /*
@@ -529,19 +626,36 @@
  * pick one to send a request.
  */
 - (void)getUserFriendTargetDialogRequest {
-    currentAPICall = kAPIFriendsForTargetDialogRequests;
-    [self apiGraphFriends];
+	[self showActivityIndicator];
+	[[Facebook shared] requestWithGraphPath:@"me/friends"
+								 parameters:[NSDictionary dictionary]
+								 completion:^(FBRequest *request, id result) {
+									 [self hideActivityIndicator];
+									 if ([result isKindOfClass:[NSArray class]] && ([result count] > 0)) {
+										 result = [result objectAtIndex:0];
+									 }
+									 
+									 NSArray *resultData = [result objectForKey: @"data"];
+									 // got friends?
+									 if ([resultData count] > 0) { 
+										 // pick a random one to send a request to
+										 int randomIndex = arc4random() % [resultData count];	
+										 NSString* randomFriend = 
+										 [[resultData objectAtIndex: randomIndex] objectForKey: @"id"];
+										 [self apiDialogRequestsSendTarget:randomFriend];
+									 } else {
+										 [self showMessage: @"You have no friends to select."];
+									 }
+								 }];
+
 }
 
 /*
  * API: Enable frictionless in the SDK, retrieve friends enabled for frictionless send
  */
 - (void)enableFrictionlessAppRequests {
-    HackbookAppDelegate *delegate = 
-        (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
-    
     // Enable frictionless app requests
-    [[delegate facebook] enableFrictionlessRequests];
+    [[Facebook shared] enableFrictionlessRequests];
     
     UIAlertView *alertView = [[UIAlertView alloc]
                               initWithTitle:@"Enabled Frictionless Requests"
@@ -567,11 +681,34 @@
 - (void)apiGraphMe {
     [self showActivityIndicator];
     currentAPICall = kAPIGraphMe;
-    HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
     NSMutableDictionary *params = [NSMutableDictionary dictionaryWithObjectsAndKeys:
                                    @"name,picture",  @"fields",
                                    nil];
-    [[delegate facebook] requestWithGraphPath:@"me" andParams:params andDelegate:self];
+	
+	[[Facebook shared] requestWithGraphPath:@"me"
+								 parameters:params
+								 completion:^(FBRequest *request, id result) {
+									 [self hideActivityIndicator];
+									 if ([result isKindOfClass:[NSArray class]] && ([result count] > 0)) {
+										 result = [result objectAtIndex:0];
+									 }
+									 
+									 NSString *nameID = [[NSString alloc] initWithFormat: @"%@ (%@)", 
+														 [result objectForKey:@"name"], 
+														 [result objectForKey:@"id"]];
+									 NSMutableArray *userData = [[NSMutableArray alloc] initWithObjects:
+																 [NSDictionary dictionaryWithObjectsAndKeys:
+																  [result objectForKey:@"id"], @"id",
+																  nameID, @"name",
+																  [result objectForKey:@"picture"], @"details",
+																  nil], nil];
+									 // Show the basic user information in a new view controller
+									 APIResultsViewController *controller = [[APIResultsViewController alloc]
+																			 initWithTitle:@"Your Information"
+																			 data:userData
+																			 action:@""];
+									 [self.navigationController pushViewController:controller animated:YES];
+								 }];
 }
 
 /*
@@ -588,8 +725,35 @@
 - (void)apiGraphUserCheckins {
     [self showActivityIndicator];
     currentAPICall = kAPIGraphUserCheckins;
-    HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
-    [[delegate facebook] requestWithGraphPath:@"me/checkins" andDelegate:self];
+	
+	[[Facebook shared] requestWithGraphPath:@"me/checkins"
+								 parameters:nil
+								 completion:^(FBRequest *request, id result) {
+									 [self hideActivityIndicator];
+									 if ([result isKindOfClass:[NSArray class]] && ([result count] > 0)) {
+										 result = [result objectAtIndex:0];
+									 }
+									 
+									 NSMutableArray *places = [[NSMutableArray alloc] initWithCapacity:1];
+									 NSArray *resultData = [result objectForKey:@"data"];
+									 for (NSUInteger i=0; i<[resultData count] && i < 5; i++) {
+										 NSString *placeID = [[[resultData objectAtIndex:i] objectForKey:@"place"] objectForKey:@"id"];
+										 NSString *placeName = [[[resultData objectAtIndex:i] objectForKey:@"place"] objectForKey:@"name"];
+										 NSString *checkinMessage = [[resultData objectAtIndex:i] objectForKey:@"message"] ?
+										 [[resultData objectAtIndex:i] objectForKey:@"message"] : @"";
+										 [places addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+															placeID,@"id",
+															placeName,@"name",
+															checkinMessage,@"details",
+															nil]];
+									 }
+									 // Show the user's recent check-ins a new view controller
+									 APIResultsViewController *controller = [[APIResultsViewController alloc]
+																			 initWithTitle:@"Recent Check-ins"
+																			 data:places
+																			 action:@"recentcheckins"];
+									 [self.navigationController pushViewController:controller animated:YES];
+								 }];
 }
 
 /*
@@ -616,14 +780,33 @@
     NSString *centerLocation = [[NSString alloc] initWithFormat:@"%f,%f",
                                 location.coordinate.latitude,
                                 location.coordinate.longitude];
-    HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
+
     NSMutableDictionary *params = [NSMutableDictionary dictionaryWithObjectsAndKeys:
                                    @"place",  @"type",
                                    centerLocation, @"center",
                                    @"1000",  @"distance",
                                    nil];
 
-    [[delegate facebook] requestWithGraphPath:@"search" andParams:params andDelegate:self];
+	[[Facebook shared] requestWithGraphPath:@"search"
+								 parameters:params
+								 completion:^(FBRequest *request, id result) {
+									 [self hideActivityIndicator];
+									 if ([result isKindOfClass:[NSArray class]] && ([result count] > 0)) {
+										 result = [result objectAtIndex:0];
+									 }
+									 
+									 NSMutableArray *places = [[NSMutableArray alloc] initWithCapacity:1];
+									 NSArray *resultData = [result objectForKey:@"data"];
+									 for (NSUInteger i=0; i<[resultData count] && i < 5; i++) {
+										 [places addObject:[resultData objectAtIndex:i]];
+									 }
+									 // Show the places nearby in a new view controller
+									 APIResultsViewController *controller = [[APIResultsViewController alloc]
+																			 initWithTitle:@"Nearby"
+																			 data:places
+																			 action:@"places"];
+									 [self.navigationController pushViewController:controller animated:YES];
+								 }];
 }
 
 /*
@@ -680,9 +863,7 @@
  */
 - (void)apiGraphUserPhotosPost {
     [self showActivityIndicator];
-    currentAPICall = kAPIGraphUserPhotosPost;
-    HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
-
+	
     // Download a sample photo
     NSURL *url = [NSURL URLWithString:@"http://www.facebook.com/images/devsite/iphone_connect_btn.jpg"];
     NSData *data = [NSData dataWithContentsOfURL:url];
@@ -690,11 +871,16 @@
     NSMutableDictionary *params = [NSMutableDictionary dictionaryWithObjectsAndKeys:
                                    img, @"picture",
                                    nil];
-    
-    [[delegate facebook] requestWithGraphPath:@"me/photos"
-                          andParams:params
-                      andHttpMethod:@"POST"
-                        andDelegate:self];
+	
+	[[Facebook shared] requestWithGraphPath:@"me/photos"
+								 parameters:params
+							  requestMethod:@"POST"
+								   finalize:^(FBRequest *request) {
+									  [request addCompletionHandler:^(FBRequest *request, id result) {
+										  [self hideActivityIndicator];
+										  [self showMessage:@"Photo uploaded successfully."];
+									  }];
+								   }];
 }
 
 /*
@@ -703,7 +889,6 @@
 - (void)apiGraphUserVideosPost {
     [self showActivityIndicator];
     currentAPICall = kAPIGraphUserVideosPost;
-    HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
 
     // Download a sample video
     NSURL *url = [NSURL URLWithString:@"https://developers.facebook.com/attachment/sample.mov"];
@@ -714,10 +899,16 @@
                                    @"Video Test Title", @"title",
                                    @"Video Test Description", @"description",
 								   nil];
-	[[delegate facebook] requestWithGraphPath:@"me/videos"
-                         andParams:params
-                     andHttpMethod:@"POST"
-                       andDelegate:self];
+	
+	[[Facebook shared] requestWithGraphPath:@"me/videos"
+								 parameters:params
+							  requestMethod:@"POST"
+								   finalize:^(FBRequest *request) {
+									   [request addCompletionHandler:^(FBRequest *request, id result) {
+										   [self hideActivityIndicator];
+										   [self showMessage:@"Video uploaded successfully."];
+									   }];
+								   }];
 }
 
 #pragma mark - UITableViewDatasource and UITableViewDelegate Methods
@@ -912,236 +1103,6 @@
     [self hideActivityIndicator];
 }
 
-#pragma mark - FBRequestDelegate Methods
-/**
- * Called when the Facebook API request has returned a response. This callback
- * gives you access to the raw response. It's called before
- * (void)request:(FBRequest *)request didLoad:(id)result,
- * which is passed the parsed response object.
- */
-- (void)request:(FBRequest *)request didReceiveResponse:(NSURLResponse *)response {
-    //NSLog(@"received response");
-}
-
-/**
- * Called when a request returns and its response has been parsed into
- * an object. The resulting object may be a dictionary, an array, a string,
- * or a number, depending on the format of the API response. If you need access
- * to the raw response, use:
- *
- * (void)request:(FBRequest *)request
- *      didReceiveResponse:(NSURLResponse *)response
- */
-- (void)request:(FBRequest *)request didLoad:(id)result {
-    [self hideActivityIndicator];
-    if ([result isKindOfClass:[NSArray class]] && ([result count] > 0)) {
-        result = [result objectAtIndex:0];
-    }
-    switch (currentAPICall) {
-        case kAPIGraphUserPermissionsDelete:
-        {
-            [self showMessage:@"User uninstalled app"];
-            HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
-            // Nil out the session variables to prevent
-            // the app from thinking there is a valid session
-            [delegate facebook].accessToken = nil;
-            [delegate facebook].expirationDate = nil;
-
-            // Notify the root view about the logout.
-            RootViewController *rootViewController = (RootViewController *)[[self.navigationController viewControllers] objectAtIndex:0];
-            [rootViewController fbDidLogout];
-            break;
-        }
-        case kAPIFriendsForDialogFeed:
-        {
-            NSArray *resultData = [result objectForKey: @"data"];
-            // Check that the user has friends
-            if ([resultData count] > 0) {
-                // Pick a random friend to post the feed to
-                int randomNumber = arc4random() % [resultData count];
-                [self apiDialogFeedFriend: 
-                    [[resultData objectAtIndex: randomNumber] objectForKey: @"id"]];
-            } else {
-                [self showMessage:@"You do not have any friends to post to."];
-            }
-            break;
-        }
-        case kAPIGetAppUsersFriendsNotUsing:
-        {
-            // Save friend results
-            savedAPIResult = nil;
-            // Many results
-            if ([result isKindOfClass:[NSArray class]]) {
-                savedAPIResult = [[NSMutableArray alloc] initWithArray:result copyItems:YES];
-            } else if ([result isKindOfClass:[NSDecimalNumber class]]) {
-                savedAPIResult = [[NSMutableArray alloc] initWithObjects:[result stringValue], nil];
-            }
-
-            // Set up to get friends
-            currentAPICall = kAPIFriendsForDialogRequests;
-            [self apiGraphFriends];
-            break;
-        }
-        case kAPIGetAppUsersFriendsUsing:
-        {
-            NSMutableArray *friendsWithApp = [[NSMutableArray alloc] initWithCapacity:1];
-            // Many results
-            if ([result isKindOfClass:[NSArray class]]) {
-                [friendsWithApp addObjectsFromArray:result];
-            } else if ([result isKindOfClass:[NSDecimalNumber class]]) {
-                [friendsWithApp addObject: [result stringValue]];
-            }
-            
-            if ([friendsWithApp count] > 0) {
-                [self apiDialogRequestsSendToUsers:friendsWithApp];
-            } else {
-                [self showMessage:@"None of your friends are using the app."];
-            }
-            break;
-        }
-        case kAPIFriendsForDialogRequests:
-        {
-            NSArray *resultData = [result objectForKey:@"data"];
-            if ([resultData count] == 0) {
-                [self showMessage:@"You have no friends to select."];
-            } else {
-                NSMutableArray *friendsWithoutApp = [[NSMutableArray alloc] initWithCapacity:1];
-                // Loop through friends and find those who do not have the app
-                for (NSDictionary *friendObject in resultData) {
-                    BOOL foundFriend = NO;
-                    for (NSString *friendWithApp in savedAPIResult) {
-                        if ([[friendObject objectForKey:@"id"] isEqualToString:friendWithApp]) {
-                            foundFriend = YES;
-                            break;
-                        }
-                    }
-                    if (!foundFriend) {
-                        [friendsWithoutApp addObject:[friendObject objectForKey:@"id"]];
-                    }
-                }
-                if ([friendsWithoutApp count] > 0) {
-                    [self apiDialogRequestsSendToNonUsers:friendsWithoutApp];
-                } else {
-                    [self showMessage:@"All your friends are using the app."];
-                }
-            }
-            break;
-        }
-        case kAPIFriendsForTargetDialogRequests:
-        {
-            NSArray *resultData = [result objectForKey: @"data"];
-            // got friends?
-            if ([resultData count] > 0) { 
-                // pick a random one to send a request to
-                int randomIndex = arc4random() % [resultData count];	
-                NSString* randomFriend = 
-                    [[resultData objectAtIndex: randomIndex] objectForKey: @"id"];
-                [self apiDialogRequestsSendTarget:randomFriend];
-            } else {
-                [self showMessage: @"You have no friends to select."];
-            }
-            break;
-        }
-        case kAPIGraphMe:
-        {
-            NSString *nameID = [[NSString alloc] initWithFormat: @"%@ (%@)", 
-                                [result objectForKey:@"name"], 
-                                [result objectForKey:@"id"]];
-            NSMutableArray *userData = [[NSMutableArray alloc] initWithObjects:
-                                        [NSDictionary dictionaryWithObjectsAndKeys:
-                                         [result objectForKey:@"id"], @"id",
-                                         nameID, @"name",
-                                         [result objectForKey:@"picture"], @"details",
-                                         nil], nil];
-            // Show the basic user information in a new view controller
-            APIResultsViewController *controller = [[APIResultsViewController alloc]
-                                                initWithTitle:@"Your Information"
-                                                data:userData
-                                                action:@""];
-            [self.navigationController pushViewController:controller animated:YES];
-            break;
-        }
-        case kAPIGraphUserFriends:
-        {
-            NSMutableArray *friends = [[NSMutableArray alloc] initWithCapacity:1];
-            NSArray *resultData = [result objectForKey:@"data"];
-            if ([resultData count] > 0) {
-                for (NSUInteger i=0; i<[resultData count] && i < 25; i++) {
-                    [friends addObject:[resultData objectAtIndex:i]];
-                }
-                // Show the friend information in a new view controller
-                APIResultsViewController *controller = [[APIResultsViewController alloc]
-                                                        initWithTitle:@"Friends"
-                                                        data:friends action:@""];
-                [self.navigationController pushViewController:controller animated:YES];
-            } else {
-                [self showMessage:@"You have no friends."];
-            }
-            break;
-        }
-        case kAPIGraphUserCheckins:
-        {
-            NSMutableArray *places = [[NSMutableArray alloc] initWithCapacity:1];
-            NSArray *resultData = [result objectForKey:@"data"];
-            for (NSUInteger i=0; i<[resultData count] && i < 5; i++) {
-                NSString *placeID = [[[resultData objectAtIndex:i] objectForKey:@"place"] objectForKey:@"id"];
-                NSString *placeName = [[[resultData objectAtIndex:i] objectForKey:@"place"] objectForKey:@"name"];
-                NSString *checkinMessage = [[resultData objectAtIndex:i] objectForKey:@"message"] ?
-                    [[resultData objectAtIndex:i] objectForKey:@"message"] : @"";
-                [places addObject:[NSDictionary dictionaryWithObjectsAndKeys:
-                                   placeID,@"id",
-                                   placeName,@"name",
-                                   checkinMessage,@"details",
-                                   nil]];
-            }
-            // Show the user's recent check-ins a new view controller
-            APIResultsViewController *controller = [[APIResultsViewController alloc]
-                                                initWithTitle:@"Recent Check-ins"
-                                                data:places
-                                                action:@"recentcheckins"];
-            [self.navigationController pushViewController:controller animated:YES];
-            break;
-        }
-        case kAPIGraphSearchPlace:
-        {
-            NSMutableArray *places = [[NSMutableArray alloc] initWithCapacity:1];
-            NSArray *resultData = [result objectForKey:@"data"];
-            for (NSUInteger i=0; i<[resultData count] && i < 5; i++) {
-                [places addObject:[resultData objectAtIndex:i]];
-            }
-            // Show the places nearby in a new view controller
-            APIResultsViewController *controller = [[APIResultsViewController alloc]
-                                                initWithTitle:@"Nearby"
-                                                data:places
-                                                action:@"places"];
-            [self.navigationController pushViewController:controller animated:YES];
-            break;
-        }
-        case kAPIGraphUserPhotosPost:
-        {
-            [self showMessage:@"Photo uploaded successfully."];
-            break;
-        }
-        case kAPIGraphUserVideosPost:
-        {
-            [self showMessage:@"Video uploaded successfully."];
-            break;
-        }
-        default:
-            break;
-    }
-}
-
-/**
- * Called when an error prevents the Facebook API request from completing
- * successfully.
- */
-- (void)request:(FBRequest *)request didFailWithError:(NSError *)error {
-    [self hideActivityIndicator];
-    NSLog(@"Error message: %@", [[error userInfo] objectForKey:@"error_msg"]);
-    [self showMessage:@"Oops, something went haywire."];
-}
-
 #pragma mark - FBDialogDelegate Methods
 
 /**
@@ -1149,7 +1110,7 @@
  * instead of dialogDidComplete: to properly handle successful shares/sends
  * that return ID data back.
  */
-- (void)dialogCompleteWithUrl:(NSURL *)url {
+- (void)dialog:(FBDialog*)dialog didCompleteWithURL:(NSURL *)url {
     if (![url query]) {
         NSLog(@"User canceled dialog or there was an error");
         return;
@@ -1191,7 +1152,7 @@
     }
 }
 
-- (void)dialogDidNotComplete:(FBDialog *)dialog {
+- (void)dialogWasCancelled:(FBDialog *)dialog {
     NSLog(@"Dialog dismissed.");
 }
 

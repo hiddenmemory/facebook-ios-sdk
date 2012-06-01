@@ -1,5 +1,20 @@
-Facebook iOS SDK
-===========================
+Facebook iOS SDK [OverTheAir DUB REMIX]
+=======================================
+
+OverTheAir Changes:
+===================
+
+- Runs on iOS5 only with ARC support
+- Massive cleanup of API naming convention to be a better iOS citizen
+- Removed SBJSON to use the iOS native NSJSONSerialization methods
+- Swapped the delegate patterns to be a flexible block based API system resulting in less verbosity and better code locality (removes a big requirement on object globals to track requests in user code)
+- Automatic storage of the session tokens and expiration tokens to NSUserDefaults
+- Flag to automatically refresh the token on application launch
+- Removed various class instance variables where property exists to remove duplication
+- Made the Facebook object a singleton object to reduce complexity
+
+About:
+======
 
 This open source iOS library allows you to integrate Facebook into your iOS application include iPhone, iPad and iPod touch.
 

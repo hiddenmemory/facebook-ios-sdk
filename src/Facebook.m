@@ -18,7 +18,6 @@
 #import "FBFrictionlessRequestSettings.h"
 #import "FBLoginDialog.h"
 #import "FBRequest.h"
-#import "JSON.h"
 
 static NSString* kDialogBaseURL = @"https://m.facebook.com/dialog/";
 static NSString* kGraphBaseURL = @"https://graph.facebook.com/";
@@ -726,8 +725,17 @@ static void *finishedContext = @"finishedContext";
             id fbid = [params objectForKey:@"to"];
             if (fbid != nil) {
                 // if value parses as a json array expression get the list that way
-                SBJsonParser *parser = [[[SBJsonParser alloc] init] autorelease];
-                id fbids = [parser objectWithString:fbid];
+				NSError *error = nil;
+				
+				id fbids = [NSJSONSerialization JSONObjectWithData:[fbid dataUsingEncoding:NSUTF8StringEncoding]
+														   options:0
+															 error:&error];
+				
+				if( error ) {
+					NSLog(@"%s: %d: Unable to decode JSON: %@", __FILE__, __LINE__, fbid);
+					fbids = [NSArray array];
+				}
+				
                 if (![fbids isKindOfClass:[NSArray class]]) {
                     // otherwise seperate by commas (handles the singleton case too)
                     fbids = [fbid componentsSeparatedByString:@","];

@@ -27,8 +27,6 @@
  */
 
 @interface FBDialog : UIView <UIWebViewDelegate> {
-    id<FBDialogDelegate> _delegate;
-    NSMutableDictionary *_params;
     NSString * _serverURL;
     NSURL* _loadingURL;
     UIWebView* _webView;

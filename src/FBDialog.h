@@ -27,8 +27,8 @@
  */
 
 @interface FBDialog : UIView <UIWebViewDelegate> {
-    id<FBDialogDelegate> _delegate;
-    NSMutableDictionary *_params;
+    id<FBDialogDelegate> __weak _delegate;
+    NSMutableDictionary *__weak _params;
     NSString * _serverURL;
     NSURL* _loadingURL;
     UIWebView* _webView;
@@ -46,12 +46,12 @@
 /**
  * The delegate.
  */
-@property(nonatomic,assign) id<FBDialogDelegate> delegate;
+@property(nonatomic,weak) id<FBDialogDelegate> delegate;
 
 /**
  * The parameters.
  */
-@property(nonatomic, retain) NSMutableDictionary* params;
+@property(weak, nonatomic) NSMutableDictionary* params;
 
 - (NSString *) getStringFromUrl: (NSString*) url needle:(NSString *) needle;
 

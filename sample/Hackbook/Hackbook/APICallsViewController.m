@@ -949,7 +949,7 @@
 
             // Notify the root view about the logout.
             RootViewController *rootViewController = (RootViewController *)[[self.navigationController viewControllers] objectAtIndex:0];
-            [rootViewController fbDidLogout];
+            [rootViewController facebookDidLogout];
             break;
         }
         case kAPIFriendsForDialogFeed:

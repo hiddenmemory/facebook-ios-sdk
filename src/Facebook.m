@@ -231,8 +231,8 @@ extendTokenOnApplicationActive = _extendTokenOnApplicationActive;
         if (requestState == kFBRequestStateComplete) {
             if ([_request sessionDidExpire]) {
                 [self invalidateSession];
-                if ([self.sessionDelegate respondsToSelector:@selector(fbSessionInvalidated)]) {
-                    [self.sessionDelegate fbSessionInvalidated];
+                if ([self.sessionDelegate respondsToSelector:@selector(facebookSessionInvalidated:)]) {
+                    [self.sessionDelegate facebookSessionInvalidated:self];
                 }
             }
             [_request removeObserver:self forKeyPath:requestFinishedKeyPath];
@@ -510,8 +510,8 @@ extendTokenOnApplicationActive = _extendTokenOnApplicationActive;
 - (void)logout {
     [self invalidateSession];
         
-    if ([self.sessionDelegate respondsToSelector:@selector(fbDidLogout)]) {
-        [self.sessionDelegate fbDidLogout];
+    if ([self.sessionDelegate respondsToSelector:@selector(facebookDidLogout:)]) {
+        [self.sessionDelegate facebookDidLogout:self];
     }
 }
 
@@ -526,8 +526,8 @@ extendTokenOnApplicationActive = _extendTokenOnApplicationActive;
   // preserve deprecated callback behavior, but leave cached delegate intact
   // avoid calling twice if the passed and cached delegates are the same
   if (delegate != self.sessionDelegate &&
-    [delegate respondsToSelector:@selector(fbDidLogout)]) {
-    [delegate fbDidLogout];
+    [delegate respondsToSelector:@selector(facebookDidLogout)]) {
+    [delegate facebookDidLogout];
   }
 }
 
@@ -832,8 +832,8 @@ extendTokenOnApplicationActive = _extendTokenOnApplicationActive;
 	
 	[self storeAccessToken];
 	
-    if ([self.sessionDelegate respondsToSelector:@selector(fbDidLogin)]) {
-        [self.sessionDelegate fbDidLogin];
+    if ([self.sessionDelegate respondsToSelector:@selector(facebookDidLogin:)]) {
+        [self.sessionDelegate facebookDidLogin:self];
     }
     
 }
@@ -842,8 +842,8 @@ extendTokenOnApplicationActive = _extendTokenOnApplicationActive;
  * Did not login call the not login delegate
  */
 - (void)fbDialogNotLogin:(BOOL)cancelled {
-    if ([self.sessionDelegate respondsToSelector:@selector(fbDidNotLogin:)]) {
-        [self.sessionDelegate fbDidNotLogin:cancelled];
+    if ([self.sessionDelegate respondsToSelector:@selector(facebook:didNotLogin:)]) {
+        [self.sessionDelegate facebook:self didNotLogin:cancelled];
     }
 }
 
@@ -877,8 +877,8 @@ extendTokenOnApplicationActive = _extendTokenOnApplicationActive;
     
 	[self storeAccessToken];
 	
-    if ([self.sessionDelegate respondsToSelector:@selector(fbDidExtendToken:expiresAt:)]) {
-        [self.sessionDelegate fbDidExtendToken:accessToken expiresAt:expirationDate];
+    if ([self.sessionDelegate respondsToSelector:@selector(facebook:didExtendToken:expiresAt:)]) {
+        [self.sessionDelegate facebook:self didExtendToken:accessToken expiresAt:expirationDate];
     }
 }
 

@@ -65,11 +65,11 @@
 - (void)logout:(id<FBSessionDelegate>)delegate;
 
 - (FBRequest*)requestWithParameters:(NSMutableDictionary *)params
-					   delegate:(id <FBRequestDelegate>)delegate;
+						   delegate:(id <FBRequestDelegate>)delegate;
 
 - (FBRequest*)requestWithMethodName:(NSString *)methodName
 						 parameters:(NSMutableDictionary *)params
-						 requestMethod:(NSString *)httpMethod
+					  requestMethod:(NSString *)httpMethod
 						   delegate:(id <FBRequestDelegate>)delegate;
 
 - (FBRequest*)requestWithGraphPath:(NSString *)graphPath
@@ -81,7 +81,7 @@
 
 - (FBRequest*)requestWithGraphPath:(NSString *)graphPath
 						parameters:(NSMutableDictionary *)params
-						requestMethod:(NSString *)httpMethod
+					 requestMethod:(NSString *)httpMethod
 						  delegate:(id <FBRequestDelegate>)delegate;
 
 
@@ -115,12 +115,12 @@
 /**
  * Called when the user successfully logged in.
  */
-- (void)fbDidLogin;
+- (void)facebookDidLogin:(Facebook*)facebook;
 
 /**
  * Called when the user dismissed the dialog without logging in.
  */
-- (void)fbDidNotLogin:(BOOL)cancelled;
+- (void)facebook:(Facebook*)facebook didNotLogin:(BOOL)cancelled;
 
 /**
  * Called after the access token was extended. If your application has any
@@ -129,13 +129,14 @@
  * should overwrite the old access token with the new one in this method.
  * See extendAccessToken for more details.
  */
-- (void)fbDidExtendToken:(NSString*)accessToken
-               expiresAt:(NSDate*)expiresAt;
+- (void)facebook:(Facebook*)facebook
+  didExtendToken:(NSString*)accessToken
+	   expiresAt:(NSDate*)expiresAt;
 
 /**
  * Called when the user logged out.
  */
-- (void)fbDidLogout;
+- (void)facebookDidLogout:(Facebook*)facebook;
 
 /**
  * Called when the current session has expired. This might happen when:
@@ -144,6 +145,6 @@
  *  - the user revoked the app's permissions
  *  - the user changed his or her password
  */
-- (void)fbSessionInvalidated;
+- (void)facebookSessionInvalidated:(Facebook*)facebook;
 
 @end

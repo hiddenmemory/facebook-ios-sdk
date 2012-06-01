@@ -297,27 +297,27 @@
 /**
  * Called when the user has logged in successfully.
  */
-- (void)fbDidLogin {
+- (void)facebookDidLogin:(Facebook*)facebook {
     [self showLoggedIn];
         
     [pendingApiCallsController userDidGrantPermission];
 }
 
--(void)fbDidExtendToken:(NSString *)accessToken expiresAt:(NSDate *)expiresAt {
+-(void)facebook:(Facebook*)facebook didExtendToken:(NSString *)accessToken expiresAt:(NSDate *)expiresAt {
     NSLog(@"token extended");
 }
 
 /**
  * Called when the user canceled the authorization dialog.
  */
--(void)fbDidNotLogin:(BOOL)cancelled {
+-(void)facebook:(Facebook*)facebook didNotLogin:(BOOL)cancelled {
     [pendingApiCallsController userDidNotGrantPermission];
 }
 
 /**
  * Called when the request logout has succeeded.
  */
-- (void)fbDidLogout {
+- (void)facebookDidLogout {
     pendingApiCallsController = nil;
     
     // Remove saved authorization information if it exists and it is
@@ -333,7 +333,7 @@
 /**
  * Called when the session has expired.
  */
-- (void)fbSessionInvalidated {
+- (void)facebookSessionInvalidated:(Facebook*)facebook {
     UIAlertView *alertView = [[UIAlertView alloc]
                               initWithTitle:@"Auth Exception"
                               message:@"Your session has expired."
@@ -342,7 +342,7 @@
                               otherButtonTitles:nil,
                               nil];
     [alertView show];
-    [self fbDidLogout];
+    [self facebookDidLogout];
 }
 
 #pragma mark - FBRequestDelegate Methods

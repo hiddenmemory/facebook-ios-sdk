@@ -8,14 +8,30 @@
 
 #import "Facebook+Graph.h"
 
+@interface Facebook (GraphPrivate)
+
+- (void)search:(NSString *)query
+                fields:(NSArray *)fields
+				 range:(NSUInteger)range
+			completion:(void(^)(NSArray *locations))completionHandler
+				 error:(void(^)(NSError *error))errorHandler;
+
+
+@end
+
+
 @implementation Facebook (Graph)
 
+#pragma me
 - (void)me:(void(^)(NSDictionary *me))completionHandler
 	 error:(void(^)(NSError *error))errorHandler {
 	
 }
 
 // ID, Name, Picture URL
+
+#pragma friends
+
 - (void)friends:(void(^)(NSArray *friends))completionHandler
 		  error:(void(^)(NSError *error))errorHandler {
 	
@@ -32,6 +48,7 @@
 	
 }
 
+#pragma fetching content
 - (void)albums:(void(^)(NSArray *albums))completionHandler
 		 error:(void(^)(NSError *error))errorHandler {
 	
@@ -48,6 +65,7 @@
 	
 }
 
+#pragma sharing content
 - (void)setStatus:(NSString*)status
 	   completion:(void(^)(NSString *status))completionHandler
 			error:(void(^)(NSError *error))errorHandler {
@@ -76,8 +94,10 @@
 	
 }
 
+#pragma search
 - (void)locationSearch:(NSString *)query
               location:(CLLocationCoordinate2D)location
+              distance:(int)distance
                 fields:(NSArray *)fields
 				 range:(NSUInteger)range
 			completion:(void(^)(NSArray *locations))completionHandler
@@ -128,6 +148,17 @@
                  range:(NSUInteger)range
             completion:(void(^)(NSArray *locations))completionHandler
                  error:(void(^)(NSError *error))errorHandler
+{
+    
+}
+
+#pragma search (private)
+
+- (void)search:(NSString *)query
+        fields:(NSArray *)fields
+         range:(NSUInteger)range
+    completion:(void(^)(NSArray *locations))completionHandler
+         error:(void(^)(NSError *error))errorHandler
 {
     
 }

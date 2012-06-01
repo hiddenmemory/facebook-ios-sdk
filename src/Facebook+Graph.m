@@ -12,13 +12,26 @@
 
 - (void)me:(void(^)(NSDictionary *me))completionHandler
 	 error:(void(^)(NSError *error))errorHandler {
-	
+
+	[self requestWithGraphPath:@"me"
+					parameters:[NSDictionary dictionaryWithObjectsAndKeys:@"name,picture", @"fields", nil]
+					completion:^(FBRequest *request, id result) {	
+						if( completionHandler ) {
+							completionHandler(result);
+						}
+					}
+						 error:^(FBRequest *request, NSError *error) {
+							 if( errorHandler ) {
+								 errorHandler(error);
+							 }
+						 }];
 }
 
 // ID, Name, Picture URL
 - (void)friends:(void(^)(NSArray *friends))completionHandler
 		  error:(void(^)(NSError *error))errorHandler {
 	
+
 }
 
 - (void)friendsWithKeys:(NSArray*)keys 

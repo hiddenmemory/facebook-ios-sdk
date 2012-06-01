@@ -44,6 +44,20 @@
     [super dealloc];
 }
 
+- (NSString*)stringWithObject:(id)source {
+	NSError *error = nil;
+	NSString *result = [[NSString alloc] initWithData:[NSJSONSerialization dataWithJSONObject:source
+																					  options:0
+																						error:&error]
+											 encoding:NSUTF8StringEncoding];
+	
+	if( error ) {
+		NSLog(@"Unable to convert object %@ source", source);
+	}
+	
+	return result;
+}
+
 - (void)didReceiveMemoryWarning {
     // Releases the view if it doesn't have a superview.
     [super didReceiveMemoryWarning];
@@ -123,14 +137,13 @@
  */
 - (void)apiGraphUserCheckins:(NSUInteger)index {
     HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
-    SBJSON *jsonWriter = [[SBJSON new] autorelease];
 
     NSDictionary *coordinates = [NSDictionary dictionaryWithObjectsAndKeys:
                                   [[[myData objectAtIndex:index] objectForKey:@"location"] objectForKey:@"latitude"],@"latitude",
                                   [[[myData objectAtIndex:index] objectForKey:@"location"] objectForKey:@"longitude"],@"longitude",
                                   nil];
 
-    NSString *coordinatesStr = [jsonWriter stringWithObject:coordinates];
+    NSString *coordinatesStr = [self stringWithObject:coordinates];
     NSMutableDictionary *params = [NSMutableDictionary dictionaryWithObjectsAndKeys:
                                    [[myData objectAtIndex:index] objectForKey:@"id"], @"place",
                                    coordinatesStr, @"coordinates",

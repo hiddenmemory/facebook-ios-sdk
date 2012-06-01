@@ -20,6 +20,7 @@
 #import "DataSet.h"
 #import "APIResultsViewController.h"
 #import "RootViewController.h"
+#import "Facebook+Graph.h"
 
 // For re-using table cells
 #define TITLE_TAG 1001
@@ -674,34 +675,25 @@
  * Graph API: Get the user's basic information, picking the name and picture fields.
  */
 - (void)apiGraphMe {
-    currentAPICall = kAPIGraphMe;
-    NSMutableDictionary *params = [NSMutableDictionary dictionaryWithObjectsAndKeys:
-                                   @"name,picture",  @"fields",
-                                   nil];
-	
-	[[Facebook shared] requestWithGraphPath:@"me"
-								 parameters:params
-								 completion:^(FBRequest *request, id result) {
-									 if ([result isKindOfClass:[NSArray class]] && ([result count] > 0)) {
-										 result = [result objectAtIndex:0];
-									 }
-									 
-									 NSString *nameID = [[NSString alloc] initWithFormat: @"%@ (%@)", 
-														 [result objectForKey:@"name"], 
-														 [result objectForKey:@"id"]];
-									 NSMutableArray *userData = [[NSMutableArray alloc] initWithObjects:
-																 [NSDictionary dictionaryWithObjectsAndKeys:
-																  [result objectForKey:@"id"], @"id",
-																  nameID, @"name",
-																  [result objectForKey:@"picture"], @"details",
-																  nil], nil];
-									 // Show the basic user information in a new view controller
-									 APIResultsViewController *controller = [[APIResultsViewController alloc]
-																			 initWithTitle:@"Your Information"
-																			 data:userData
-																			 action:@""];
-									 [self.navigationController pushViewController:controller animated:YES];
-								 }];
+	[[Facebook shared] me:^(NSDictionary *me) {
+		NSString *ID = [me objectForKey:@"id"];
+		NSString *name = [me objectForKey:@"name"];
+		NSString *pictureURL = [me objectForKey:@"picture"];
+
+		NSArray *list = [NSArray arrayWithObject:[NSDictionary dictionaryWithObjectsAndKeys:
+												  ID, @"id",
+												  [NSString stringWithFormat:@"%@ (%@)", name, ID], @"name",
+												  pictureURL, @"details",
+												  nil]];
+		
+		APIResultsViewController *controller = [[APIResultsViewController alloc] initWithTitle:@"Your Information"
+																						  data:list
+																						action:@""];
+		[self.navigationController pushViewController:controller animated:YES];
+	} 
+					error:^(NSError *error) {
+						[self showMessage:NSLocalizedString(@"Unable to fetch your details", @"")];
+					}];
 }
 
 /*

@@ -340,7 +340,9 @@ else {
 /**
  * A function for parsing URL parameters.
  */
-- (NSDictionary*)parseURLParams:(NSString *)query {
+
+- (NSDictionary*)parseURLParams:(NSString *)query 
+{
 	NSArray *pairs = [query componentsSeparatedByString:@"&"];
 	NSMutableDictionary *params = [[NSMutableDictionary alloc] init];
 	for (NSString *pair in pairs) {

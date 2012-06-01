@@ -76,11 +76,62 @@
 	
 }
 
-- (void)locationSearch:(CLLocationCoordinate2D)location
-				  type:(NSString*)type // Enumerate
+- (void)locationSearch:(NSString *)query
+              location:(CLLocationCoordinate2D)location
+                fields:(NSArray *)fields
 				 range:(NSUInteger)range
 			completion:(void(^)(NSArray *locations))completionHandler
-				 error:(void(^)(NSError *error))errorHandler {
+				 error:(void(^)(NSError *error))errorHandler
+{
+    
+}
+
+
+- (void)postsSearch:(NSString *)query
+             fields:(NSArray *)fields
+              range:(NSUInteger)range
+         completion:(void(^)(NSArray *locations))completionHandler
+              error:(void(^)(NSError *error))errorHandler
+{
+    
+}
+
+- (void)peopleSearch:(NSString *)query
+              fields:(NSArray *)fields
+               range:(NSUInteger)range
+          completion:(void(^)(NSArray *locations))completionHandler
+               error:(void(^)(NSError *error))errorHandler
+{
+    
+}
+
+- (void)pagesSearch:(NSString *)query
+             fields:(NSArray *)fields
+              range:(NSUInteger)range
+         completion:(void(^)(NSArray *locations))completionHandler
+              error:(void(^)(NSError *error))errorHandler
+{
+    
+}
+
+- (void)eventsSearch:(NSString *)query
+              fields:(NSArray *)fields
+               range:(NSUInteger)range
+          completion:(void(^)(NSArray *locations))completionHandler
+               error:(void(^)(NSError *error))errorHandler
+{
+    
+}
+
+- (void)checkinsSearch:(NSString *)query   
+                fields:(NSArray *)fields
+                 range:(NSUInteger)range
+            completion:(void(^)(NSArray *locations))completionHandler
+                 error:(void(^)(NSError *error))errorHandler
+{
+    
+}
+    
 	
 }
 

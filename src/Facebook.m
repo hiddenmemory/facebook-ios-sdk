@@ -58,6 +58,8 @@ static void *finishedContext = @"finishedContext";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+static Facebook *facebookSharedObject = nil;
+
 @implementation Facebook
 
 @synthesize    accessToken = _accessToken,
@@ -70,11 +72,13 @@ extendTokenOnApplicationActive = _extendTokenOnApplicationActive;
 
 + (Facebook*)shared:(NSString *)appID {
 	static dispatch_once_t pred = 0; \
-	__strong static Facebook *_sharedObject = nil;
 	dispatch_once(&pred, ^{
-		_sharedObject = [[Facebook alloc] initWithAppID:appID];
+		facebookSharedObject = [[Facebook alloc] initWithAppID:appID];
 	});
-	return _sharedObject;
+	return facebookSharedObject;
+}
++ (Facebook*)shared {
+	return facebookSharedObject;
 }
 
 - (void)applicationDidBecomeActive:(NSNotification*)notification {

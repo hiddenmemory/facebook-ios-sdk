@@ -53,6 +53,7 @@ typedef enum {
 @property (nonatomic, assign) BOOL extendTokenOnApplicationActive;
 
 + (Facebook*)shared:(NSString*)appID;
++ (Facebook*)shared;
 
 - (void)authorize:(NSArray *)permissions;
 

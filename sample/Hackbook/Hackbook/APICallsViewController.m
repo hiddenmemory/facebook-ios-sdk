@@ -863,8 +863,7 @@
  */
 - (void)apiGraphUserPhotosPost {
     [self showActivityIndicator];
-    currentAPICall = kAPIGraphUserPhotosPost;
-
+	
     // Download a sample photo
     NSURL *url = [NSURL URLWithString:@"http://www.facebook.com/images/devsite/iphone_connect_btn.jpg"];
     NSData *data = [NSData dataWithContentsOfURL:url];

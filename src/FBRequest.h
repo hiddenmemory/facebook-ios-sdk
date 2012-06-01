@@ -30,17 +30,7 @@ typedef NSUInteger FBRequestState;
 /**
  * Do not use this interface directly, instead, use method in Facebook.h
  */
-@interface FBRequest : NSObject {
-    id<FBRequestDelegate> _delegate;
-    NSString*             _url;
-    NSString*             _httpMethod;
-    NSMutableDictionary*  _params;
-    NSURLConnection*      _connection;
-    NSMutableData*        _responseText;
-    FBRequestState        _state;
-    NSError*              _error;
-    BOOL                  _sessionDidExpire;
-}
+@interface FBRequest : NSObject 
 
 
 @property(nonatomic,assign) id<FBRequestDelegate> delegate;

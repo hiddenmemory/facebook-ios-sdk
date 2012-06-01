@@ -8,8 +8,8 @@ OverTheAir Changes:
 - Massive cleanup of API naming convention to be a better iOS citizen
 - Removed SBJSON to use the iOS native NSJSONSerialization methods
 - Swapped the delegate patterns to be a flexible block based API system resulting in less verbosity and better code locality (removes a big requirement on object globals to track requests in user code)
-- Automatic storage of the session tokens and expiration tokens to NSUserDefaults
-- Flag to automatically refresh the token on application launch
+- Automatic storage of the session tokens and expiration date to NSUserDefaults
+- Flag to automatically refresh the token on application launch without user code (turned on by default)
 - Removed various class instance variables where property exists to remove duplication
 - Made the Facebook object a singleton object to reduce complexity
 

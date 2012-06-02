@@ -111,11 +111,6 @@ lastRequestedPermissions = _lastRequestedPermissions;
 											 selector:@selector(autobind:)
 												 name:UIApplicationDidFinishLaunchingNotification
 											   object:nil];
-	
-	[[NSNotificationCenter defaultCenter] addObserver:self
-											 selector:@selector(autobind:)
-												 name:UIApplicationDidBecomeActiveNotification
-											   object:nil];
 }
 
 - (void)applicationDidBecomeActive:(NSNotification*)notification {

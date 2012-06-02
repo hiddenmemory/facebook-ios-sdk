@@ -11,11 +11,11 @@
 
 @interface Facebook (Graph)
 
-#pragma me
+#pragma mark - me
 - (void)me:(void(^)(NSDictionary *me))completionHandler
 	 error:(void(^)(NSError *error))errorHandler;
 
-#pragma friends
+#pragma mark - friends
 // ID, Name, Picture URL
 - (void)friends:(void(^)(NSArray *friends))completionHandler
 		  error:(void(^)(NSError *error))errorHandler;
@@ -28,7 +28,7 @@
 				 error:(void(^)(NSError *error))errorHandler;
 
 
-#pragma fetching content
+#pragma mark - fetching content
 - (void)albums:(void(^)(NSArray *albums))completionHandler
 		 error:(void(^)(NSError *error))errorHandler;
 
@@ -43,7 +43,7 @@
 	   completion:(void(^)(NSString *status))completionHandler
 			error:(void(^)(NSError *error))errorHandler;
 
-#pragma sharing content
+#pragma mark - sharing content
 - (void)sharePhoto:(UIImage*)image
 			 title:(NSString*)title
 		completion:(void(^)(NSString *photoID))completionHandler
@@ -60,9 +60,9 @@
 		completion:(void(^)(NSString *videoID))completionHandler
 			 error:(void(^)(NSError *error))errorHandler;
 
-#pragma search
+#pragma mark - search
 - (void)locationSearch:(NSString *)query
-              location:(CLLocationCoordinate2D)location
+            coordinate:(CLLocationCoordinate2D)coordinate
               distance:(int)distance
                 fields:(NSArray *)fields
 				 range:(NSUInteger)range

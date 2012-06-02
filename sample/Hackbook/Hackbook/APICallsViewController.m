@@ -653,10 +653,7 @@
 																						  data:list
 																						action:@""];
 		[self.navigationController pushViewController:controller animated:YES];
-	} 
-					error:^(NSError *error) {
-						[self showMessage:NSLocalizedString(@"Unable to fetch your details", @"")];
-					}];
+	} error:[self errorHandler:NSLocalizedString(@"Unable to fetch your details", @"")]];
 }
 
 /*
@@ -767,37 +764,25 @@
 }
 
 /*
- * Helper method to kick off GPS to get the user's location.
- */
-- (void)getNearby {
-    // A warning if the user turned off location services.
-    if (![CLLocationManager locationServicesEnabled]) {
-        UIAlertView *servicesDisabledAlert = [[UIAlertView alloc] initWithTitle:@"Location Services Disabled" message:@"You currently have all location services for this device disabled. If you proceed, you will be asked to confirm whether location services should be reenabled." delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
-        [servicesDisabledAlert show];
-    }
-    // Start the location manager
-    self.locationManager = [[CLLocationManager alloc] init];
-    locationManager.delegate = self;
-    locationManager.desiredAccuracy = kCLLocationAccuracyBest;
-    [locationManager startUpdatingLocation];
-    // Time out if it takes too long to get a reading.
-    [self performSelector:@selector(processLocationData) withObject:nil afterDelay:15.0];
-}
-
-/*
  * Helper method to check the user permissions which were stored in the app session
  * when the app was started. After the check decide on whether to prompt for user
  * check-in permissions first or get the user's location which will in turn search
  * for nearby places the user can then check-in to.
  */
 - (void)getPermissionsCallNearby {
-    HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
-    if ([[delegate userPermissions] objectForKey:@"publish_checkins"]) {
-        [self getNearby];
-    } else {
-        currentAPICall = kDialogPermissionsCheckinForPlaces;
-        [self apiPromptCheckinPermissions];
-    }
+	[[Facebook shared] usingPermission:@"publish_checkin" request:^{
+		if (![CLLocationManager locationServicesEnabled]) {
+			UIAlertView *servicesDisabledAlert = [[UIAlertView alloc] initWithTitle:@"Location Services Disabled" message:@"You currently have all location services for this device disabled. If you proceed, you will be asked to confirm whether location services should be reenabled." delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
+			[servicesDisabledAlert show];
+		}
+		// Start the location manager
+		self.locationManager = [[CLLocationManager alloc] init];
+		locationManager.delegate = self;
+		locationManager.desiredAccuracy = kCLLocationAccuracyBest;
+		[locationManager startUpdatingLocation];
+		// Time out if it takes too long to get a reading.
+		[self performSelector:@selector(processLocationData) withObject:nil afterDelay:15.0];
+	}];
 }
 
 - (void)apiGraphUserAlbums {

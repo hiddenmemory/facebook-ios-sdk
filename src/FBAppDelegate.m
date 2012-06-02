@@ -22,11 +22,15 @@
 @implementation FBAppDelegate
 
 - (BOOL)application:(UIApplication *)application handleOpenURL:(NSURL *)url {
-    return [[Facebook shared] handleOpenURL:url];
+	NSURLRequest *request = [NSURLRequest requestWithURL:url];
+	[NSURLConnection connectionWithRequest:request delegate:nil];
+	return NO;
 }
 
 - (BOOL)application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication annotation:(id)annotation {
-    return [[Facebook shared] handleOpenURL:url];
+	NSURLRequest *request = [NSURLRequest requestWithURL:url];
+	[NSURLConnection connectionWithRequest:request delegate:nil];
+	return NO;
 }
 
 @end

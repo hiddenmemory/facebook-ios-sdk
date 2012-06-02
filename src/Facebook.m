@@ -1119,3 +1119,40 @@ lastRequestedPermissions = _lastRequestedPermissions;
 }
 
 @end
+
+#pragma mark - FacebookURLProtocol
+
+/* This protocol handles the URLs in the plist for the application.
+
+ When the application delegate is called with a URL, it should create a 
+ request and a connection; This will then call to this protocol to handle
+ the URL. This is described in the URL Loading System Programming Guide at 
+ https://developer.apple.com/library/mac/#documentation/Cocoa/Conceptual/URLLoadingSystem/Concepts/URLOverview.html#//apple_ref/doc/uid/20001834-155857
+ 
+ This has the benefit of allowing multiple libraries to have the chance to
+ handle the URL called to the app.
+*/
+
+@interface FacebookURLProtocol : NSURLProtocol
+@end
+
+@implementation FacebookURLProtocol
+
++ (void)load {
+	[self registerClass:[FacebookURLProtocol class]];
+}
++ (BOOL)canInitWithRequest:(NSURLRequest *)request {
+	if ([[request.URL scheme] hasPrefix:@"fb"])
+		return YES;
+	
+	return NO;
+}
+- (void)startLoading {
+	[[Facebook shared] handleOpenURL:self.request.URL];
+}
+- (void)stopLoading {}
++ (NSURLRequest *)canonicalRequestForRequest:(NSURLRequest *)request {
+	return request;
+}
+
+@end

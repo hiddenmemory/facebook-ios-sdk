@@ -27,7 +27,7 @@
     UIView *messageView;
 }
 
-@property (nonatomic, retain) NSMutableArray *myData;
+@property (nonatomic, retain) NSArray *myData;
 @property (nonatomic, retain) NSString *myAction;
 @property (nonatomic, retain) UILabel *messageLabel;
 @property (nonatomic, retain) UIView *messageView;

@@ -56,7 +56,7 @@ static NSString* kAppId = @"210849718975311";
     apiData = [[DataSet alloc] init];
     
     // Initialize user permissions
-    userPermissions = [[NSMutableDictionary alloc] initWithCapacity:1];
+    userPermissions = [NSMutableDictionary dictionary];
     
     // Override point for customization after application launch.
     // Add the navigation controller's view to the window and display.

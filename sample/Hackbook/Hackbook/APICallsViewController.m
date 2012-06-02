@@ -287,28 +287,36 @@
  * Graph API: Method to get the user's friends.
  */
 - (void)apiGraphFriends {
-	[[Facebook shared] requestWithGraphPath:@"me/friends"
-								 parameters:[NSDictionary dictionary]
-								 completion:^(FBRequest *request, id result) {
-									 if ([result isKindOfClass:[NSArray class]] && ([result count] > 0)) {
-										 result = [result objectAtIndex:0];
-									 }
-									 
-									 NSMutableArray *friends = [[NSMutableArray alloc] initWithCapacity:1];
-									 NSArray *resultData = [result objectForKey:@"data"];
-									 if ([resultData count] > 0) {
-										 for (NSUInteger i=0; i<[resultData count] && i < 25; i++) {
-											 [friends addObject:[resultData objectAtIndex:i]];
-										 }
-										 // Show the friend information in a new view controller
-										 APIResultsViewController *controller = [[APIResultsViewController alloc]
-																				 initWithTitle:@"Friends"
-																				 data:friends action:@""];
-										 [self.navigationController pushViewController:controller animated:YES];
-									 } else {
-										 [self showMessage:@"You have no friends."];
-									 }
-								 }];
+	[[Facebook shared] friendsWithApp:^(NSArray *friends) {
+		
+	} 
+								error:^(NSError *error) {
+									
+								}];
+	
+	
+	[[Facebook shared] friends:^(NSArray *friends) {
+		if( [friends count] ) {
+			NSMutableArray *list = [NSMutableArray array];
+			
+			[friends enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+				NSMutableDictionary *friend = [NSMutableDictionary dictionaryWithDictionary:obj];
+				[friend setObject:[friend objectForKey:@"picture"] forKey:@"details"];
+				[list addObject:friend];
+			}];
+			
+			APIResultsViewController *controller = [[APIResultsViewController alloc] initWithTitle:@"Friends"
+																							  data:list
+																							action:@""];
+
+			[self.navigationController pushViewController:controller animated:YES];
+		}
+		else {
+			[self showMessage:NSLocalizedString(@"You have no friends.", @"")];
+		}
+	} error:^(NSError *error) {
+		[self showMessage:NSLocalizedString(@"Unable to fetch friends list", @"")];
+	}];
 }
 
 /*

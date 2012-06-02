@@ -26,8 +26,8 @@
  - Removed various class instance variables where property exists to remove duplication
  - Made the Facebook object a singleton object to reduce complexity:
 
-    [Facebook shared]
-    [Facebook shared:APPID]
+		[Facebook shared]
+		[Facebook shared:APPID]
     
  - Added quality of life change requestStarted and requestFinished block that will fire once for each request start and finish (whether error or not). Useful for UI setup and teardown like progress or wait views.
  - Added validation of URL schemes to the API as it is required for successful authentication

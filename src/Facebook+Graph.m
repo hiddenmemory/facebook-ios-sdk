@@ -209,7 +209,6 @@ static NSString *const kFBFieldPicture = @"picture";
 			error:(void(^)(NSError *error))errorHandler {
 
 	[self usingPermission:@"publish_stream" request:^{
-		
 		NSMutableDictionary *params = [NSMutableDictionary dictionaryWithObjectsAndKeys:
 									   status, @"message",
 									   nil];

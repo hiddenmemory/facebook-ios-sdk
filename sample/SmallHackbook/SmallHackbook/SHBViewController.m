@@ -9,29 +9,13 @@
 #import "SHBViewController.h"
 #import "FBConnect.h"
 
-@interface SHBViewController ()
-
-@end
-
 @implementation SHBViewController
 @synthesize textView;
-
-- (void)viewDidLoad
-{
-    [super viewDidLoad];
-	// Do any additional setup after loading the view, typically from a nib.
-}
 
 - (void)viewDidUnload
 {
 	[self setTextView:nil];
     [super viewDidUnload];
-    // Release any retained subviews of the main view.
-}
-
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
-{
-	return YES;
 }
 
 - (void)_displayAlert:(NSString*)message {

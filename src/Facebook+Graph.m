@@ -31,7 +31,27 @@
 - (void)friends:(void(^)(NSArray *friends))completionHandler
 		  error:(void(^)(NSError *error))errorHandler {
 	
-
+	[self requestWithGraphPath:@"me/friends"
+					parameters:[NSDictionary dictionaryWithObjectsAndKeys:@"name,picture", @"fields", nil]
+					completion:^(FBRequest *request, id result) {
+						NSArray *realResult = nil;
+						
+						if( [[result class] isSubclassOfClass:[NSArray class]] ) {
+							realResult = result;
+						}
+						else if( [[result class] isSubclassOfClass:[NSDictionary class]] && [result objectForKey:@"data"] ) {
+							realResult = [result objectForKey:@"data"];
+						}
+						
+						if( completionHandler ) {
+							completionHandler(realResult);
+						}
+					}
+						 error:^(FBRequest *request, NSError *error) {
+							 if( errorHandler ) {
+								 errorHandler(error);
+							 }
+						 }];
 }
 
 - (void)friendsWithKeys:(NSArray*)keys 

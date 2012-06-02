@@ -12,6 +12,7 @@ OverTheAir Changes:
 - Flag to automatically refresh the token on application launch without user code (turned on by default)
 - Removed various class instance variables where property exists to remove duplication
 - Made the Facebook object a singleton object to reduce complexity
+- Added quality of life change requestStarted and requestFinished block that will fire once for each request start and finish (whether error or not). Useful for UI setup and teardown like progress or wait views.
 
 About:
 ======

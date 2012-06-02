@@ -17,6 +17,17 @@
 #import "APIResultsViewController.h"
 #import "HackbookAppDelegate.h"
 
+@interface APIResultsViewController () {
+	NSCache *thumbnailCache;
+	NSMutableData *incomingImage;
+	NSMutableArray *incomingImageQueue;
+	NSURLConnection *incomingImageConnection;
+	
+	UITableView *tableView;
+}
+
+@end
+
 @implementation APIResultsViewController
 
 @synthesize myData;
@@ -27,9 +38,12 @@
 - (id)initWithTitle:(NSString *)title data:(NSArray *)data action:(NSString *)action {
     self = [super init];
     if (self) {
-        if (nil != data) {
-            myData = [[NSMutableArray alloc] initWithArray:data copyItems:YES];
-        }
+		myData = data;
+		
+		thumbnailCache = [[NSCache alloc] init];
+		incomingImageQueue = [NSMutableArray array];
+		incomingImage = [NSMutableData data];
+		
         self.navigationItem.title = title;
         self.myAction = action;
     }
@@ -66,12 +80,12 @@
     self.view = view;
 
     // Main Menu Table
-    UITableView *myTableView = [[UITableView alloc] initWithFrame:self.view.bounds
+    tableView = [[UITableView alloc] initWithFrame:self.view.bounds
                                                             style:UITableViewStylePlain];
-    [myTableView setBackgroundColor:[UIColor whiteColor]];
-    myTableView.dataSource = self;
-    myTableView.delegate = self;
-    myTableView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+    [tableView setBackgroundColor:[UIColor whiteColor]];
+    tableView.dataSource = self;
+    tableView.delegate = self;
+    tableView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     if ([self.myAction isEqualToString:@"places"]) {
         UILabel *headerLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, self.view.bounds.size.width, 30)];
         headerLabel.text = @"  Tap selection to check in";
@@ -80,9 +94,9 @@
                                                       green:248.0/255.0
                                                        blue:228.0/255.0
                                                       alpha:1];
-        myTableView.tableHeaderView = headerLabel;
+        tableView.tableHeaderView = headerLabel;
     }
-    [self.view addSubview:myTableView];
+    [self.view addSubview:tableView];
 
     // Message Label for showing confirmation and status messages
     CGFloat yLabelViewOffset = self.view.bounds.size.height-self.navigationController.navigationBar.frame.size.height-30;
@@ -142,7 +156,6 @@
 								   finalize:^(FBRequest *request) {
 									   [request addCompletionHandler:^(FBRequest *request, id result) {
 										   [self showMessage:@"Checked in successfully"];
-										   
 									   }];
 									   
 									   [request addErrorHandler:^(FBRequest *request, NSError *error) {
@@ -151,17 +164,85 @@
 								   }];
 }
 
+#pragma mark -
+#pragma mark NSURLConnection Callbacks
+
+- (void)downloadNextImage {
+	if( [incomingImageQueue count] ) {
+		NSDictionary *object = [incomingImageQueue objectAtIndex:0];
+		
+		NSString *objectID = [object objectForKey:@"id"];
+		
+		NSString *url = [NSString stringWithFormat:@"https://graph.facebook.com/%@/picture",objectID];
+
+		NSURLRequest *request = [[NSURLRequest alloc] initWithURL:[NSURL URLWithString:url]];
+		
+		incomingImageConnection = [[NSURLConnection alloc] initWithRequest:request
+																  delegate:self
+														  startImmediately:NO];
+								   
+		[incomingImageConnection scheduleInRunLoop:[NSRunLoop mainRunLoop] 
+										   forMode:NSRunLoopCommonModes];
+		
+		[incomingImageConnection start];
+	}
+}
+
+- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
+{
+    [incomingImage setLength:0];
+}
+- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data 
+{
+    [incomingImage appendData:data];
+}
+- (void)connection:(NSURLConnection *)_connection didFailWithError:(NSError *)error 
+{
+	[incomingImageQueue removeObjectAtIndex:0];
+	[self downloadNextImage];
+}
+- (void)connectionDidFinishLoading:(NSURLConnection *)_connection 
+{
+    UIImage *image = [UIImage imageWithData:incomingImage];
+	NSDictionary *row = [incomingImageQueue objectAtIndex:0];
+	
+	[thumbnailCache setObject:image forKey:[row objectForKey:@"id"]];
+	
+	NSLog(@"Done loading %@: %@", row, image);
+	
+	[tableView reloadRowsAtIndexPaths:[NSArray arrayWithObject:[NSIndexPath indexPathForRow:[[row objectForKey:@"row"] unsignedIntegerValue]
+																				  inSection:-0]]
+					 withRowAnimation:UITableViewRowAnimationFade];
+	
+	[incomingImageQueue removeObjectAtIndex:0];
+	
+	[self downloadNextImage];
+}
 
 #pragma mark - Private Methods
 /*
  * Helper method to return the picture endpoint for a given Facebook
  * object. Useful for displaying user, friend, or location pictures.
  */
-- (UIImage *)imageForObject:(NSString *)objectID {
-    // Get the object image
-    NSString *url = [[NSString alloc] initWithFormat:@"https://graph.facebook.com/%@/picture",objectID];
-    UIImage *image = [UIImage imageWithData:[NSData dataWithContentsOfURL:[NSURL URLWithString:url]]];
-    return image;
+
+- (UIImage *)imageForObject:(NSString *)objectID row:(NSUInteger)row {	
+	if( [thumbnailCache objectForKey:objectID] ) {
+		return [thumbnailCache objectForKey:objectID];
+	}
+	else {
+		BOOL requestDownload = ([incomingImageQueue count] == 0);
+		
+		[incomingImageQueue addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+									   objectID, @"id",
+									   [NSNumber numberWithUnsignedInteger:row], @"row", 
+									   nil]];
+		
+		if( requestDownload ) {
+			[self downloadNextImage];
+		}
+	}
+	
+    return nil;
 }
 
 /*
@@ -224,24 +305,24 @@
 }
 
 #pragma mark - UITableView Datasource and Delegate Methods
-- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
+- (CGFloat)tableView:(UITableView *)_tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
     return 80.0;
 }
 
 // Customize the number of sections in the table view.
-- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)_tableView {
     return 1;
 }
 
-- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+- (NSInteger)tableView:(UITableView *)_tableView numberOfRowsInSection:(NSInteger)section {
     return [myData count];
 }
 
 // Customize the appearance of table view cells.
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+- (UITableViewCell *)tableView:(UITableView *)_tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     static NSString *CellIdentifier = @"Cell";
 
-    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    UITableViewCell *cell = [_tableView dequeueReusableCellWithIdentifier:CellIdentifier];
     if (cell == nil) {
         cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:CellIdentifier];
         // Show disclosure only if this view is related to showing nearby places, thus allowing
@@ -251,30 +332,33 @@
         }
     }
 
-    cell.textLabel.text = [[myData objectAtIndex:indexPath.row] objectForKey:@"name"];
+	NSDictionary *row = [myData objectAtIndex:indexPath.row];
+	
+    cell.textLabel.text = [row objectForKey:@"name"];
     cell.textLabel.font = [UIFont boldSystemFontOfSize:14.0];
     cell.textLabel.lineBreakMode = UILineBreakModeWordWrap;
     cell.textLabel.numberOfLines = 2;
     // If extra information available then display this.
-    if ([[myData objectAtIndex:indexPath.row] objectForKey:@"details"]) {
-        cell.detailTextLabel.text = [[myData objectAtIndex:indexPath.row] objectForKey:@"details"];
+    if ([row objectForKey:@"details"]) {
+        cell.detailTextLabel.text = [row objectForKey:@"details"];
         cell.detailTextLabel.font = [UIFont fontWithName:@"Helvetica" size:12.0];
         cell.detailTextLabel.lineBreakMode = UILineBreakModeCharacterWrap;
         cell.detailTextLabel.numberOfLines = 2;
     }
     // The object's image
-    cell.imageView.image = [self imageForObject:[[myData objectAtIndex:indexPath.row] objectForKey:@"id"]];
+    cell.imageView.image = [self imageForObject:[row objectForKey:@"id"]
+											row:indexPath.row];
     // Configure the cell.
     return cell;
 }
 
-- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+- (void)tableView:(UITableView *)_tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     // Only handle taps if the view is related to showing nearby places that
     // the user can check-in to.
     if ([self.myAction isEqualToString:@"places"]) {
         [self apiGraphUserCheckins:indexPath.row];
     }
-    [tableView deselectRowAtIndexPath:indexPath animated:NO];
+    [_tableView deselectRowAtIndexPath:indexPath animated:NO];
 }
 
 

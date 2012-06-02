@@ -57,7 +57,27 @@ static NSString *const kFBFieldPicture = @"picture";
 - (void)friends:(void(^)(NSArray *friends))completionHandler
 		  error:(void(^)(NSError *error))errorHandler {
 	
-
+	[self requestWithGraphPath:@"me/friends"
+					parameters:[NSDictionary dictionaryWithObjectsAndKeys:@"name,picture", @"fields", nil]
+					completion:^(FBRequest *request, id result) {
+						NSArray *realResult = nil;
+						
+						if( [[result class] isSubclassOfClass:[NSArray class]] ) {
+							realResult = result;
+						}
+						else if( [[result class] isSubclassOfClass:[NSDictionary class]] && [result objectForKey:@"data"] ) {
+							realResult = [result objectForKey:@"data"];
+						}
+						
+						if( completionHandler ) {
+							completionHandler(realResult);
+						}
+					}
+						 error:^(FBRequest *request, NSError *error) {
+							 if( errorHandler ) {
+								 errorHandler(error);
+							 }
+						 }];
 }
 
 - (void)friendsWithKeys:(NSArray*)keys 
@@ -69,6 +89,20 @@ static NSString *const kFBFieldPicture = @"picture";
 - (void)friendsWithApp:(void(^)(NSArray *friends))completionHandler
 				 error:(void(^)(NSError *error))errorHandler {
 	
+	[self requestWithMethodName:@"friends.getAppUsers"
+								  parameters:[NSDictionary dictionaryWithObjectsAndKeys:@"name,picture", @"fields", nil]
+								  completion:^(FBRequest *request, id result) {
+									  NSLog(@"Result: %@", result);
+									  [self peopleSearch:[NSString stringWithFormat:@"ids=%@", [result componentsJoinedByString:@","]]
+												  fields:[NSArray arrayWithObjects:@"name", @"picture", nil]
+												   range:0
+											  completion:^(NSArray *locations) {
+												  NSLog(@"Locations: %@", locations);
+											  } 
+												   error:^(NSError *error) {
+													   
+												   }];
+								  }];
 }
 
 #pragma mark - fetching content
@@ -217,8 +251,12 @@ static NSString *const kFBFieldPicture = @"picture";
     completion:(void(^)(NSArray *locations))completionHandler
          error:(void(^)(NSError *error))errorHandler
 {
+	NSMutableDictionary *p = [NSMutableDictionary dictionaryWithDictionary:parameters];
+	
+	[p setObject:query forKey:@"q"];
+	
     [self requestWithGraphPath:@"search"
-					parameters:parameters
+					parameters:p
 					completion:^(FBRequest *request, id result) {	
 						if( completionHandler ) {
 							completionHandler(result);

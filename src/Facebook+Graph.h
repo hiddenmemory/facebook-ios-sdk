@@ -64,7 +64,7 @@
 			 error:(void(^)(NSError *error))errorHandler;
 
 #pragma mark - search
-- (void)searchLocations:(NSString *)query
+- (void)searchLocation:(NSString *)query
             coordinate:(CLLocationCoordinate2D)coordinate
               distance:(int)distance
                 fields:(NSArray *)fields

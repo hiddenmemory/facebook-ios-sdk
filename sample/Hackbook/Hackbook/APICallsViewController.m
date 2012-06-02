@@ -287,14 +287,6 @@
  * Graph API: Method to get the user's friends.
  */
 - (void)apiGraphFriends {
-	[[Facebook shared] friendsWithApp:^(NSArray *friends) {
-		
-	} 
-								error:^(NSError *error) {
-									
-								}];
-	
-	
 	[[Facebook shared] friends:^(NSArray *friends) {
 		if( [friends count] ) {
 			NSMutableArray *list = [NSMutableArray array];
@@ -542,60 +534,42 @@
  * Helper method to get friends using the app which will in turn
  * send a request to NON users.
  */
-- (void)getAppUsersFriendsNotUsing {
-    currentAPICall = kAPIGetAppUsersFriendsNotUsing;
-	
-	[[Facebook shared] requestWithMethodName:@"friends.getAppUsers"
-								  parameters:nil
-								  completion:^(FBRequest *request, id result) {
-									  if ([result isKindOfClass:[NSArray class]] && ([result count] > 0)) {
-										  result = [result objectAtIndex:0];
-									  }
 
-									  // Save friend results
-									  savedAPIResult = nil;
-									  // Many results
-									  if ([result isKindOfClass:[NSArray class]]) {
-										  savedAPIResult = [[NSMutableArray alloc] initWithArray:result copyItems:YES];
-									  } else if ([result isKindOfClass:[NSDecimalNumber class]]) {
-										  savedAPIResult = [[NSMutableArray alloc] initWithObjects:[result stringValue], nil];
-									  }
-									  
-									  // Set up to get friends
-									  
-									  [[Facebook shared] requestWithGraphPath:@"me/friends"
-																   parameters:[NSDictionary dictionary]
-																   completion:^(FBRequest *request, id result) {
-																	   if ([result isKindOfClass:[NSArray class]] && ([result count] > 0)) {
-																		   result = [result objectAtIndex:0];
-																	   }
-																	   
-																	   NSArray *resultData = [result objectForKey:@"data"];
-																	   if ([resultData count] == 0) {
-																		   [self showMessage:@"You have no friends to select."];
-																	   } else {
-																		   NSMutableArray *friendsWithoutApp = [[NSMutableArray alloc] initWithCapacity:1];
-																		   // Loop through friends and find those who do not have the app
-																		   for (NSDictionary *friendObject in resultData) {
-																			   BOOL foundFriend = NO;
-																			   for (NSString *friendWithApp in savedAPIResult) {
-																				   if ([[friendObject objectForKey:@"id"] isEqualToString:friendWithApp]) {
-																					   foundFriend = YES;
-																					   break;
-																				   }
-																			   }
-																			   if (!foundFriend) {
-																				   [friendsWithoutApp addObject:[friendObject objectForKey:@"id"]];
-																			   }
-																		   }
-																		   if ([friendsWithoutApp count] > 0) {
-																			   [self apiDialogRequestsSendToNonUsers:friendsWithoutApp];
-																		   } else {
-																			   [self showMessage:@"All your friends are using the app."];
-																		   }
-																	   }
-																   }];
-								  }];
+- (void(^)(NSError*))errorHandler:(NSString*)message {
+	return ^(NSError *error) {
+		NSLog(@"Error: %@: %@", message, error);
+		[self showMessage:message];
+	};
+}
+
+- (void)getAppUsersFriendsNotUsing {
+	[[Facebook shared] friendsWithApp:^(NSArray *friendsWithApp) {
+		NSMutableSet *friendsWithAppSet = [NSMutableSet set];
+		
+		[friendsWithApp enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+			NSDictionary *friend = (NSDictionary*)obj;
+			[friendsWithAppSet addObject:[friend objectForKey:@"id"]];
+		}];
+		
+		
+		[[Facebook shared] friends:^(NSArray *friends) {
+			NSMutableArray *list = [NSMutableArray array];
+			
+			[friends enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+				NSDictionary *friend = (NSDictionary*)obj;
+				
+				if( ![friendsWithAppSet containsObject:[friend objectForKey:@"id"]] ) {
+					[list addObject:[friend objectForKey:@"id"]];
+				}
+			}];
+			
+			if ([list count] > 0) {
+				[self apiDialogRequestsSendToNonUsers:list];
+			} else {
+				[self showMessage:@"All your friends are using the app."];
+			}
+		} error:[self errorHandler:NSLocalizedString(@"Unable to fetch friends", @"")]];
+	} error:[self errorHandler:NSLocalizedString(@"Unable to fetch friends with app", @"")]];
 }
 
 /*
@@ -603,28 +577,19 @@
  * send a request to current app users.
  */
 - (void)getAppUsersFriendsUsing {
-    currentAPICall = kAPIGetAppUsersFriendsUsing;
-	[[Facebook shared] requestWithMethodName:@"friends.getAppUsers"
-								  parameters:nil
-								  completion:^(FBRequest *request, id result) {
-									  if ([result isKindOfClass:[NSArray class]] && ([result count] > 0)) {
-										  result = [result objectAtIndex:0];
-									  }
-									  
-									  NSMutableArray *friendsWithApp = [[NSMutableArray alloc] initWithCapacity:1];
-									  // Many results
-									  if ([result isKindOfClass:[NSArray class]]) {
-										  [friendsWithApp addObjectsFromArray:result];
-									  } else if ([result isKindOfClass:[NSDecimalNumber class]]) {
-										  [friendsWithApp addObject: [result stringValue]];
-									  }
-									  
-									  if ([friendsWithApp count] > 0) {
-										  [self apiDialogRequestsSendToUsers:friendsWithApp];
-									  } else {
-										  [self showMessage:@"None of your friends are using the app."];
-									  }
-								  }];
+	[[Facebook shared] friendsWithApp:^(NSArray *friends) {
+		if( [friends count] ) {
+			NSMutableArray *list = [NSMutableArray array];
+			[friends enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+				NSDictionary *friend = (NSDictionary*)obj;
+				[list addObject:[friend objectForKey:@"id"]];
+			}];
+			[self apiDialogRequestsSendToUsers:list];
+		}
+		else {
+			[self showMessage:NSLocalizedString(@"None of your friends are using the app.", @"")];
+		}
+	} error:[self errorHandler:NSLocalizedString(@"Unable to fetch friends with app", @"")]];
 }
 
 /*
@@ -632,26 +597,16 @@
  * pick one to send a request.
  */
 - (void)getUserFriendTargetDialogRequest {
-	[[Facebook shared] requestWithGraphPath:@"me/friends"
-								 parameters:[NSDictionary dictionary]
-								 completion:^(FBRequest *request, id result) {
-									 if ([result isKindOfClass:[NSArray class]] && ([result count] > 0)) {
-										 result = [result objectAtIndex:0];
-									 }
-									 
-									 NSArray *resultData = [result objectForKey: @"data"];
-									 // got friends?
-									 if ([resultData count] > 0) { 
-										 // pick a random one to send a request to
-										 int randomIndex = arc4random() % [resultData count];	
-										 NSString* randomFriend = 
-										 [[resultData objectAtIndex: randomIndex] objectForKey: @"id"];
-										 [self apiDialogRequestsSendTarget:randomFriend];
-									 } else {
-										 [self showMessage: @"You have no friends to select."];
-									 }
-								 }];
-
+	[[Facebook shared] friends:^(NSArray *friends) {
+		if( [friends count] ) {
+			int randomIndex = arc4random() % [friends count];	
+			NSString* randomFriend =  [[friends objectAtIndex:randomIndex] objectForKey:@"id"];
+			[self apiDialogRequestsSendTarget:randomFriend];
+		}
+		else {
+			[self showMessage: @"You have no friends to select."];
+		}
+	} error:[self errorHandler:NSLocalizedString(@"Unable to fetch friends list", @"")]];
 }
 
 /*

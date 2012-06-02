@@ -128,7 +128,7 @@ else {
 - (void)validateApplicationURLScheme {
 	// Now check that the URL scheme fb[app_id]://authorize is in the .plist and can
 	// be opened, doing a simple check without local app id factored in here
-	NSString *url = [NSString stringWithFormat:@"fb%@://authorize",kAppId];
+	NSString *url = [NSString stringWithFormat:@"fb%@://authorize", self.appId];
 	BOOL bSchemeInPlist = NO; // find out if the sceme is in the plist file.
 	NSArray* aBundleURLTypes = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleURLTypes"];
 	if ([aBundleURLTypes isKindOfClass:[NSArray class]] && ([aBundleURLTypes count] > 0)) {
@@ -901,7 +901,7 @@ else {
 				NSError *error = nil;
 				
 				id fbids = [NSJSONSerialization JSONObjectWithData:[fbid dataUsingEncoding:NSUTF8StringEncoding]
-														   options:0
+														   options:NSJSONReadingAllowFragments
 															 error:&error];
 				
 				if( error ) {

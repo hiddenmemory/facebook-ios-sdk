@@ -80,7 +80,7 @@
                range:(NSUInteger)range
           completion:(void(^)(NSArray *locations))completionHandler
                error:(void(^)(NSError *error))errorHandler;
-    
+
 - (void)pagesSearch:(NSString *)query
              fields:(NSArray *)fields
               range:(NSUInteger)range
@@ -97,15 +97,15 @@
                 fields:(NSArray *)fields
                  range:(NSUInteger)range
             completion:(void(^)(NSArray *locations))completionHandler
-                error:(void(^)(NSError *error))errorHandler;
+				 error:(void(^)(NSError *error))errorHandler;
 
 #pragma mark - id query
 
-- (void)idsQuery:(NSString *)query   
-                fields:(NSArray *)fields
-                 range:(NSUInteger)range
-            completion:(void(^)(NSArray *locations))completionHandler
-                 error:(void(^)(NSError *error))errorHandler;
+- (void)idsQuery:(NSArray *)query   
+		  fields:(NSArray *)fields
+		   range:(NSUInteger)range
+	  completion:(void(^)(NSDictionary *objectMap))completionHandler
+		   error:(void(^)(NSError *error))errorHandler;
 
 
 

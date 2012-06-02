@@ -63,8 +63,6 @@ static NSString *const kFBFieldPicture = @"picture";
 - (void)friendsWithKeys:(NSArray*)keys 
 			 completion:(void(^)(NSArray *friends))completionHandler
 				  error:(void(^)(NSError *error))errorHandler {
-    
-    
     NSString *keysString = [keys componentsJoinedByString:@","];
     NSDictionary *parameters = [NSDictionary dictionaryWithObject:keysString forKey:@"fields"];
     
@@ -98,19 +96,18 @@ static NSString *const kFBFieldPicture = @"picture";
 								  parameters:[NSDictionary dictionaryWithObjectsAndKeys:@"name,picture", @"fields", nil]
 								  completion:^(FBRequest *request, id result) {
 									  NSLog(@"Result: %@", result);
-									  [self idsQuery:[NSString stringWithFormat:@"%@",[result componentsJoinedByString:@","]]
+									  [self idsQuery:result
                                               fields:[NSArray arrayWithObjects:kFBFieldName, kFBFieldPicture, nil]
                                                range:0
-                                          completion:^(NSArray *people) {
+                                          completion:^(NSDictionary *people) {
                                               if( completionHandler ) {
-                                                  completionHandler(people);
+                                                  completionHandler([people allValues]);
                                               }
                                           } 
                                                error:^(NSError *error) {
                                                    if( errorHandler ) {
                                                        errorHandler(error);
                                                    }
-                                                   
                                                }];
 								  }];
 }
@@ -118,7 +115,17 @@ static NSString *const kFBFieldPicture = @"picture";
 #pragma mark - fetching content
 - (void)albums:(void(^)(NSArray *albums))completionHandler
 		 error:(void(^)(NSError *error))errorHandler {
-	
+	[self requestWithGraphPath:@"me/albums"
+					  finalize:^(FBRequest *request) {
+						  [request addCompletionHandler:^(FBRequest *request, id result) {
+							  NSLog(@"Result: %@", result); 
+						  }];
+						  [request addErrorHandler:^(FBRequest *request, NSError *error) {
+							  if( errorHandler ) {
+								  errorHandler(error);
+							  }
+						  }];
+					  }];
 }
 
 - (void)photosInAlbum:(NSString*)album
@@ -274,10 +281,10 @@ static NSString *const kFBFieldPicture = @"picture";
 
 #pragma mark - id query
 
-- (void)idsQuery:(NSString *)query   
+- (void)idsQuery:(NSArray *)query   
            fields:(NSArray *)fields
             range:(NSUInteger)range
-       completion:(void(^)(NSArray *locations))completionHandler
+       completion:(void(^)(NSDictionary *objectMap))completionHandler
             error:(void(^)(NSError *error))errorHandler
 {
     
@@ -285,7 +292,7 @@ static NSString *const kFBFieldPicture = @"picture";
     NSString *fieldString = [fields componentsJoinedByString:@","];
     
     NSDictionary *parameters = [NSDictionary dictionaryWithObjectsAndKeys:
-                                query, @"ids",
+                                [query componentsJoinedByString:@","], @"ids",
                                 fieldString, @"fields", 
                                 nil];
     

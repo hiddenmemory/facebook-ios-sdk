@@ -50,8 +50,8 @@ static void *finishedContext = @"finishedContext";
 }
 
 // private properties
-@property(strong, nonatomic) NSArray* permissions;
-@property(nonatomic, copy) NSString* appId;
+@property (nonatomic, copy) NSString* appId;
+@property (nonatomic, strong) NSArray *permissions;
 
 - (id)initWithAppID:(NSString*)appID;
 
@@ -438,8 +438,9 @@ else {
 	
 	void (^grantedHandler)(Facebook*) = [_grantedHandler copy];
 	void (^deniedHandler)(Facebook*) = [_deniedHandler copy];
+	id danglingPointerHolder = nil;
 	
-	void (^temporaryLoginHandler)(Facebook*,FacebookLoginState) = [^(Facebook *facebook, FacebookLoginState state) {
+	void (^temporaryLoginHandler)(Facebook*,FacebookLoginState) = ^(Facebook *facebook, FacebookLoginState state) {
 		if( state == FacebookLoginSuccess && grantedHandler ) {
 			grantedHandler(facebook);
 		}
@@ -447,10 +448,10 @@ else {
 			deniedHandler(facebook);
 		}
 	
-		[loginHandlers removeObject:temporaryLoginHandler];
-	} copy];
+		[loginHandlers removeObject:danglingPointerHolder];
+	};
 	
-	[self addLoginHandler:temporaryLoginHandler];
+	[loginHandlers addObject:(danglingPointerHolder = [temporaryLoginHandler copy])];
 	
 	[self authorize:permissions];
 };

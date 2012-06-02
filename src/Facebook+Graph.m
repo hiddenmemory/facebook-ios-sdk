@@ -37,6 +37,7 @@ static NSString *const kFBFieldPicture = @"picture";
 #pragma mark - me
 - (void)me:(void(^)(NSDictionary *me))completionHandler
 	 error:(void(^)(NSError *error))errorHandler {
+	
 	[self requestWithGraphPath:@"me"
 					parameters:[NSDictionary dictionaryWithObjectsAndKeys:@"name,picture", @"fields", nil]
 					completion:^(FBRequest *request, id result) {	
@@ -49,6 +50,25 @@ static NSString *const kFBFieldPicture = @"picture";
 								 errorHandler(error);
 							 }
 						 }];
+}
+
+- (void)deletePermissions:(void (^)(Facebook*))completionHandler {
+	[[Facebook shared] addLogoutHandler:completionHandler];
+
+	[[Facebook shared] requestWithGraphPath:@"me/permissions"
+								 parameters:[NSDictionary dictionary]
+							  requestMethod:@"DELETE"
+								   finalize:^(FBRequest *request) {
+									   [request addCompletionHandler:^(FBRequest *request, id result) {
+										   [[Facebook shared] logout];
+									   }];
+								   }];
+	
+}
+
+- (void)fetchPermissions:(void(^)(NSArray *friends))completionHandler
+				   error:(void(^)(NSError *error))errorHandler {
+	
 }
 
 #pragma mark - friends
@@ -65,7 +85,7 @@ static NSString *const kFBFieldPicture = @"picture";
 				  error:(void(^)(NSError *error))errorHandler {
     NSString *keysString = [keys componentsJoinedByString:@","];
     NSDictionary *parameters = [NSDictionary dictionaryWithObject:keysString forKey:@"fields"];
-    
+
     [self requestWithGraphPath:@"me/friends"
 					parameters:parameters
 					completion:^(FBRequest *request, id result) {
@@ -91,7 +111,7 @@ static NSString *const kFBFieldPicture = @"picture";
 
 - (void)friendsWithApp:(void(^)(NSArray *friends))completionHandler
 				 error:(void(^)(NSError *error))errorHandler {
-	
+
 	[self requestWithMethodName:@"friends.getAppUsers"
 								  parameters:[NSDictionary dictionaryWithObjectsAndKeys:@"name,picture", @"fields", nil]
 								  completion:^(FBRequest *request, id result) {
@@ -137,26 +157,42 @@ static NSString *const kFBFieldPicture = @"picture";
 - (void)photosInAlbum:(NSString*)album
 		   completion:(void(^)(NSArray *photos))completionHandler
 				error:(void(^)(NSError *error))errorHandler {
-	
+
 }
 
 - (void)videos:(void(^)(NSArray *photos))completionHandler
 		 error:(void(^)(NSError *error))errorHandler {
 	
+	[self requestWithGraphPath:@"me/videos/uploaded"
+					  finalize:^(FBRequest *request) {
+						  [request addCompletionHandler:^(FBRequest *request, id result) {
+							  if( completionHandler ) {
+								  if( [[result class] isSubclassOfClass:[NSDictionary class]] ) {
+									  result = [result objectForKey:@"data"];
+								  }
+								  completionHandler(result);
+							  }
+						  }];
+						  [request addErrorHandler:^(FBRequest *request, NSError *error) {
+							  if( errorHandler ) {
+								  errorHandler(error);
+							  }
+						  }];
+					  }];
 }
 
 #pragma mark - sharing content
 - (void)setStatus:(NSString*)status
 	   completion:(void(^)(NSString *status))completionHandler
 			error:(void(^)(NSError *error))errorHandler {
-	
+
 }
 
 - (void)sharePhoto:(UIImage*)image
 			 title:(NSString*)title
 		completion:(void(^)(NSString *photoID))completionHandler
 			 error:(void(^)(NSError *error))errorHandler {
-	
+
 }
 
 - (void)sharePhoto:(UIImage*)image
@@ -164,14 +200,14 @@ static NSString *const kFBFieldPicture = @"picture";
 			 title:(NSString*)title
 		completion:(void(^)(NSString *photoID))completionHandler
 			 error:(void(^)(NSError *error))errorHandler {
-	
+
 }
 
 - (void)shareVideo:(NSData*)video
 			 title:(NSString*)title
 		completion:(void(^)(NSString *videoID))completionHandler
 			 error:(void(^)(NSError *error))errorHandler {
-	
+
 }
 
 #pragma mark - search
@@ -293,8 +329,6 @@ static NSString *const kFBFieldPicture = @"picture";
        completion:(void(^)(NSDictionary *objectMap))completionHandler
             error:(void(^)(NSError *error))errorHandler
 {
-    
-    
     NSString *fieldString = [fields componentsJoinedByString:@","];
     
     NSDictionary *parameters = [NSDictionary dictionaryWithObjectsAndKeys:

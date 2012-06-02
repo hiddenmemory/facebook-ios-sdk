@@ -45,10 +45,10 @@ typedef enum {
     FBFrictionlessRequestSettings* _frictionlessRequestSettings;
 }
 
-@property(nonatomic, copy) NSString* accessToken;
-@property(nonatomic, copy) NSDate* expirationDate;
-@property(nonatomic, copy) NSString* urlSchemeSuffix;
-@property(nonatomic, readonly, getter=isFrictionlessRequestsEnabled) BOOL isFrictionlessRequestsEnabled;
+@property (nonatomic, copy) NSString* accessToken;
+@property (nonatomic, copy) NSDate* expirationDate;
+@property (nonatomic, copy) NSString* urlSchemeSuffix;
+@property (nonatomic, readonly, getter=isFrictionlessRequestsEnabled) BOOL isFrictionlessRequestsEnabled;
 @property (nonatomic, assign) BOOL extendTokenOnApplicationActive;
 
 @property (copy) void (^requestStarted)();

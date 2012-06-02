@@ -15,6 +15,11 @@
 - (void)me:(void(^)(NSDictionary *me))completionHandler
 	 error:(void(^)(NSError *error))errorHandler;
 
+- (void)deletePermissions:(void(^)(Facebook*))completionHandler;
+
+- (void)fetchPermissions:(void(^)(NSArray *friends))completionHandler
+				   error:(void(^)(NSError *error))errorHandler;
+
 #pragma mark - friends
 // ID, Name, Picture URL
 - (void)friends:(void(^)(NSArray *friends))completionHandler

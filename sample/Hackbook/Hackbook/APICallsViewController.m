@@ -872,6 +872,31 @@
 								   }];
 }
 
+- (void)apiGraphUserVideos {
+	[self usingPermissions:[NSArray arrayWithObject:@"user_videos"] 
+				   request:^{
+					   [[Facebook shared] videos:^(NSArray *videos) {
+						   NSMutableArray *list = [NSMutableArray array];
+						   
+						   [videos enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+							   NSDictionary *video = (NSDictionary*)obj;
+							   
+							   [list addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+												[video objectForKey:@"id"], @"id",
+												[video objectForKey:@"name"], @"name",
+												[video objectForKey:@"picture"], @"picture",
+												[video objectForKey:@"description"], @"details",
+												nil]];
+						   }];
+						   
+						   APIResultsViewController *controller = [[APIResultsViewController alloc] initWithTitle:@"Videos"
+																											 data:list
+																										   action:nil];
+						   [self.navigationController pushViewController:controller animated:YES];
+					   } error:[self errorHandler:NSLocalizedString(@"Unable to fetch album list", @"")]];
+				   }];
+}
+
 /*
  * Graph API: Post a video to the user's wall.
  */

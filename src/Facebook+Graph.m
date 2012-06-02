@@ -29,8 +29,6 @@
 
 @end
 
-
-
 @implementation Facebook (Graph)
 
 static NSString *const kFBSearchTypePost = @"post";
@@ -73,11 +71,6 @@ static NSString *const kFBFieldPicture = @"picture";
 										   [[Facebook shared] logout];
 									   }];
 								   }];
-	
-}
-
-- (void)fetchPermissions:(void(^)(NSArray *friends))completionHandler
-				   error:(void(^)(NSError *error))errorHandler {
 	
 }
 
@@ -196,10 +189,49 @@ static NSString *const kFBFieldPicture = @"picture";
 }
 
 #pragma mark - sharing content
+
+/**
+ * Helper method to parse URL query parameters
+ */
+- (NSDictionary *)parseURLParams:(NSString *)query {
+	NSArray *pairs = [query componentsSeparatedByString:@"&"];
+	NSMutableDictionary *params = [NSMutableDictionary dictionary];
+	for (NSString *pair in pairs) {
+		NSArray *kv = [pair componentsSeparatedByString:@"="];
+		NSString *val = [[kv objectAtIndex:1] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+		[params setObject:val forKey:[kv objectAtIndex:0]];
+	}
+    return params;
+}
+
 - (void)setStatus:(NSString*)status
 	   completion:(void(^)(NSString *status))completionHandler
 			error:(void(^)(NSError *error))errorHandler {
 
+	[self usingPermission:@"publish_stream" request:^{
+		
+		NSMutableDictionary *params = [NSMutableDictionary dictionaryWithObjectsAndKeys:
+									   status, @"message",
+									   nil];
+		
+		[[Facebook shared] requestWithGraphPath:@"feed"
+									 parameters:params
+								  requestMethod:FBMethodPost
+									   finalize:^(FBRequest *request) {
+										   if( completionHandler ) {
+											   [request addCompletionHandler:^(FBRequest *request, id result) {
+												   NSLog(@"Result: %@", request);
+												   completionHandler(status);
+											   }];
+										   }
+										   if( errorHandler ) {
+											   [request addErrorHandler:^(FBRequest *request, NSError *error) {
+												   NSLog(@"Error: %@", error);
+												   errorHandler(error);
+											   }];
+										   }
+									   }];
+	}];
 }
 
 - (void)sharePhoto:(UIImage*)image

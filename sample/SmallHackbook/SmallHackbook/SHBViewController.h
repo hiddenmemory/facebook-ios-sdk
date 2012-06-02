@@ -9,6 +9,9 @@
 #import <UIKit/UIKit.h>
 
 @interface SHBViewController : UIViewController
-- (IBAction)go:(id)sender;
+@property (weak, nonatomic) IBOutlet UITextView *textView;
+
+- (IBAction)postStatus:(id)sender;
+- (IBAction)albumList:(id)sender;
 
 @end

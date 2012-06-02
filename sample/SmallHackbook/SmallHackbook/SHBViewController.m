@@ -14,6 +14,7 @@
 @end
 
 @implementation SHBViewController
+@synthesize textView;
 
 - (void)viewDidLoad
 {
@@ -23,6 +24,7 @@
 
 - (void)viewDidUnload
 {
+	[self setTextView:nil];
     [super viewDidUnload];
     // Release any retained subviews of the main view.
 }
@@ -32,7 +34,26 @@
 	return YES;
 }
 
-- (IBAction)go:(id)sender {
+- (void)_displayAlert:(NSString*)message {
+	UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"SmallHackbook!"
+													message:message
+												   delegate:nil
+										  cancelButtonTitle:@"OK"
+										  otherButtonTitles:nil];
+	[alert show];
+}
+
+- (IBAction)postStatus:(id)sender {
+	[[Facebook shared] setStatus:textView.text
+					  completion:^(NSString *status) {
+						  [self _displayAlert:@"Your status has been updated. Your friends have been informed. Life is great."];
+					  } 
+						   error:^(NSError *error) {
+							   [self _displayAlert:[NSString stringWithFormat:@"Unable to update your status - %@.", error]];
+						   }];
+}
+
+- (IBAction)albumList:(id)sender {
 	[[Facebook shared] fetchAlbums:^(NSArray *albums) {
 		[albums enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
 			NSLog(@"%u: %@ (%@)", idx, [obj objectForKey:@"name"], [obj objectForKey:@"id"]);

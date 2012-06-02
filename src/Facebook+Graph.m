@@ -8,8 +8,33 @@
 
 #import "Facebook+Graph.h"
 
+@interface Facebook (GraphPrivate)
+
+- (void)search:(NSString *)query
+                fields:(NSArray *)fields
+				 range:(NSUInteger)range
+			completion:(void(^)(NSArray *locations))completionHandler
+				 error:(void(^)(NSError *error))errorHandler;
+
+
+@end
+
+
+
 @implementation Facebook (Graph)
 
+static NSString *const kFBSearchTypePost = @"post";
+static NSString *const kFBSearchTypeUser = @"user";
+static NSString *const kFBSearchTypePage = @"page";
+static NSString *const kFBSearchTypeEvent = @"event";
+static NSString *const kFBSearchTypeGroup = @"group";
+static NSString *const kFBSearchTypePlace = @"place";
+static NSString *const kFBSearchTypeCheckIn = @"checkin";
+
+static NSString *const kFBFieldName = @"name";
+static NSString *const kFBFieldPicture = @"picture";
+
+#pragma mark - me
 - (void)me:(void(^)(NSDictionary *me))completionHandler
 	 error:(void(^)(NSError *error))errorHandler {
 
@@ -27,7 +52,8 @@
 						 }];
 }
 
-// ID, Name, Picture URL
+#pragma mark - friends
+
 - (void)friends:(void(^)(NSArray *friends))completionHandler
 		  error:(void(^)(NSError *error))errorHandler {
 	
@@ -70,6 +96,7 @@
 								  }];
 }
 
+#pragma mark - fetching content
 - (void)albums:(void(^)(NSArray *albums))completionHandler
 		 error:(void(^)(NSError *error))errorHandler {
 	
@@ -86,6 +113,7 @@
 	
 }
 
+#pragma mark - sharing content
 - (void)setStatus:(NSString*)status
 	   completion:(void(^)(NSString *status))completionHandler
 			error:(void(^)(NSError *error))errorHandler {
@@ -114,14 +142,42 @@
 	
 }
 
+#pragma mark - search
 - (void)locationSearch:(NSString *)query
-              location:(CLLocationCoordinate2D)location
+              coordinate:(CLLocationCoordinate2D)coordinate
+              distance:(int)distance
                 fields:(NSArray *)fields
 				 range:(NSUInteger)range
 			completion:(void(^)(NSArray *locations))completionHandler
 				 error:(void(^)(NSError *error))errorHandler
 {
+    NSString *centerLocation = [[NSString alloc] initWithFormat:@"%f,%f",
+                                coordinate.latitude,
+                                coordinate.longitude];
     
+    NSString *fieldString = [fields componentsJoinedByString:@","];
+    
+    NSString *distanceString = [NSString stringWithFormat:@"%i",distance];
+    
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionaryWithObjectsAndKeys:
+                                   kFBSearchTypePlace,  @"type",
+                                   centerLocation, @"center",
+                                   distanceString, @"distance",
+                                     fieldString, @"fields", 
+                                    nil];
+    
+    [self requestWithGraphPath:@"search"
+					parameters:parameters
+					completion:^(FBRequest *request, id result) {	
+						if( completionHandler ) {
+							completionHandler(result);
+						}
+					}
+						 error:^(FBRequest *request, NSError *error) {
+							 if( errorHandler ) {
+								 errorHandler(error);
+							 }
+						 }];
 }
 
 
@@ -141,6 +197,15 @@
                error:(void(^)(NSError *error))errorHandler
 {
     
+    NSString *fieldString = [fields componentsJoinedByString:@","];
+    
+    NSDictionary *parameters = [NSDictionary dictionaryWithObjectsAndKeys:
+                                    kFBSearchTypeUser, @"type",
+                                          fieldString, @"fields", 
+                                       nil];
+    
+    [self search:query parameters:parameters completion:completionHandler error:errorHandler];
+
 }
 
 - (void)pagesSearch:(NSString *)query
@@ -168,5 +233,26 @@
                  error:(void(^)(NSError *error))errorHandler
 {
     
+}
+
+#pragma mark - search (private)
+
+- (void)search:(NSString *)query
+    parameters:(NSDictionary *)parameters
+    completion:(void(^)(NSArray *locations))completionHandler
+         error:(void(^)(NSError *error))errorHandler
+{
+    [self requestWithGraphPath:@"search"
+					parameters:parameters
+					completion:^(FBRequest *request, id result) {	
+						if( completionHandler ) {
+							completionHandler(result);
+						}
+					}
+						 error:^(FBRequest *request, NSError *error) {
+							 if( errorHandler ) {
+								 errorHandler(error);
+							 }
+						 }];
 }
 @end

@@ -56,9 +56,21 @@ static NSString *const kFBFieldPicture = @"picture";
 
 - (void)friends:(void(^)(NSArray *friends))completionHandler
 		  error:(void(^)(NSError *error))errorHandler {
-	
-	[self requestWithGraphPath:@"me/friends"
-					parameters:[NSDictionary dictionaryWithObjectsAndKeys:@"name,picture", @"fields", nil]
+    
+    NSArray *keys = [NSArray arrayWithObjects:@"name",@"picture", nil];
+    [self friendsWithKeys:keys completion:completionHandler error:errorHandler];
+}
+
+- (void)friendsWithKeys:(NSArray*)keys 
+			 completion:(void(^)(NSArray *friends))completionHandler
+				  error:(void(^)(NSError *error))errorHandler {
+    
+    
+    NSString *keysString = [keys componentsJoinedByString:@","];
+    NSDictionary *parameters = [NSDictionary dictionaryWithObject:keysString forKey:@"fields"];
+    
+    [self requestWithGraphPath:@"me/friends"
+					parameters:parameters
 					completion:^(FBRequest *request, id result) {
 						NSArray *realResult = nil;
 						
@@ -78,11 +90,8 @@ static NSString *const kFBFieldPicture = @"picture";
 								 errorHandler(error);
 							 }
 						 }];
-}
-
-- (void)friendsWithKeys:(NSArray*)keys 
-			 completion:(void(^)(NSArray *friends))completionHandler
-				  error:(void(^)(NSError *error))errorHandler {
+    
+    
 	
 }
 

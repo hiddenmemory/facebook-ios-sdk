@@ -429,9 +429,31 @@ else {
  */
 - (void)authorize:(NSArray *)permissions {
     self.permissions = permissions;
-    
     [self authorizeWithFBAppAuth:YES safariAuth:YES];
 }
+
+- (void)authorize:(NSArray *)permissions 
+		  granted:(void(^)(Facebook *))_grantedHandler 
+		   denied:(void(^)(Facebook*))_deniedHandler {
+	
+	void (^grantedHandler)(Facebook*) = [_grantedHandler copy];
+	void (^deniedHandler)(Facebook*) = [_deniedHandler copy];
+	
+	void (^temporaryLoginHandler)(Facebook*,FacebookLoginState) = [^(Facebook *facebook, FacebookLoginState state) {
+		if( state == FacebookLoginSuccess && grantedHandler ) {
+			grantedHandler(facebook);
+		}
+		else if( deniedHandler ) {
+			deniedHandler(facebook);
+		}
+	
+		[loginHandlers removeObject:temporaryLoginHandler];
+	} copy];
+	
+	[self addLoginHandler:temporaryLoginHandler];
+	
+	[self authorize:permissions];
+};
 
 /**
  * Attempt to extend the access token.

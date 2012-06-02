@@ -21,7 +21,7 @@
 	UITableViewDataSource,
 	UITableViewDelegate
 > {
-    NSMutableArray *myData;
+    NSArray *myData;
     NSString *myAction;
     UILabel *messageLabel;
     UIView *messageView;

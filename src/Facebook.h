@@ -59,6 +59,10 @@ typedef enum {
 
 - (void)authorize:(NSArray *)permissions;
 
+- (void)authorize:(NSArray *)permissions 
+		  granted:(void(^)(Facebook *))_grantedHandler 
+		   denied:(void(^)(Facebook*))_deniedHandler;
+
 - (void)extendAccessToken;
 
 - (void)extendAccessTokenIfNeeded;

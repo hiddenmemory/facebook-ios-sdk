@@ -172,6 +172,13 @@
                                     @"Find nearby locations", @"button",
                                     @"getPermissionsCallNearby", @"method",
                                     nil];
+		NSDictionary *graphMenuPre5 = [NSDictionary dictionaryWithObjectsAndKeys:
+									   @"Fetch photo albums", @"title",
+									   @"See a list of photo albums attached to the user.", @"description",
+									   @"Display albums", @"button",
+									   @"apiGraphUserAlbums", @"method",
+									   nil];
+		
         NSDictionary *graphMenu5 = [[NSDictionary alloc] initWithObjectsAndKeys:
                                     @"Upload a photo", @"title",
                                     @"You can upload a photo to the application's album.", @"description",
@@ -186,11 +193,13 @@
                                     nil];
 
 
+		
         NSArray *graphMenuItems = [[NSArray alloc] initWithObjects:
                                    graphMenu1,
                                    graphMenu2,
                                    graphMenu3,
                                    graphMenu4,
+								   graphMenuPre5,
                                    graphMenu5,
                                    graphMenu6,
                                    nil];

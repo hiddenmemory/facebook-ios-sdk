@@ -115,10 +115,16 @@ static NSString *const kFBFieldPicture = @"picture";
 #pragma mark - fetching content
 - (void)albums:(void(^)(NSArray *albums))completionHandler
 		 error:(void(^)(NSError *error))errorHandler {
+
 	[self requestWithGraphPath:@"me/albums"
 					  finalize:^(FBRequest *request) {
 						  [request addCompletionHandler:^(FBRequest *request, id result) {
-							  NSLog(@"Result: %@", result); 
+							  if( completionHandler ) {
+								  if( [[result class] isSubclassOfClass:[NSDictionary class]] ) {
+									  result = [result objectForKey:@"data"];
+								  }
+								  completionHandler(result);
+							  }
 						  }];
 						  [request addErrorHandler:^(FBRequest *request, NSError *error) {
 							  if( errorHandler ) {

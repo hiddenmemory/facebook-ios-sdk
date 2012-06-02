@@ -130,11 +130,7 @@ static NSString *const kFBFieldPicture = @"picture";
                                 coordinate.latitude,
                                 coordinate.longitude];
     
-    NSMutableString *fieldString = [NSMutableString string];
-    for(NSString *field in fields)
-    {
-        [fieldString appendString:@""];
-    }
+    NSString *fieldString = [fields componentsJoinedByString:@","];
     
     NSString *distanceString = [NSString stringWithFormat:@"%i",distance];
     
@@ -176,19 +172,12 @@ static NSString *const kFBFieldPicture = @"picture";
                error:(void(^)(NSError *error))errorHandler
 {
     
-    NSMutableString *fieldString = [NSMutableString string];
-    for(NSString *field in fields)
-    {
-        [fieldString appendString:[NSString stringWithFormat:@",%@",field]];
-    }
+    NSString *fieldString = [fields componentsJoinedByString:@","];
     
-    
-
     NSDictionary *parameters = [NSDictionary dictionaryWithObjectsAndKeys:
                                     kFBSearchTypeUser, @"type",
                                           fieldString, @"fields", 
                                        nil];
-    
     
     [self search:query parameters:parameters completion:completionHandler error:errorHandler];
 

@@ -58,6 +58,7 @@ typedef enum {
 @property (copy) void (^requestFinished)();
 
 + (Facebook*)bind:(NSString*)appID;
++ (Facebook*)bind;
 + (Facebook*)shared;
 
 - (void)authorize:(NSArray *)permissions;

@@ -10,6 +10,7 @@
 
 @interface SHBViewController : UIViewController
 @property (weak, nonatomic) IBOutlet UITextView *textView;
+@property (weak, nonatomic) IBOutlet UIImageView *imageView;
 
 - (IBAction)postStatus:(id)sender;
 - (IBAction)albumList:(id)sender;

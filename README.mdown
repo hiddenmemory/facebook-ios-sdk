@@ -41,6 +41,8 @@ OverTheAir Changes:
 										...
 									} error:nil]];
 								}];
+								
+- API to make common tasks easier and less error prone - [[Facebook+Graph.h]]
 
 About:
 ======

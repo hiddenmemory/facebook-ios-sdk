@@ -49,7 +49,7 @@ static NSString* kAppId = @"210849718975311";
     self.navigationController = navController;
     
     // Initialize Facebook
-    facebook = [Facebook shared:kAppId];
+    facebook = [Facebook bind:kAppId];
 	facebook.delegate = rootViewController;
 	
     // Initialize API data (for views, etc.)

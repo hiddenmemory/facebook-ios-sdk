@@ -20,3 +20,5 @@
 #import "FBLoginDialog.h"
 #import "FBRequest.h"
 #import "Facebook+Delegate.h"
+#import "Facebook+Graph.h"
+#import "FBAppDelegate.h"

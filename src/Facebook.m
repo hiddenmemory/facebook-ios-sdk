@@ -74,22 +74,48 @@ lastRequestedPermissions = _lastRequestedPermissions;
 
 @synthesize requestStarted, requestFinished;
 
-+ (Facebook*)shared:(NSString *)appID {
++ (Facebook*)bind:(NSString *)appID {
 	static dispatch_once_t pred = 0; \
 	dispatch_once(&pred, ^{
+		NSLog(@"Binding to %@", appID);
 		facebookSharedObject = [[Facebook alloc] initWithAppID:appID];
 		if( facebookSharedObject.isSessionValid ) {
 			[facebookSharedObject fetchActiveUserPermissions];
 		}
 	});
-
 	return facebookSharedObject;
+}
++ (void)autobind:(NSNotification*)notification {
+	NSArray* aBundleURLTypes = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleURLTypes"];
+	if ([aBundleURLTypes isKindOfClass:[NSArray class]] && ([aBundleURLTypes count] > 0)) {
+		NSDictionary* aBundleURLTypes0 = [aBundleURLTypes objectAtIndex:0];
+		if ([aBundleURLTypes0 isKindOfClass:[NSDictionary class]]) {
+			NSArray* aBundleURLSchemes = [aBundleURLTypes0 objectForKey:@"CFBundleURLSchemes"];
+			if ([aBundleURLSchemes isKindOfClass:[NSArray class]] && ([aBundleURLSchemes count] > 0)) {
+				NSString *scheme = [aBundleURLSchemes objectAtIndex:0];
+				if ([scheme isKindOfClass:[NSString class]] && [scheme hasPrefix:@"fb"]) {
+					[self bind:[scheme substringFromIndex:2]];
+				}
+			}
+		}
+	}
 }
 + (Facebook*)shared {
 	if( !facebookSharedObject ) {
 		@throw [NSError errorWithDomain:@"com.facebook.iOS.RequiresAppIDError" code:42 userInfo:nil];
 	}
 	return facebookSharedObject;
+}
++ (void)load {
+	[[NSNotificationCenter defaultCenter] addObserver:self
+											 selector:@selector(autobind:)
+												 name:UIApplicationDidFinishLaunchingNotification
+											   object:nil];
+	
+	[[NSNotificationCenter defaultCenter] addObserver:self
+											 selector:@selector(autobind:)
+												 name:UIApplicationDidBecomeActiveNotification
+											   object:nil];
 }
 
 - (void)applicationDidBecomeActive:(NSNotification*)notification {
@@ -114,9 +140,9 @@ lastRequestedPermissions = _lastRequestedPermissions;
 // private
 
 #define FBAccessTokenKey [NSString stringWithFormat:@"com.facebook.ios.token:%@", \
-[[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleIdentifier"]]
+							[[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleIdentifier"]]
 #define FBExpirationDateKey [NSString stringWithFormat:@"com.facebook.ios.expiration:%@", \
-[[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleIdentifier"]]
+								[[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleIdentifier"]]
 
 - (void)storeAccessToken {
 	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];

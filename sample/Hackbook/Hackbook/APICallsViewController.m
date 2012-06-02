@@ -800,53 +800,16 @@
     }
 }
 
-- (void)usingPermissions:(NSArray*)permissions
-				 request:(void(^)())_request {
-	
-	HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
-	NSDictionary *existingPermissions = [delegate userPermissions];
-	
-	BOOL mustAuthorise = NO;
-	
-	for( NSString *permission in permissions ) {
-		if( [existingPermissions objectForKey:permission] == nil ) {
-			mustAuthorise = YES;
-			break;
-		}
-	}
-	
-	if( mustAuthorise ) {
-		void (^request)() = [_request copy];
-
-		[[Facebook shared] authorize:permissions
-							 granted:^(Facebook *facebook) {
-								 NSMutableDictionary *newPermissions = [NSMutableDictionary dictionaryWithDictionary:existingPermissions];
-								 [permissions enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
-									 [newPermissions setObject:[NSNumber numberWithBool:YES] forKey:obj];
-								 }];
-								 delegate.userPermissions = newPermissions;
-								 
-								 request();
-							 }
-							  denied:^(Facebook *facebook) {
-								  [self showMessage:NSLocalizedString(@"Unable to update permissions", @"")];
-							  }];
-	}
-	else {
-		_request();
-	}
-}
-
 - (void)apiGraphUserAlbums {
-	[self usingPermissions:[NSArray arrayWithObject:@"user_photos"] 
-				   request:^{
-					   [[Facebook shared] albums:^(NSArray *albums) {
-						   APIResultsViewController *controller = [[APIResultsViewController alloc] initWithTitle:@"Photo Albums"
-																											 data:albums
-																										   action:nil];
-						   [self.navigationController pushViewController:controller animated:YES];
-					   } error:[self errorHandler:NSLocalizedString(@"Unable to fetch album list", @"")]];
-				   }];
+	[[Facebook shared] usingPermissions:[NSArray arrayWithObject:@"user_photos"] 
+								request:^{
+									[[Facebook shared] albums:^(NSArray *albums) {
+										APIResultsViewController *controller = [[APIResultsViewController alloc] initWithTitle:@"Photo Albums"
+																														  data:albums
+																														action:nil];
+										[self.navigationController pushViewController:controller animated:YES];
+									} error:[self errorHandler:NSLocalizedString(@"Unable to fetch album list", @"")]];
+								}];
 }
 
 /*
@@ -873,28 +836,28 @@
 }
 
 - (void)apiGraphUserVideos {
-	[self usingPermissions:[NSArray arrayWithObject:@"user_videos"] 
-				   request:^{
-					   [[Facebook shared] videos:^(NSArray *videos) {
-						   NSMutableArray *list = [NSMutableArray array];
-						   
-						   [videos enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
-							   NSDictionary *video = (NSDictionary*)obj;
-							   
-							   [list addObject:[NSDictionary dictionaryWithObjectsAndKeys:
-												[video objectForKey:@"id"], @"id",
-												[video objectForKey:@"name"], @"name",
-												[video objectForKey:@"picture"], @"picture",
-												[video objectForKey:@"description"], @"details",
-												nil]];
-						   }];
-						   
-						   APIResultsViewController *controller = [[APIResultsViewController alloc] initWithTitle:@"Videos"
-																											 data:list
-																										   action:nil];
-						   [self.navigationController pushViewController:controller animated:YES];
-					   } error:[self errorHandler:NSLocalizedString(@"Unable to fetch album list", @"")]];
-				   }];
+	[[Facebook shared] usingPermissions:[NSArray arrayWithObject:@"user_videos"] 
+								request:^{
+									[[Facebook shared] videos:^(NSArray *videos) {
+										NSMutableArray *list = [NSMutableArray array];
+										
+										[videos enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+											NSDictionary *video = (NSDictionary*)obj;
+											
+											[list addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+															 [video objectForKey:@"id"], @"id",
+															 [video objectForKey:@"name"], @"name",
+															 [video objectForKey:@"picture"], @"picture",
+															 [video objectForKey:@"description"], @"details",
+															 nil]];
+										}];
+										
+										APIResultsViewController *controller = [[APIResultsViewController alloc] initWithTitle:@"Videos"
+																														  data:list
+																														action:nil];
+										[self.navigationController pushViewController:controller animated:YES];
+									} error:[self errorHandler:NSLocalizedString(@"Unable to fetch album list", @"")]];
+								}];
 }
 
 /*

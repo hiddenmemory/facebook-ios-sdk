@@ -35,7 +35,7 @@ static NSString *const kFBFieldName = @"name";
 static NSString *const kFBFieldPicture = @"picture";
 
 #pragma mark - me
-- (void)me:(void(^)(NSDictionary *me))completionHandler
+- (void)fetchMe:(void(^)(NSDictionary *me))completionHandler
 	 error:(void(^)(NSError *error))errorHandler {
 	
 	[self requestWithGraphPath:@"me"
@@ -73,14 +73,14 @@ static NSString *const kFBFieldPicture = @"picture";
 
 #pragma mark - friends
 
-- (void)friends:(void(^)(NSArray *friends))completionHandler
+- (void)fetchFriends:(void(^)(NSArray *friends))completionHandler
 		  error:(void(^)(NSError *error))errorHandler {
     
     NSArray *keys = [NSArray arrayWithObjects:kFBFieldName,kFBFieldPicture, nil];
-    [self friendsWithKeys:keys completion:completionHandler error:errorHandler];
+    [self fetchFriendsWithKeys:keys completion:completionHandler error:errorHandler];
 }
 
-- (void)friendsWithKeys:(NSArray*)keys 
+- (void)fetchFriendsWithKeys:(NSArray*)keys 
 			 completion:(void(^)(NSArray *friends))completionHandler
 				  error:(void(^)(NSError *error))errorHandler {
     NSString *keysString = [keys componentsJoinedByString:@","];
@@ -109,14 +109,14 @@ static NSString *const kFBFieldPicture = @"picture";
 						 }];
 }
 
-- (void)friendsWithApp:(void(^)(NSArray *friends))completionHandler
+- (void)fetchFriendsWithApp:(void(^)(NSArray *friends))completionHandler
 				 error:(void(^)(NSError *error))errorHandler {
 
 	[self requestWithMethodName:@"friends.getAppUsers"
 								  parameters:[NSDictionary dictionaryWithObjectsAndKeys:@"name,picture", @"fields", nil]
 								  completion:^(FBRequest *request, id result) {
 									  NSLog(@"Result: %@", result);
-									  [self idsQuery:result
+									  [self fetchIDsQuery:result
                                               fields:[NSArray arrayWithObjects:kFBFieldName, kFBFieldPicture, nil]
                                                range:0
                                           completion:^(NSDictionary *people) {
@@ -133,7 +133,7 @@ static NSString *const kFBFieldPicture = @"picture";
 }
 
 #pragma mark - fetching content
-- (void)albums:(void(^)(NSArray *albums))completionHandler
+- (void)fetchAlbums:(void(^)(NSArray *albums))completionHandler
 		 error:(void(^)(NSError *error))errorHandler {
 
 	[self usingPermission:@"user_photos" request:^{
@@ -156,13 +156,13 @@ static NSString *const kFBFieldPicture = @"picture";
 	}];
 }
 
-- (void)photosInAlbum:(NSString*)album
+- (void)fetchPhotosInAlbum:(NSString*)album
 		   completion:(void(^)(NSArray *photos))completionHandler
 				error:(void(^)(NSError *error))errorHandler {
 
 }
 
-- (void)videos:(void(^)(NSArray *photos))completionHandler
+- (void)fetchVideos:(void(^)(NSArray *photos))completionHandler
 		 error:(void(^)(NSError *error))errorHandler {
 	
 	[self usingPermission:@"user_videos" request:^{
@@ -215,7 +215,7 @@ static NSString *const kFBFieldPicture = @"picture";
 }
 
 #pragma mark - search
-- (void)locationSearch:(NSString *)query
+- (void)searchLocation:(NSString *)query
               coordinate:(CLLocationCoordinate2D)coordinate
               distance:(int)distance
                 fields:(NSArray *)fields
@@ -243,7 +243,7 @@ static NSString *const kFBFieldPicture = @"picture";
 }
 
 
-- (void)postsSearch:(NSString *)query
+- (void)searchPosts:(NSString *)query
              fields:(NSArray *)fields
               range:(NSUInteger)range
          completion:(void(^)(NSArray *locations))completionHandler
@@ -259,7 +259,7 @@ static NSString *const kFBFieldPicture = @"picture";
     [self search:query parameters:parameters range:range completion:completionHandler error:errorHandler];
 }
 
-- (void)peopleSearch:(NSString *)query
+- (void)searchPeople:(NSString *)query
               fields:(NSArray *)fields
                range:(NSUInteger)range
           completion:(void(^)(NSArray *locations))completionHandler
@@ -277,7 +277,7 @@ static NSString *const kFBFieldPicture = @"picture";
 
 }
 
-- (void)pagesSearch:(NSString *)query
+- (void)searchPages:(NSString *)query
              fields:(NSArray *)fields
               range:(NSUInteger)range
          completion:(void(^)(NSArray *locations))completionHandler
@@ -293,7 +293,7 @@ static NSString *const kFBFieldPicture = @"picture";
     [self search:query parameters:parameters range:range completion:completionHandler error:errorHandler];
 }
 
-- (void)eventsSearch:(NSString *)query
+- (void)searchEvents:(NSString *)query
               fields:(NSArray *)fields
                range:(NSUInteger)range
           completion:(void(^)(NSArray *locations))completionHandler
@@ -309,7 +309,7 @@ static NSString *const kFBFieldPicture = @"picture";
     [self search:query parameters:parameters range:range completion:completionHandler error:errorHandler];
 }
 
-- (void)checkinsSearch:(NSString *)query   
+- (void)searchCheckins:(NSString *)query   
                 fields:(NSArray *)fields
                  range:(NSUInteger)range
             completion:(void(^)(NSArray *locations))completionHandler
@@ -327,7 +327,7 @@ static NSString *const kFBFieldPicture = @"picture";
 
 #pragma mark - id query
 
-- (void)idsQuery:(NSArray *)query   
+- (void)fetchIDsQuery:(NSArray *)query   
            fields:(NSArray *)fields
             range:(NSUInteger)range
        completion:(void(^)(NSDictionary *objectMap))completionHandler

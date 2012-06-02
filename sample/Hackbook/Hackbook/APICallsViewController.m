@@ -323,7 +323,7 @@
  * Graph API: Method to get the user's permissions for this app.
  */
 - (void)apiGraphUserPermissions {
-#warning Not implemented
+    #warning Not implemented
     currentAPICall = kAPIGraphUserPermissions;
 	[[Facebook shared] requestWithGraphPath:@"me/permissions"
 								 parameters:[NSDictionary dictionary]

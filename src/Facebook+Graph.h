@@ -97,7 +97,16 @@
                 fields:(NSArray *)fields
                  range:(NSUInteger)range
             completion:(void(^)(NSArray *locations))completionHandler
+                error:(void(^)(NSError *error))errorHandler;
+
+#pragma mark - id query
+
+- (void)idsQuery:(NSString *)query   
+                fields:(NSArray *)fields
+                 range:(NSUInteger)range
+            completion:(void(^)(NSArray *locations))completionHandler
                  error:(void(^)(NSError *error))errorHandler;
+
 
 
 

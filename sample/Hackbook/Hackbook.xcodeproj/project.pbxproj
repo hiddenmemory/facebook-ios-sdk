@@ -357,6 +357,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ENABLE_OBJC_ARC = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer: Kieran Gutteridge (369DZS26NN)";
 				COPY_PHASE_STRIP = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -365,6 +366,7 @@
 				INFOPLIST_FILE = "Hackbook/Hackbook-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				PRODUCT_NAME = Hackbook;
+				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "4E6F6CB8-1B0B-4290-9A70-5B1D66AEC3F1";
 				TARGETED_DEVICE_FAMILY = "1,2";
 				WRAPPER_EXTENSION = app;
 			};

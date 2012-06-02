@@ -93,13 +93,14 @@ static NSString *const kFBFieldPicture = @"picture";
 								  parameters:[NSDictionary dictionaryWithObjectsAndKeys:@"name,picture", @"fields", nil]
 								  completion:^(FBRequest *request, id result) {
 									  NSLog(@"Result: %@", result);
-									  [self peopleSearch:[NSString stringWithFormat:@"ids=%@", [result componentsJoinedByString:@","]]
+									  [self idsQuery:[NSString stringWithFormat:@"%@",[result componentsJoinedByString:@","]]
 												  fields:[NSArray arrayWithObjects:@"name", @"picture", nil]
 												   range:0
-											  completion:^(NSArray *locations) {
-												  NSLog(@"Locations: %@", locations);
+											  completion:^(NSArray *people) {
+												  NSLog(@"People: %@", people);
 											  } 
 												   error:^(NSError *error) {
+                                                       NSLog(@"Error: %@",error);
 													   
 												   }];
 								  }];
@@ -159,34 +160,24 @@ static NSString *const kFBFieldPicture = @"picture";
 				 range:(NSUInteger)range
 			completion:(void(^)(NSArray *locations))completionHandler
 				 error:(void(^)(NSError *error))errorHandler
-{
+{    
+    NSString *fieldString = [fields componentsJoinedByString:@","];
+    
     NSString *centerLocation = [[NSString alloc] initWithFormat:@"%f,%f",
                                 coordinate.latitude,
                                 coordinate.longitude];
     
-    NSString *fieldString = [fields componentsJoinedByString:@","];
-    
     NSString *distanceString = [NSString stringWithFormat:@"%i",distance];
     
-    NSMutableDictionary *parameters = [NSMutableDictionary dictionaryWithObjectsAndKeys:
+    NSDictionary *parameters = [NSDictionary dictionaryWithObjectsAndKeys:
                                    kFBSearchTypePlace,  @"type",
                                    centerLocation, @"center",
                                    distanceString, @"distance",
                                      fieldString, @"fields", 
-                                    nil];
+                                nil];
     
-    [self requestWithGraphPath:@"search"
-					parameters:parameters
-					completion:^(FBRequest *request, id result) {	
-						if( completionHandler ) {
-							completionHandler(result);
-						}
-					}
-						 error:^(FBRequest *request, NSError *error) {
-							 if( errorHandler ) {
-								 errorHandler(error);
-							 }
-						 }];
+    [self search:query parameters:parameters range:range completion:completionHandler error:errorHandler];
+
 }
 
 
@@ -196,7 +187,14 @@ static NSString *const kFBFieldPicture = @"picture";
          completion:(void(^)(NSArray *locations))completionHandler
               error:(void(^)(NSError *error))errorHandler
 {
+    NSString *fieldString = [fields componentsJoinedByString:@","];
     
+    NSDictionary *parameters = [NSDictionary dictionaryWithObjectsAndKeys:
+                                kFBSearchTypePost, @"type",
+                                fieldString, @"fields", 
+                                nil];
+    
+    [self search:query parameters:parameters range:range completion:completionHandler error:errorHandler];
 }
 
 - (void)peopleSearch:(NSString *)query
@@ -213,7 +211,7 @@ static NSString *const kFBFieldPicture = @"picture";
                                           fieldString, @"fields", 
                                        nil];
     
-    [self search:query parameters:parameters completion:completionHandler error:errorHandler];
+    [self search:query parameters:parameters range:range completion:completionHandler error:errorHandler];
 
 }
 
@@ -223,7 +221,14 @@ static NSString *const kFBFieldPicture = @"picture";
          completion:(void(^)(NSArray *locations))completionHandler
               error:(void(^)(NSError *error))errorHandler
 {
+    NSString *fieldString = [fields componentsJoinedByString:@","];
     
+    NSDictionary *parameters = [NSDictionary dictionaryWithObjectsAndKeys:
+                                kFBSearchTypePage, @"type",
+                                fieldString, @"fields", 
+                                nil];
+    
+    [self search:query parameters:parameters range:range completion:completionHandler error:errorHandler];
 }
 
 - (void)eventsSearch:(NSString *)query
@@ -232,7 +237,14 @@ static NSString *const kFBFieldPicture = @"picture";
           completion:(void(^)(NSArray *locations))completionHandler
                error:(void(^)(NSError *error))errorHandler
 {
+    NSString *fieldString = [fields componentsJoinedByString:@","];
     
+    NSDictionary *parameters = [NSDictionary dictionaryWithObjectsAndKeys:
+                                kFBSearchTypeEvent, @"type",
+                                fieldString, @"fields", 
+                                nil];
+    
+    [self search:query parameters:parameters range:range completion:completionHandler error:errorHandler];
 }
 
 - (void)checkinsSearch:(NSString *)query   
@@ -241,22 +253,60 @@ static NSString *const kFBFieldPicture = @"picture";
             completion:(void(^)(NSArray *locations))completionHandler
                  error:(void(^)(NSError *error))errorHandler
 {
+    NSString *fieldString = [fields componentsJoinedByString:@","];
     
+    NSDictionary *parameters = [NSDictionary dictionaryWithObjectsAndKeys:
+                                kFBSearchTypeCheckIn, @"type",
+                                fieldString, @"fields", 
+                                nil];
+    
+    [self search:query parameters:parameters range:range completion:completionHandler error:errorHandler];
+}
+
+#pragma mark - id query
+
+- (void)idsQuery:(NSString *)query   
+           fields:(NSArray *)fields
+            range:(NSUInteger)range
+       completion:(void(^)(NSArray *locations))completionHandler
+            error:(void(^)(NSError *error))errorHandler
+{
+    
+    
+    NSString *fieldString = [fields componentsJoinedByString:@","];
+    
+    NSDictionary *parameters = [NSDictionary dictionaryWithObjectsAndKeys:
+                                query, @"ids",
+                                fieldString, @"fields", 
+                                nil];
+    
+    [self requestWithGraphPath:@""
+					parameters:parameters
+					completion:^(FBRequest *request, id result) {	
+						if( completionHandler ) {
+							completionHandler(result);
+						}
+					}
+						 error:^(FBRequest *request, NSError *error) {
+							 if( errorHandler ) {
+								 errorHandler(error);
+							 }
+						 }];
 }
 
 #pragma mark - search (private)
 
 - (void)search:(NSString *)query
     parameters:(NSDictionary *)parameters
+         range:(int)range
     completion:(void(^)(NSArray *locations))completionHandler
          error:(void(^)(NSError *error))errorHandler
 {
-	NSMutableDictionary *p = [NSMutableDictionary dictionaryWithDictionary:parameters];
-	
-	[p setObject:query forKey:@"q"];
-	
+    NSMutableDictionary *p = [NSDictionary dictionaryWithDictionary:parameters];
+    [p setObject:query forKey:@"q"];
+    
     [self requestWithGraphPath:@"search"
-					parameters:p
+					parameters:parameters
 					completion:^(FBRequest *request, id result) {	
 						if( completionHandler ) {
 							completionHandler(result);

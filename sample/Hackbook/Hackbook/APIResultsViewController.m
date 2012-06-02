@@ -207,9 +207,7 @@
 	NSDictionary *row = [incomingImageQueue objectAtIndex:0];
 	
 	[thumbnailCache setObject:image forKey:[row objectForKey:@"id"]];
-	
-	NSLog(@"Done loading %@: %@", row, image);
-	
+		
 	[tableView reloadRowsAtIndexPaths:[NSArray arrayWithObject:[NSIndexPath indexPathForRow:[[row objectForKey:@"row"] unsignedIntegerValue]
 																				  inSection:-0]]
 					 withRowAnimation:UITableViewRowAnimationFade];

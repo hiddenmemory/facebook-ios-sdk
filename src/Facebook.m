@@ -104,7 +104,9 @@ lastRequestedPermissions = _lastRequestedPermissions;
 	return nil;	
 }
 + (void)autobind:(NSNotification*)notification {
-	[self bind];
+	if( !facebookSharedObject ) {
+		[self bind];
+	}
 }
 + (Facebook*)shared {
 	return facebookSharedObject;

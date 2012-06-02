@@ -34,7 +34,9 @@
 
 - (IBAction)go:(id)sender {
 	[[Facebook shared] fetchAlbums:^(NSArray *albums) {
-		NSLog(@"Albums: %@", albums);
+		[albums enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+			NSLog(@"%u: %@ (%@)", idx, [obj objectForKey:@"name"], [obj objectForKey:@"id"]);
+		}];
 	} error:nil];
 }
 

@@ -85,8 +85,7 @@ lastRequestedPermissions = _lastRequestedPermissions;
 	});
 	return facebookSharedObject;
 }
-+ (void)autobind {
-	NSLog(@"Autobinding");
++ (void)autobind:(NSNotification*)notification {
 	NSArray* aBundleURLTypes = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleURLTypes"];
 	if ([aBundleURLTypes isKindOfClass:[NSArray class]] && ([aBundleURLTypes count] > 0)) {
 		NSDictionary* aBundleURLTypes0 = [aBundleURLTypes objectAtIndex:0];
@@ -109,8 +108,13 @@ lastRequestedPermissions = _lastRequestedPermissions;
 }
 + (void)load {
 	[[NSNotificationCenter defaultCenter] addObserver:self
-											 selector:@selector(autobind)
+											 selector:@selector(autobind:)
 												 name:UIApplicationDidFinishLaunchingNotification
+											   object:nil];
+	
+	[[NSNotificationCenter defaultCenter] addObserver:self
+											 selector:@selector(autobind:)
+												 name:UIApplicationDidBecomeActiveNotification
 											   object:nil];
 }
 

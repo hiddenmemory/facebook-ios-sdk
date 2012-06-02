@@ -12,43 +12,41 @@
 @interface Facebook (Graph)
 
 #pragma mark - me
-- (void)me:(void(^)(NSDictionary *me))completionHandler
+- (void)fetchMe:(void(^)(NSDictionary *me))completionHandler
 	 error:(void(^)(NSError *error))errorHandler;
 
 - (void)deletePermissions:(void(^)(Facebook*))completionHandler;
 
-- (void)fetchPermissions:(void(^)(NSArray *friends))completionHandler
-				   error:(void(^)(NSError *error))errorHandler;
-
 #pragma mark - friends
 // ID, Name, Picture URL
-- (void)friends:(void(^)(NSArray *friends))completionHandler
+- (void)fetchFriends:(void(^)(NSArray *friends))completionHandler
 		  error:(void(^)(NSError *error))errorHandler;
 
-- (void)friendsWithKeys:(NSArray*)keys 
+- (void)fetchFriendsWithKeys:(NSArray*)keys 
 			 completion:(void(^)(NSArray *friends))completionHandler
 				  error:(void(^)(NSError *error))errorHandler;
 
-- (void)friendsWithApp:(void(^)(NSArray *friends))completionHandler
+- (void)fetchFriendsWithApp:(void(^)(NSArray *friends))completionHandler
 				 error:(void(^)(NSError *error))errorHandler;
 
 
 #pragma mark - fetching content
-- (void)albums:(void(^)(NSArray *albums))completionHandler
+- (void)fetchAlbums:(void(^)(NSArray *albums))completionHandler
 		 error:(void(^)(NSError *error))errorHandler;
 
-- (void)photosInAlbum:(NSString*)album
+- (void)fetchPhotosInAlbum:(NSString*)album
 		   completion:(void(^)(NSArray *photos))completionHandler
 				error:(void(^)(NSError *error))errorHandler;
 
-- (void)videos:(void(^)(NSArray *photos))completionHandler
+- (void)fetchVideos:(void(^)(NSArray *photos))completionHandler
 		 error:(void(^)(NSError *error))errorHandler;
+
+#pragma mark - sharing content
 
 - (void)setStatus:(NSString*)status
 	   completion:(void(^)(NSString *status))completionHandler
 			error:(void(^)(NSError *error))errorHandler;
 
-#pragma mark - sharing content
 - (void)sharePhoto:(UIImage*)image
 			 title:(NSString*)title
 		completion:(void(^)(NSString *photoID))completionHandler
@@ -66,7 +64,7 @@
 			 error:(void(^)(NSError *error))errorHandler;
 
 #pragma mark - search
-- (void)locationSearch:(NSString *)query
+- (void)searchLocations:(NSString *)query
             coordinate:(CLLocationCoordinate2D)coordinate
               distance:(int)distance
                 fields:(NSArray *)fields
@@ -74,31 +72,31 @@
 			completion:(void(^)(NSArray *locations))completionHandler
 				 error:(void(^)(NSError *error))errorHandler;
 
-- (void)postsSearch:(NSString *)query
+- (void)searchPosts:(NSString *)query
              fields:(NSArray *)fields
               range:(NSUInteger)range
          completion:(void(^)(NSArray *locations))completionHandler
               error:(void(^)(NSError *error))errorHandler;
 
-- (void)peopleSearch:(NSString *)query
+- (void)searchPeople:(NSString *)query
               fields:(NSArray *)fields
                range:(NSUInteger)range
           completion:(void(^)(NSArray *locations))completionHandler
                error:(void(^)(NSError *error))errorHandler;
 
-- (void)pagesSearch:(NSString *)query
+- (void)searchPages:(NSString *)query
              fields:(NSArray *)fields
               range:(NSUInteger)range
          completion:(void(^)(NSArray *locations))completionHandler
               error:(void(^)(NSError *error))errorHandler;
 
-- (void)eventsSearch:(NSString *)query
+- (void)searchEvents:(NSString *)query
               fields:(NSArray *)fields
                range:(NSUInteger)range
           completion:(void(^)(NSArray *locations))completionHandler
                error:(void(^)(NSError *error))errorHandler;
 
-- (void)checkinsSearch:(NSString *)query   
+- (void)searchCheckins:(NSString *)query   
                 fields:(NSArray *)fields
                  range:(NSUInteger)range
             completion:(void(^)(NSArray *locations))completionHandler
@@ -106,7 +104,7 @@
 
 #pragma mark - id query
 
-- (void)idsQuery:(NSArray *)query   
+- (void)fetchIDsQuery:(NSArray *)query   
 		  fields:(NSArray *)fields
 		   range:(NSUInteger)range
 	  completion:(void(^)(NSDictionary *objectMap))completionHandler

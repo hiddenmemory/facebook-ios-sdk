@@ -271,7 +271,7 @@ error = _error;
  */
 
 - (void)_reportError:(NSError*)error {
-	[errorHandlers enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+	[[errorHandlers copy] enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
 		void (^handler)(FBRequest*,NSError *) = (void(^)(FBRequest*,NSError*))obj;
 		handler(self, error);
 	}];
@@ -288,7 +288,7 @@ error = _error;
  * private helper function: handle the response data
  */
 - (void)handleResponseData:(NSData *)data {
-	[rawHandlers enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+	[[rawHandlers copy] enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
 		void (^handler)(FBRequest*,NSData *) = (void(^)(FBRequest*, NSData*))obj;
 		handler(self, data);
 	}];
@@ -301,7 +301,7 @@ error = _error;
 		[self _reportError:error];
 	}
 	else {
-		[completionHandlers enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+		[[completionHandlers copy] enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
 			void (^handler)(FBRequest*,id) = (void(^)(FBRequest*, id))obj;
 			handler(self, result);
 		}];
@@ -328,7 +328,7 @@ error = _error;
 		[Facebook shared].requestStarted();
 	}
 	
-	[loadHandlers enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+	[[loadHandlers copy] enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
 		void (^handler)(FBRequest*) = (void(^)(FBRequest*))obj;
 		handler(self);
 	}];
@@ -384,7 +384,7 @@ error = _error;
 	
 	NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse*)response;
 	
-	[responseHandlers enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+	[[responseHandlers copy] enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
 		void (^handler)(FBRequest*,NSURLResponse*) = (void(^)(FBRequest*,NSURLResponse*))obj;
 		handler(self, httpResponse);
 	}];

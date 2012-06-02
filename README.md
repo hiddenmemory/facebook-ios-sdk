@@ -5,7 +5,7 @@
  - Runs on iOS5 only with ARC support for better memory management
  - Massive cleanup of API naming convention to be a better iOS citizen. e.g.:
 
-    - (FBRequest*)requestWithMethodName:(NSString *)methodName
+    	- (FBRequest*)requestWithMethodName:(NSString *)methodName
                              parameters:(NSDictionary *)params
                           requestMethod:(NSString *)httpMethod
                                finalize:(void(^)(FBRequest*request))finalize;
@@ -13,7 +13,7 @@
  - Removed SBJSON to use the iOS native NSJSONSerialization methods
  - Swapped the delegate patterns to be a flexible block based API system resulting in less verbosity and better code locality (removes a big requirement on object globals to track requests in user code)
 
-    [[Facebook shared] requestWithGraphPath:@"me/permissions"
+    	[[Facebook shared] requestWithGraphPath:@"me/permissions"
                       finalize:^(FBRequest *request) {
                           [request addCompletionHandler:^(FBRequest *request, id result) {
                               _permissions = [NSSet setWithArray:[[[result objectForKey:@"data"] objectAtIndex:0] allKeys]];
@@ -33,7 +33,7 @@
  - Added validation of URL schemes to the API as it is required for successful authentication
  - Added persistent tracking of the permissions the client has and helpers to make requesting new permission access and then running operations against it trivial:
 
-    [[Facebook shared] usingPermissions:[NSArray arrayWithObject:@"user_photos"] 
+		[[Facebook shared] usingPermissions:[NSArray arrayWithObject:@"user_photos"] 
                                 request:^{
                                     [[Facebook shared] albums:^(NSArray *albums) {
                                         ...

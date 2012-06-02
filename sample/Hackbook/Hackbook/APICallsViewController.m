@@ -287,7 +287,7 @@
  * Graph API: Method to get the user's friends.
  */
 - (void)apiGraphFriends {
-	[[Facebook shared] friends:^(NSArray *friends) {
+	[[Facebook shared] fetchFriends:^(NSArray *friends) {
 		if( [friends count] ) {
 			NSMutableArray *list = [NSMutableArray array];
 			
@@ -543,7 +543,7 @@
 }
 
 - (void)getAppUsersFriendsNotUsing {
-	[[Facebook shared] friendsWithApp:^(NSArray *friendsWithApp) {
+	[[Facebook shared] fetchFriendsWithApp:^(NSArray *friendsWithApp) {
 		NSMutableSet *friendsWithAppSet = [NSMutableSet set];
 		
 		[friendsWithApp enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
@@ -552,7 +552,7 @@
 		}];
 		
 		
-		[[Facebook shared] friends:^(NSArray *friends) {
+		[[Facebook shared] fetchFriends:^(NSArray *friends) {
 			NSMutableArray *list = [NSMutableArray array];
 			
 			[friends enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
@@ -577,7 +577,7 @@
  * send a request to current app users.
  */
 - (void)getAppUsersFriendsUsing {
-	[[Facebook shared] friendsWithApp:^(NSArray *friends) {
+	[[Facebook shared] fetchFriendsWithApp:^(NSArray *friends) {
 		if( [friends count] ) {
 			NSMutableArray *list = [NSMutableArray array];
 			[friends enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
@@ -597,7 +597,7 @@
  * pick one to send a request.
  */
 - (void)getUserFriendTargetDialogRequest {
-	[[Facebook shared] friends:^(NSArray *friends) {
+	[[Facebook shared] fetchFriends:^(NSArray *friends) {
 		if( [friends count] ) {
 			int randomIndex = arc4random() % [friends count];	
 			NSString* randomFriend =  [[friends objectAtIndex:randomIndex] objectForKey:@"id"];
@@ -638,7 +638,7 @@
  * Graph API: Get the user's basic information, picking the name and picture fields.
  */
 - (void)apiGraphMe {
-	[[Facebook shared] me:^(NSDictionary *me) {
+	[[Facebook shared] fetchMe:^(NSDictionary *me) {
 		NSString *ID = [me objectForKey:@"id"];
 		NSString *name = [me objectForKey:@"name"];
 		NSString *pictureURL = [me objectForKey:@"picture"];
@@ -801,7 +801,7 @@
 }
 
 - (void)apiGraphUserAlbums {
-	[[Facebook shared] albums:^(NSArray *albums) {
+	[[Facebook shared] fetchAlbums:^(NSArray *albums) {
 		APIResultsViewController *controller = [[APIResultsViewController alloc] initWithTitle:@"Photo Albums"
 																						  data:albums
 																						action:nil];
@@ -833,7 +833,7 @@
 }
 
 - (void)apiGraphUserVideos {
-	[[Facebook shared] videos:^(NSArray *videos) {
+	[[Facebook shared] fetchVideos:^(NSArray *videos) {
 		NSMutableArray *list = [NSMutableArray array];
 		
 		[videos enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {

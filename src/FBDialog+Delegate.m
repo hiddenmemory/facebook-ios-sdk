@@ -21,7 +21,8 @@
 	if (oldDelegate) return;
     
  
-    if( [weakSelf.delegate respondsToSelector:@selector(dialogDidComplete:)] || [weakSelf.delegate respondsToSelector:@selector(dialogWasCancelled:)]  ) 
+    if( [weakSelf.delegate respondsToSelector:@selector(dialogDidComplete:)] || 
+	    [weakSelf.delegate respondsToSelector:@selector(dialogWasCancelled:)]  ) 
     {
         [self addCompletionHandler:^(FBDialog *dialog, FacebookDialogState state) {
             switch (state) {
@@ -47,7 +48,8 @@
     }
 	
     
-    if( [weakSelf.delegate respondsToSelector:@selector(dialog:didCompleteWithURL:)] || [weakSelf.delegate respondsToSelector:@selector(dialog:didNotCompleteWithURL:)] )
+    if( [weakSelf.delegate respondsToSelector:@selector(dialog:didCompleteWithURL:)] || 
+	    [weakSelf.delegate respondsToSelector:@selector(dialog:didNotCompleteWithURL:)] )
     {
         
         [self addCompletionURLHandler:^(FBDialog *dialog, NSURL *url, FacebookDialogState state) {
@@ -84,6 +86,12 @@
 
         }];
     }
+	
+	if( [weakSelf.delegate respondsToSelector:@selector(dialog:shouldOpenURLInExternalBrowser:)] ){
+		self.shouldOpenURLInExternalBrowser = ^BOOL(NSURL *url) {
+			return [weakSelf.delegate dialog:weakSelf shouldOpenURLInExternalBrowser:url];
+		};
+	}
 }
 
 - (id<FBDialogDelegate>)delegate {

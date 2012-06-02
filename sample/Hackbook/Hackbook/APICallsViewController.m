@@ -395,7 +395,23 @@
                                    actionLinksStr, @"actions",
                                    nil];
 
-	[[Facebook shared] dialog:@"feed" parameters:params delegate:self];
+	[[Facebook shared] dialog:@"feed" 
+				   parameters:params 
+					 finalize:^(FBDialog *dialog) {
+						 [dialog addCompletionURLHandler:^(FBDialog *dialog, NSURL *url, FacebookDialogState state) {
+							 if (![url query]) {
+								 NSLog(@"User canceled dialog or there was an error");
+								 return;
+							 }
+							 
+							 NSDictionary *params = [self parseURLParams:[url query]];
+							 
+							 if ([params valueForKey:@"post_id"]) {
+								 [self showMessage:@"Published feed successfully."];
+								 NSLog(@"Feed post ID: %@", [params valueForKey:@"post_id"]);
+							 }
+						 }];
+					 }];
 }
 
 /*
@@ -444,7 +460,24 @@
                                    actionLinksStr, @"actions",
                                    nil];
 
-	[[Facebook shared] dialog:@"feed" parameters:params delegate:self];
+	[[Facebook shared] dialog:@"feed" 
+				   parameters:params
+					 finalize:^(FBDialog *dialog) {
+						 [dialog addCompletionURLHandler:^(FBDialog *dialog, NSURL *url, FacebookDialogState state) {
+							 if (![url query]) {
+								 NSLog(@"User canceled dialog or there was an error");
+								 return;
+							 }
+							 
+							 NSDictionary *params = [self parseURLParams:[url query]];
+							
+							 // Successful posts return a post_id
+							 if ([params valueForKey:@"post_id"]) {
+								 [self showMessage:@"Published feed successfully."];
+								 NSLog(@"Feed post ID: %@", [params valueForKey:@"post_id"]);
+							 }
+						 }];
+					 }];
 }
 
 /*
@@ -470,7 +503,29 @@
                                    giftStr, @"data",
                                    nil];
 
-	[[Facebook shared] dialog:@"apprequests" parameters:params delegate:self];
+	[[Facebook shared] dialog:@"apprequests" 
+				   parameters:params 
+					 finalize:^(FBDialog *dialog) {
+						 [dialog addCompletionURLHandler:^(FBDialog *dialog, NSURL *url, FacebookDialogState state) {
+							 if (![url query]) {
+								 NSLog(@"User canceled dialog or there was an error");
+								 return;
+							 }
+							 
+							 NSDictionary *params = [self parseURLParams:[url query]];
+							 
+							 NSMutableArray *requestIDs = [[NSMutableArray alloc] init];
+							 for (NSString *paramKey in params) {
+								 if ([paramKey hasPrefix:@"request_ids"]) {
+									 [requestIDs addObject:[params objectForKey:paramKey]];
+								 }
+							 }
+							 if ([requestIDs count] > 0) {
+								 [self showMessage:@"Sent request successfully."];
+								 NSLog(@"Request ID(s): %@", requestIDs);
+							 } 
+						 }];
+					 }];
 }
 
 /*
@@ -482,7 +537,6 @@
  * Dialog: Requests - send to friends not currently using the app.
  */
 - (void)apiDialogRequestsSendToNonUsers:(NSArray *)selectIDs {
-    currentAPICall = kDialogRequestsSendToSelect;
     NSString *selectIDsStr = [selectIDs componentsJoinedByString:@","];
     NSMutableDictionary* params = [NSMutableDictionary dictionaryWithObjectsAndKeys:
                                    @"Learn how to make your iOS apps social.",  @"message",
@@ -493,7 +547,30 @@
     HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
     [[delegate facebook] dialog:@"apprequests"
                       parameters:params
-                    delegate:self];
+                    finalize:^(FBDialog *dialog) {
+						[dialog addCompletionURLHandler:^(FBDialog *dialog, NSURL *url, FacebookDialogState state) {
+							if (![url query]) {
+								NSLog(@"User canceled dialog or there was an error");
+								return;
+							}
+							
+							NSDictionary *params = [self parseURLParams:[url query]];
+							
+							// Successful requests return one or more request_ids.
+							// Get any request IDs, will be in the URL in the form
+							// request_ids[0]=1001316103543&request_ids[1]=10100303657380180
+							NSMutableArray *requestIDs = [[NSMutableArray alloc] init];
+							for (NSString *paramKey in params) {
+								if ([paramKey hasPrefix:@"request_ids"]) {
+									[requestIDs addObject:[params objectForKey:paramKey]];
+								}
+							}
+							if ([requestIDs count] > 0) {
+								[self showMessage:@"Sent request successfully."];
+								NSLog(@"Request ID(s): %@", requestIDs);
+							}
+						}];
+					}];
 }
 
 /*
@@ -510,8 +587,31 @@
 
     HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
     [[delegate facebook] dialog:@"apprequests"
-                      parameters:params
-                    delegate:self];
+					 parameters:params
+					   finalize:^(FBDialog *dialog) {
+						   [dialog addCompletionURLHandler:^(FBDialog *dialog, NSURL *url, FacebookDialogState state) {
+							   if (![url query]) {
+								   NSLog(@"User canceled dialog or there was an error");
+								   return;
+							   }
+							   
+							   NSDictionary *params = [self parseURLParams:[url query]];
+							   
+							   // Successful requests return one or more request_ids.
+							   // Get any request IDs, will be in the URL in the form
+							   // request_ids[0]=1001316103543&request_ids[1]=10100303657380180
+							   NSMutableArray *requestIDs = [[NSMutableArray alloc] init];
+							   for (NSString *paramKey in params) {
+								   if ([paramKey hasPrefix:@"request_ids"]) {
+									   [requestIDs addObject:[params objectForKey:paramKey]];
+								   }
+							   }
+							   if ([requestIDs count] > 0) {
+								   [self showMessage:@"Sent request successfully."];
+								   NSLog(@"Request ID(s): %@", requestIDs);
+							   }
+						   }];
+					   }];
 }
 
 /*
@@ -526,8 +626,31 @@
 
     HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
     [[delegate facebook] dialog:@"apprequests"
-                      parameters:params
-                    delegate:self];
+					 parameters:params
+					   finalize:^(FBDialog *dialog) {
+						   [dialog addCompletionURLHandler:^(FBDialog *dialog, NSURL *url, FacebookDialogState state) {
+							   if (![url query]) {
+								   NSLog(@"User canceled dialog or there was an error");
+								   return;
+							   }
+							   
+							   NSDictionary *params = [self parseURLParams:[url query]];
+							   
+							   // Successful requests return one or more request_ids.
+							   // Get any request IDs, will be in the URL in the form
+							   // request_ids[0]=1001316103543&request_ids[1]=10100303657380180
+							   NSMutableArray *requestIDs = [[NSMutableArray alloc] init];
+							   for (NSString *paramKey in params) {
+								   if ([paramKey hasPrefix:@"request_ids"]) {
+									   [requestIDs addObject:[params objectForKey:paramKey]];
+								   }
+							   }
+							   if ([requestIDs count] > 0) {
+								   [self showMessage:@"Sent request successfully."];
+								   NSLog(@"Request ID(s): %@", requestIDs);
+							   }
+						   }];
+					   }];
 }
 
 /*

@@ -122,11 +122,11 @@ typedef enum {
 							 error:(void (^)(FBRequest*request,NSError *error))error;
 
 - (void)dialog:(NSString *)action
-	  delegate:(id<FBDialogDelegate>)delegate;
+	  finalize:(void(^)(FBDialog *dialog))finalize;
 
 - (void)dialog:(NSString *)action
 	parameters:(NSDictionary *)params
-	  delegate:(id <FBDialogDelegate>)delegate;
+	  finalize:(void(^)(FBDialog *dialog))finalize;
 
 - (BOOL)isSessionValid;
 

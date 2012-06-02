@@ -44,8 +44,7 @@ typedef enum apiCall {
     kAPIGraphUserVideosPost,
 } apiCall;
 
-@interface APICallsViewController : UIViewController < 
-	FBDialogDelegate,
+@interface APICallsViewController : UIViewController <
 	UITableViewDataSource,
 	UITableViewDelegate,
 	CLLocationManagerDelegate

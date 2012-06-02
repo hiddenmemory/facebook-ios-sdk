@@ -136,22 +136,24 @@ static NSString *const kFBFieldPicture = @"picture";
 - (void)albums:(void(^)(NSArray *albums))completionHandler
 		 error:(void(^)(NSError *error))errorHandler {
 
-	[self requestWithGraphPath:@"me/albums"
-					  finalize:^(FBRequest *request) {
-						  [request addCompletionHandler:^(FBRequest *request, id result) {
-							  if( completionHandler ) {
-								  if( [[result class] isSubclassOfClass:[NSDictionary class]] ) {
-									  result = [result objectForKey:@"data"];
+	[self usingPermission:@"user_photos" request:^{
+		[self requestWithGraphPath:@"me/albums"
+						  finalize:^(FBRequest *request) {
+							  [request addCompletionHandler:^(FBRequest *request, id result) {
+								  if( completionHandler ) {
+									  if( [[result class] isSubclassOfClass:[NSDictionary class]] ) {
+										  result = [result objectForKey:@"data"];
+									  }
+									  completionHandler(result);
 								  }
-								  completionHandler(result);
-							  }
-						  }];
-						  [request addErrorHandler:^(FBRequest *request, NSError *error) {
-							  if( errorHandler ) {
-								  errorHandler(error);
-							  }
-						  }];
-					  }];
+							  }];
+							  [request addErrorHandler:^(FBRequest *request, NSError *error) {
+								  if( errorHandler ) {
+									  errorHandler(error);
+								  }
+							  }];
+						  }];	
+	}];
 }
 
 - (void)photosInAlbum:(NSString*)album
@@ -163,22 +165,24 @@ static NSString *const kFBFieldPicture = @"picture";
 - (void)videos:(void(^)(NSArray *photos))completionHandler
 		 error:(void(^)(NSError *error))errorHandler {
 	
-	[self requestWithGraphPath:@"me/videos/uploaded"
-					  finalize:^(FBRequest *request) {
-						  [request addCompletionHandler:^(FBRequest *request, id result) {
-							  if( completionHandler ) {
-								  if( [[result class] isSubclassOfClass:[NSDictionary class]] ) {
-									  result = [result objectForKey:@"data"];
+	[self usingPermission:@"user_videos" request:^{
+		[self requestWithGraphPath:@"me/videos/uploaded"
+						  finalize:^(FBRequest *request) {
+							  [request addCompletionHandler:^(FBRequest *request, id result) {
+								  if( completionHandler ) {
+									  if( [[result class] isSubclassOfClass:[NSDictionary class]] ) {
+										  result = [result objectForKey:@"data"];
+									  }
+									  completionHandler(result);
 								  }
-								  completionHandler(result);
-							  }
+							  }];
+							  [request addErrorHandler:^(FBRequest *request, NSError *error) {
+								  if( errorHandler ) {
+									  errorHandler(error);
+								  }
+							  }];
 						  }];
-						  [request addErrorHandler:^(FBRequest *request, NSError *error) {
-							  if( errorHandler ) {
-								  errorHandler(error);
-							  }
-						  }];
-					  }];
+	}];
 }
 
 #pragma mark - sharing content

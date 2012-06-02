@@ -301,7 +301,7 @@ lastRequestedPermissions = _lastRequestedPermissions;
 }
 
 - (void)_applyCoreHandlers:(NSArray*)list {
-	[list enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+	[[list copy] enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
 		void (^handler)(Facebook*) = (void(^)(Facebook*))obj;
 		handler(self);
 	}];
@@ -1027,7 +1027,7 @@ lastRequestedPermissions = _lastRequestedPermissions;
  * Set the authToken and expirationDate after login succeed
  */
 - (void)_applyLoginHandlers:(FacebookLoginState)state {
-	[loginHandlers enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+	[[loginHandlers copy] enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
 		void (^handler)(Facebook*,FacebookLoginState) = (void(^)(Facebook*,FacebookLoginState))obj;
 		handler(self, state);
 	}];

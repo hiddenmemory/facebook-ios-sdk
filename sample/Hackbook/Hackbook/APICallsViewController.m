@@ -801,15 +801,12 @@
 }
 
 - (void)apiGraphUserAlbums {
-	[[Facebook shared] usingPermissions:[NSArray arrayWithObject:@"user_photos"] 
-								request:^{
-									[[Facebook shared] albums:^(NSArray *albums) {
-										APIResultsViewController *controller = [[APIResultsViewController alloc] initWithTitle:@"Photo Albums"
-																														  data:albums
-																														action:nil];
-										[self.navigationController pushViewController:controller animated:YES];
-									} error:[self errorHandler:NSLocalizedString(@"Unable to fetch album list", @"")]];
-								}];
+	[[Facebook shared] albums:^(NSArray *albums) {
+		APIResultsViewController *controller = [[APIResultsViewController alloc] initWithTitle:@"Photo Albums"
+																						  data:albums
+																						action:nil];
+		[self.navigationController pushViewController:controller animated:YES];
+	} error:[self errorHandler:NSLocalizedString(@"Unable to fetch album list", @"")]];
 }
 
 /*
@@ -836,28 +833,25 @@
 }
 
 - (void)apiGraphUserVideos {
-	[[Facebook shared] usingPermissions:[NSArray arrayWithObject:@"user_videos"] 
-								request:^{
-									[[Facebook shared] videos:^(NSArray *videos) {
-										NSMutableArray *list = [NSMutableArray array];
-										
-										[videos enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
-											NSDictionary *video = (NSDictionary*)obj;
-											
-											[list addObject:[NSDictionary dictionaryWithObjectsAndKeys:
-															 [video objectForKey:@"id"], @"id",
-															 [video objectForKey:@"name"], @"name",
-															 [video objectForKey:@"picture"], @"picture",
-															 [video objectForKey:@"description"], @"details",
-															 nil]];
-										}];
-										
-										APIResultsViewController *controller = [[APIResultsViewController alloc] initWithTitle:@"Videos"
-																														  data:list
-																														action:nil];
-										[self.navigationController pushViewController:controller animated:YES];
-									} error:[self errorHandler:NSLocalizedString(@"Unable to fetch album list", @"")]];
-								}];
+	[[Facebook shared] videos:^(NSArray *videos) {
+		NSMutableArray *list = [NSMutableArray array];
+		
+		[videos enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+			NSDictionary *video = (NSDictionary*)obj;
+			
+			[list addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+							 [video objectForKey:@"id"], @"id",
+							 [video objectForKey:@"name"], @"name",
+							 [video objectForKey:@"picture"], @"picture",
+							 [video objectForKey:@"description"], @"details",
+							 nil]];
+		}];
+		
+		APIResultsViewController *controller = [[APIResultsViewController alloc] initWithTitle:@"Videos"
+																						  data:list
+																						action:nil];
+		[self.navigationController pushViewController:controller animated:YES];
+	} error:[self errorHandler:NSLocalizedString(@"Unable to fetch album list", @"")]];
 }
 
 /*

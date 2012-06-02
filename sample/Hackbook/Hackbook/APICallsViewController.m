@@ -1136,7 +1136,6 @@
             // granted, save them in app session then
             // get nearby locations
             [self updateCheckinPermissions];
-            [self getNearby];
             break;
         }
         case kDialogPermissionsExtended:

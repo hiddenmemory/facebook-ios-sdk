@@ -7,41 +7,41 @@ OverTheAir Changes:
 - Runs on iOS5 only with ARC support for better memory management
 - Massive cleanup of API naming convention to be a better iOS citizen. e.g.:
 
-	- (FBRequest*)requestWithMethodName:(NSString *)methodName
-							 parameters:(NSDictionary *)params
-						  requestMethod:(NSString *)httpMethod
-							   finalize:(void(^)(FBRequest*request))finalize;
-							   
+    - (FBRequest*)requestWithMethodName:(NSString *)methodName
+                             parameters:(NSDictionary *)params
+                          requestMethod:(NSString *)httpMethod
+                               finalize:(void(^)(FBRequest*request))finalize;
+                               
 - Removed SBJSON to use the iOS native NSJSONSerialization methods
 - Swapped the delegate patterns to be a flexible block based API system resulting in less verbosity and better code locality (removes a big requirement on object globals to track requests in user code)
 
-	[[Facebook shared] requestWithGraphPath:@"me/permissions"
-					  finalize:^(FBRequest *request) {
-						  [request addCompletionHandler:^(FBRequest *request, id result) {
-							  _permissions = [NSSet setWithArray:[[[result objectForKey:@"data"] objectAtIndex:0] allKeys]];
-							  NSLog(@"Permissions: %@", self.permissions);
-						  }];
-					  }];
+    [[Facebook shared] requestWithGraphPath:@"me/permissions"
+                      finalize:^(FBRequest *request) {
+                          [request addCompletionHandler:^(FBRequest *request, id result) {
+                              _permissions = [NSSet setWithArray:[[[result objectForKey:@"data"] objectAtIndex:0] allKeys]];
+                              NSLog(@"Permissions: %@", self.permissions);
+                          }];
+                      }];
 
 - Automatic storage of the session tokens and expiration date to NSUserDefaults
 - Flag to automatically refresh the token on application launch without user code (turned on by default)
 - Removed various class instance variables where property exists to remove duplication
 - Made the Facebook object a singleton object to reduce complexity:
 
-	[Facebook shared]
-	[Facebook shared:APPID]
-	
+    [Facebook shared]
+    [Facebook shared:APPID]
+    
 - Added quality of life change requestStarted and requestFinished block that will fire once for each request start and finish (whether error or not). Useful for UI setup and teardown like progress or wait views.
 - Added validation of URL schemes to the API as it is required for successful authentication
 - Added persistent tracking of the permissions the client has and helpers to make requesting new permission access and then running operations against it trivial:
 
-	[[Facebook shared] usingPermissions:[NSArray arrayWithObject:@"user_photos"] 
-								request:^{
-									[[Facebook shared] albums:^(NSArray *albums) {
-										...
-									} error:nil]];
-								}];
-								
+    [[Facebook shared] usingPermissions:[NSArray arrayWithObject:@"user_photos"] 
+                                request:^{
+                                    [[Facebook shared] albums:^(NSArray *albums) {
+                                        ...
+                                    } error:nil]];
+                                }];
+                                
 - API to make common tasks easier and less error prone - [[Facebook+Graph.h]]
 
 About:

@@ -172,13 +172,29 @@
                                     @"Find nearby locations", @"button",
                                     @"getPermissionsCallNearby", @"method",
                                     nil];
+		
+		NSDictionary *graphMenuPre5 = [NSDictionary dictionaryWithObjectsAndKeys:
+									   @"Fetch photo albums", @"title",
+									   @"See a list of photo albums attached to the user.", @"description",
+									   @"Display albums", @"button",
+									   @"apiGraphUserAlbums", @"method",
+									   nil];
+		
         NSDictionary *graphMenu5 = [[NSDictionary alloc] initWithObjectsAndKeys:
                                     @"Upload a photo", @"title",
                                     @"You can upload a photo to the application's album.", @"description",
                                     @"Upload photo", @"button",
                                     @"apiGraphUserPhotosPost", @"method",
                                     nil];
-        NSDictionary *graphMenu6 = [[NSDictionary alloc] initWithObjectsAndKeys:
+
+		NSDictionary *graphMenuPre6 = [NSDictionary dictionaryWithObjectsAndKeys:
+									   @"Fetch video uploads", @"title",
+									   @"See a list of videos uploaded by the user.", @"description",
+									   @"Display videos", @"button",
+									   @"apiGraphUserVideos", @"method",
+									   nil];
+
+		NSDictionary *graphMenu6 = [[NSDictionary alloc] initWithObjectsAndKeys:
                                     @"Upload a video", @"title",
                                     @"You can upload a video to the user's wall. The video may take a little time to show up on the profile.", @"description",
                                     @"Upload video", @"button",
@@ -186,12 +202,15 @@
                                     nil];
 
 
+		
         NSArray *graphMenuItems = [[NSArray alloc] initWithObjects:
                                    graphMenu1,
                                    graphMenu2,
                                    graphMenu3,
                                    graphMenu4,
+								   graphMenuPre5,
                                    graphMenu5,
+								   graphMenuPre6,
                                    graphMenu6,
                                    nil];
 

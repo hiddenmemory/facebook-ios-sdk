@@ -45,11 +45,12 @@ typedef enum {
     FBFrictionlessRequestSettings* _frictionlessRequestSettings;
 }
 
-@property(nonatomic, copy) NSString* accessToken;
-@property(nonatomic, copy) NSDate* expirationDate;
-@property(nonatomic, copy) NSString* urlSchemeSuffix;
-@property(nonatomic, readonly, getter=isFrictionlessRequestsEnabled) BOOL isFrictionlessRequestsEnabled;
+@property (nonatomic, copy) NSString* accessToken;
+@property (nonatomic, copy) NSDate* expirationDate;
+@property (nonatomic, copy) NSString* urlSchemeSuffix;
+@property (nonatomic, readonly, getter=isFrictionlessRequestsEnabled) BOOL isFrictionlessRequestsEnabled;
 @property (nonatomic, assign) BOOL extendTokenOnApplicationActive;
+@property (nonatomic, readonly) NSSet *permissions;
 
 @property (copy) void (^requestStarted)();
 @property (copy) void (^requestFinished)();
@@ -58,6 +59,16 @@ typedef enum {
 + (Facebook*)shared;
 
 - (void)authorize:(NSArray *)permissions;
+
+- (void)authorize:(NSArray *)permissions 
+		  granted:(void(^)(Facebook *))_grantedHandler 
+		   denied:(void(^)(Facebook*))_deniedHandler;
+
+- (void)usingPermissions:(NSArray*)permissions
+				 request:(void(^)())_request;
+
+- (void)usingPermission:(NSString*)permission
+				request:(void(^)())_request;
 
 - (void)extendAccessToken;
 

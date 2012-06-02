@@ -50,10 +50,11 @@ static void *finishedContext = @"finishedContext";
 }
 
 // private properties
-@property(strong, nonatomic) NSArray* permissions;
-@property(nonatomic, copy) NSString* appId;
+@property (strong) NSArray *lastRequestedPermissions;
+@property (nonatomic, copy) NSString* appId;
 
 - (id)initWithAppID:(NSString*)appID;
+- (void)fetchActiveUserPermissions;
 
 @end
 
@@ -68,7 +69,8 @@ expirationDate = _expirationDate,
 permissions = _permissions,
 urlSchemeSuffix = _urlSchemeSuffix,
 appId = _appId,
-extendTokenOnApplicationActive = _extendTokenOnApplicationActive;
+extendTokenOnApplicationActive = _extendTokenOnApplicationActive,
+lastRequestedPermissions = _lastRequestedPermissions;
 
 @synthesize requestStarted, requestFinished;
 
@@ -76,10 +78,17 @@ extendTokenOnApplicationActive = _extendTokenOnApplicationActive;
 	static dispatch_once_t pred = 0; \
 	dispatch_once(&pred, ^{
 		facebookSharedObject = [[Facebook alloc] initWithAppID:appID];
+		if( facebookSharedObject.isSessionValid ) {
+			[facebookSharedObject fetchActiveUserPermissions];
+		}
 	});
+
 	return facebookSharedObject;
 }
 + (Facebook*)shared {
+	if( !facebookSharedObject ) {
+		@throw [NSError errorWithDomain:@"com.facebook.iOS.RequiresAppIDError" code:42 userInfo:nil];
+	}
 	return facebookSharedObject;
 }
 
@@ -94,11 +103,11 @@ extendTokenOnApplicationActive = _extendTokenOnApplicationActive;
 													 name:UIApplicationDidBecomeActiveNotification
 												   object:nil];
 	}
-else {
-	[[NSNotificationCenter defaultCenter] removeObserver:self
-													name:UIApplicationDidBecomeActiveNotification
-												  object:nil];		
-}
+	else {
+		[[NSNotificationCenter defaultCenter] removeObserver:self
+														name:UIApplicationDidBecomeActiveNotification
+													  object:nil];		
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -123,6 +132,48 @@ else {
         self.accessToken = [defaults objectForKey:FBAccessTokenKey];
         self.expirationDate = [defaults objectForKey:FBExpirationDateKey];
     }
+}
+
+- (void)validateApplicationURLScheme {
+	// Now check that the URL scheme fb[app_id]://authorize is in the .plist and can
+	// be opened, doing a simple check without local app id factored in here
+	NSString *url = [NSString stringWithFormat:@"fb%@://authorize", self.appId];
+	BOOL bSchemeInPlist = NO; // find out if the sceme is in the plist file.
+	NSArray* aBundleURLTypes = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleURLTypes"];
+	if ([aBundleURLTypes isKindOfClass:[NSArray class]] && ([aBundleURLTypes count] > 0)) {
+		NSDictionary* aBundleURLTypes0 = [aBundleURLTypes objectAtIndex:0];
+		if ([aBundleURLTypes0 isKindOfClass:[NSDictionary class]]) {
+			NSArray* aBundleURLSchemes = [aBundleURLTypes0 objectForKey:@"CFBundleURLSchemes"];
+			if ([aBundleURLSchemes isKindOfClass:[NSArray class]] && ([aBundleURLSchemes count] > 0)) {
+				NSString *scheme = [aBundleURLSchemes objectAtIndex:0];
+				if ([scheme isKindOfClass:[NSString class]] && [url hasPrefix:scheme]) {
+					bSchemeInPlist = YES;
+				}
+			}
+		}
+	}
+
+	// Check if the authorization callback will work
+	BOOL bCanOpenUrl = [[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString: url]];
+	if (!bSchemeInPlist || !bCanOpenUrl) {
+		UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Setup Error", @"")
+															message:NSLocalizedString(@"Invalid or missing URL scheme. You cannot run the app until you set up a valid URL scheme in your .plist.", @"")
+														   delegate:self
+												  cancelButtonTitle:@"OK"
+												  otherButtonTitles:nil,
+								  nil];
+		[alertView show];
+	}
+}
+
+- (void)fetchActiveUserPermissions {
+	[self requestWithGraphPath:@"me/permissions"
+					  finalize:^(FBRequest *request) {
+						  [request addCompletionHandler:^(FBRequest *request, id result) {
+							  _permissions = [NSSet setWithArray:[[[result objectForKey:@"data"] objectAtIndex:0] allKeys]];
+							  NSLog(@"Permissions: %@", self.permissions);
+						  }];
+					  }];
 }
 
 /**
@@ -151,7 +202,6 @@ else {
  * @param delegate the FBSessionDelegate
  */
 - (id)initWithAppID:(NSString *)appId {
-    
     self = [super init];
     if (self) {
         _requests = [NSMutableSet set];
@@ -170,7 +220,8 @@ else {
 		self.requestFinished = ^{};
 		
 		[self loadAccessToken];
-    }
+		[self validateApplicationURLScheme];
+	}
     return self;
 }
 
@@ -184,6 +235,8 @@ else {
 }
 
 - (void)invalidateSession {
+	_permissions = [NSSet set];
+	
     self.accessToken = nil;
     self.expirationDate = nil;
 	
@@ -282,7 +335,8 @@ else {
  * A private function for opening the authorization dialog.
  */
 - (void)authorizeWithFBAppAuth:(BOOL)tryFBAppAuth
-                    safariAuth:(BOOL)trySafariAuth {
+                    safariAuth:(BOOL)trySafariAuth 
+				   permissions:(NSArray*)permissions {
     NSMutableDictionary* params = [NSMutableDictionary dictionaryWithObjectsAndKeys:
                                    _appId, @"client_id",
                                    @"user_agent", @"type",
@@ -293,9 +347,10 @@ else {
     
     NSString *loginDialogURL = [kDialogBaseURL stringByAppendingString:kLogin];
     
-    if (_permissions != nil) {
-        NSString* scope = [_permissions componentsJoinedByString:@","];
+    if (permissions != nil) {
+        NSString* scope = [permissions componentsJoinedByString:@","];
         [params setValue:scope forKey:@"scope"];
+		self.lastRequestedPermissions = permissions;
     }
     
     if (_urlSchemeSuffix) {
@@ -393,10 +448,74 @@ else {
  *            Callback interface for notifying the calling application when
  *            the user has logged in.
  */
+
+
+- (void)authorize:(NSArray *)permissions 
+		  granted:(void(^)(Facebook *))_grantedHandler 
+		   denied:(void(^)(Facebook*))_deniedHandler {
+	
+	void (^grantedHandler)(Facebook*) = [_grantedHandler copy];
+	void (^deniedHandler)(Facebook*) = [_deniedHandler copy];
+	id danglingPointerHolder = nil;
+	
+	void (^temporaryLoginHandler)(Facebook*,FacebookLoginState) = ^(Facebook *facebook, FacebookLoginState state) {
+		if( state == FacebookLoginSuccess && grantedHandler ) {
+			NSMutableSet *new_permissions = [NSMutableSet setWithSet:_permissions];
+			[new_permissions addObjectsFromArray:permissions];
+			_permissions = new_permissions;
+			
+			NSLog(@"Permissions: %@", _permissions);
+			
+			grantedHandler(facebook);
+		}
+		else if( deniedHandler ) {
+			deniedHandler(facebook);
+		}
+	
+		[loginHandlers removeObject:danglingPointerHolder];
+	};
+	
+	[loginHandlers addObject:(danglingPointerHolder = [temporaryLoginHandler copy])];
+	
+	[self authorizeWithFBAppAuth:YES safariAuth:YES permissions:permissions];
+}
+
 - (void)authorize:(NSArray *)permissions {
-    self.permissions = permissions;
-    
-    [self authorizeWithFBAppAuth:YES safariAuth:YES];
+	[self authorize:permissions 
+			granted:^(Facebook *facebook) {}
+			 denied:^(Facebook *facebook) {}];
+}
+
+- (void)usingPermissions:(NSArray*)permissions
+				 request:(void(^)())_request
+{
+	
+	BOOL mustAuthorise = NO;
+	
+	for( NSString *permission in permissions ) {
+		if( ![_permissions containsObject:permission] ) {
+			mustAuthorise = YES;
+			break;
+		}
+	}
+	
+	if( mustAuthorise ) {
+		void (^request)() = [_request copy];
+		
+		[[Facebook shared] authorize:permissions
+							 granted:^(Facebook *facebook) {
+								 request();
+							 }
+							  denied:nil];
+	}
+	else {
+		_request();
+	}
+}
+
+- (void)usingPermission:(NSString*)permission
+				request:(void(^)())_request {	
+	[self usingPermissions:[NSArray arrayWithObject:permission] request:_request];
 }
 
 /**
@@ -519,14 +638,14 @@ else {
         // If the error response indicates that we should try again using Safari, open
         // the authorization dialog in Safari.
         if (errorReason && [errorReason isEqualToString:@"service_disabled_use_browser"]) {
-            [self authorizeWithFBAppAuth:NO safariAuth:YES];
+            [self authorizeWithFBAppAuth:NO safariAuth:YES permissions:self.lastRequestedPermissions];
             return YES;
         }
         
         // If the error response indicates that we should try the authorization flow
         // in an inline dialog, do that.
         if (errorReason && [errorReason isEqualToString:@"service_disabled"]) {
-            [self authorizeWithFBAppAuth:NO safariAuth:NO];
+            [self authorizeWithFBAppAuth:NO safariAuth:NO permissions:self.lastRequestedPermissions];
             return YES;
         }
         
@@ -535,8 +654,7 @@ else {
         // as a cancel.
         NSString *errorCode = [params objectForKey:@"error_code"];
         
-        BOOL userDidCancel =
-        !errorCode && (!errorReason || [errorReason isEqualToString:@"access_denied"]);
+        BOOL userDidCancel = !errorCode && (!errorReason || [errorReason isEqualToString:@"access_denied"]);
         [self facebookbDialogDidNotLogin:userDidCancel];
         return YES;
     }
@@ -867,7 +985,7 @@ else {
 				NSError *error = nil;
 				
 				id fbids = [NSJSONSerialization JSONObjectWithData:[fbid dataUsingEncoding:NSUTF8StringEncoding]
-														   options:0
+														   options:NSJSONReadingAllowFragments
 															 error:&error];
 				
 				if( error ) {
@@ -918,9 +1036,12 @@ else {
     self.accessToken = token;
     self.expirationDate = expirationDate;
     _lastAccessTokenUpdate = [NSDate date];
+	
     [self reloadFrictionlessRecipientCache];
 	
 	[self storeAccessToken];
+	
+	[self fetchActiveUserPermissions];
 	
 	[self _applyLoginHandlers:FacebookLoginSuccess];
 }

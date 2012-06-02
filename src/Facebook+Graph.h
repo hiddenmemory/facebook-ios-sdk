@@ -15,6 +15,11 @@
 - (void)me:(void(^)(NSDictionary *me))completionHandler
 	 error:(void(^)(NSError *error))errorHandler;
 
+- (void)deletePermissions:(void(^)(Facebook*))completionHandler;
+
+- (void)fetchPermissions:(void(^)(NSArray *friends))completionHandler
+				   error:(void(^)(NSError *error))errorHandler;
+
 #pragma mark - friends
 // ID, Name, Picture URL
 - (void)friends:(void(^)(NSArray *friends))completionHandler
@@ -80,7 +85,7 @@
                range:(NSUInteger)range
           completion:(void(^)(NSArray *locations))completionHandler
                error:(void(^)(NSError *error))errorHandler;
-    
+
 - (void)pagesSearch:(NSString *)query
              fields:(NSArray *)fields
               range:(NSUInteger)range
@@ -97,15 +102,15 @@
                 fields:(NSArray *)fields
                  range:(NSUInteger)range
             completion:(void(^)(NSArray *locations))completionHandler
-                error:(void(^)(NSError *error))errorHandler;
+				 error:(void(^)(NSError *error))errorHandler;
 
 #pragma mark - id query
 
-- (void)idsQuery:(NSString *)query   
-                fields:(NSArray *)fields
-                 range:(NSUInteger)range
-            completion:(void(^)(NSArray *locations))completionHandler
-                 error:(void(^)(NSError *error))errorHandler;
+- (void)idsQuery:(NSArray *)query   
+		  fields:(NSArray *)fields
+		   range:(NSUInteger)range
+	  completion:(void(^)(NSDictionary *objectMap))completionHandler
+		   error:(void(^)(NSError *error))errorHandler;
 
 
 

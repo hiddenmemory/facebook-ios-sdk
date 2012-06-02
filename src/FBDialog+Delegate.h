@@ -57,6 +57,6 @@
 @end
 
 @interface FBDialog (Delegate)
-    @property(nonatomic,weak) id<FBDialogDelegate> delegate;
+@property(nonatomic,weak) id<FBDialogDelegate> delegate;
 @end
 

@@ -19,8 +19,6 @@
 
 #import "FBDialog.h"
 
-@protocol FBLoginDialogDelegate;
-
 /**
  * Do not use this interface directly, instead, use authorize in Facebook.h
  *
@@ -29,22 +27,15 @@
  */
 
 @interface FBLoginDialog : FBDialog {
-    id<FBLoginDialogDelegate> _loginDelegate;
 }
 
--(id) initWithURL:(NSString *) loginURL
-      loginParams:(NSMutableDictionary *) params
-         delegate:(id <FBLoginDialogDelegate>) delegate;
-@end
+- (id)initWithURL:(NSString *) loginURL
+      loginParams:(NSMutableDictionary *) params;
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
-@protocol FBLoginDialogDelegate <NSObject>
-
-- (void)facebookDialogDidLogin:(NSString*)token expirationDate:(NSDate*)expirationDate;
-
-- (void)facebookbDialogDidNotLogin:(BOOL)cancelled;
+- (void)addLoginHandler:(void(^)( NSString *token, NSDate *expirationDate ))handler;
+- (void)addDidNotLoginHandler:(void(^)( BOOL cancelled ))handler;
 
 @end
+
 
 

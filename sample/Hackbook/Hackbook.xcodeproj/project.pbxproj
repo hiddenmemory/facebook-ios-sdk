@@ -37,6 +37,7 @@
 		8302ABCD15797F69007603BD /* Facebook+Graph.m in Sources */ = {isa = PBXBuildFile; fileRef = 8302ABCC15797F69007603BD /* Facebook+Graph.m */; };
 		8395A8CC157A037E00FF16EA /* FBAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 8395A8CB157A037E00FF16EA /* FBAppDelegate.m */; };
 		8395A8E0157A19DB00FF16EA /* FBDialog+Delegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 8395A8DF157A19DB00FF16EA /* FBDialog+Delegate.m */; };
+		8395A8EC157A1F4A00FF16EA /* FBLoginDialog+Delegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 8395A8EB157A1F4A00FF16EA /* FBLoginDialog+Delegate.m */; };
 		84E7D99614D9CC13006A6299 /* FBFrictionlessRequestSettings.m in Sources */ = {isa = PBXBuildFile; fileRef = 84E7D99514D9CC13006A6299 /* FBFrictionlessRequestSettings.m */; };
 /* End PBXBuildFile section */
 
@@ -89,6 +90,8 @@
 		8395A8CB157A037E00FF16EA /* FBAppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FBAppDelegate.m; path = ../../src/FBAppDelegate.m; sourceTree = "<group>"; };
 		8395A8DE157A19DB00FF16EA /* FBDialog+Delegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "FBDialog+Delegate.h"; path = "../../src/FBDialog+Delegate.h"; sourceTree = "<group>"; };
 		8395A8DF157A19DB00FF16EA /* FBDialog+Delegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "FBDialog+Delegate.m"; path = "../../src/FBDialog+Delegate.m"; sourceTree = "<group>"; };
+		8395A8EA157A1F4A00FF16EA /* FBLoginDialog+Delegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "FBLoginDialog+Delegate.h"; path = "../../src/FBLoginDialog+Delegate.h"; sourceTree = "<group>"; };
+		8395A8EB157A1F4A00FF16EA /* FBLoginDialog+Delegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "FBLoginDialog+Delegate.m"; path = "../../src/FBLoginDialog+Delegate.m"; sourceTree = "<group>"; };
 		84E7D99414D9CC13006A6299 /* FBFrictionlessRequestSettings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FBFrictionlessRequestSettings.h; path = ../../src/FBFrictionlessRequestSettings.h; sourceTree = "<group>"; };
 		84E7D99514D9CC13006A6299 /* FBFrictionlessRequestSettings.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FBFrictionlessRequestSettings.m; path = ../../src/FBFrictionlessRequestSettings.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -208,6 +211,8 @@
 				8302ABB9157958A4007603BD /* Facebook+Delegate.m */,
 				8302ABCB15797F69007603BD /* Facebook+Graph.h */,
 				8302ABCC15797F69007603BD /* Facebook+Graph.m */,
+				8395A8EA157A1F4A00FF16EA /* FBLoginDialog+Delegate.h */,
+				8395A8EB157A1F4A00FF16EA /* FBLoginDialog+Delegate.m */,
 			);
 			name = FBConnect;
 			sourceTree = "<group>";
@@ -299,6 +304,7 @@
 				8302ABCD15797F69007603BD /* Facebook+Graph.m in Sources */,
 				8395A8CC157A037E00FF16EA /* FBAppDelegate.m in Sources */,
 				8395A8E0157A19DB00FF16EA /* FBDialog+Delegate.m in Sources */,
+				8395A8EC157A1F4A00FF16EA /* FBLoginDialog+Delegate.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

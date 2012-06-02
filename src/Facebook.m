@@ -199,6 +199,33 @@ lastRequestedPermissions = _lastRequestedPermissions;
 					  }];
 }
 
+- (void)_handleLogin:(NSString*)token expirationDate:(NSDate*)expirationDate {
+	self.accessToken = token;
+	self.expirationDate = expirationDate;
+	_lastAccessTokenUpdate = [NSDate date];
+	
+	[self reloadFrictionlessRecipientCache];
+	
+	[self storeAccessToken];
+	
+	[self fetchActiveUserPermissions];
+	
+	[self _applyLoginHandlers:FacebookLoginSuccess];
+}
+- (void)_handleLoginFailed:(BOOL)cancelled {
+	[self _applyLoginHandlers:(cancelled ? FacebookLoginCancelled : FacebookLoginFailed)];
+}
+- (void)_applyLoginDialogHandlers:(FBLoginDialog*)dialog {	
+	[dialog addLoginHandler:^(NSString *token, NSDate *expirationDate) {
+		[self _handleLogin:token expirationDate:expirationDate];
+	}];
+	
+	[dialog addDidNotLoginHandler:^(BOOL cancelled) {
+		[self _handleLoginFailed:cancelled];
+	}];
+}
+
+
 /**
  * Initialize the Facebook object with application ID.
  *
@@ -413,8 +440,9 @@ lastRequestedPermissions = _lastRequestedPermissions;
     // enter his or her credentials.
     if (!didOpenOtherApp) {
         _loginDialog = [[FBLoginDialog alloc] initWithURL:loginDialogURL
-                                              loginParams:params
-                                                 delegate:self];
+                                              loginParams:params];
+		
+		[self _applyLoginDialogHandlers:(FBLoginDialog*)_loginDialog];
         [_loginDialog show];
     }
 }
@@ -678,7 +706,7 @@ lastRequestedPermissions = _lastRequestedPermissions;
         NSString *errorCode = [params objectForKey:@"error_code"];
         
         BOOL userDidCancel = !errorCode && (!errorReason || [errorReason isEqualToString:@"access_denied"]);
-        [self facebookbDialogDidNotLogin:userDidCancel];
+        [self _handleLoginFailed:userDidCancel];
         return YES;
     }
     
@@ -692,7 +720,7 @@ lastRequestedPermissions = _lastRequestedPermissions;
         }
     }
     
-    [self facebookDialogDidLogin:accessToken expirationDate:expirationDate];
+    [self _handleLogin:accessToken expirationDate:expirationDate];
     return YES;
 }
 
@@ -979,7 +1007,8 @@ lastRequestedPermissions = _lastRequestedPermissions;
     
     if ([action isEqualToString:kLogin]) {
         [params setObject:@"user_agent" forKey:@"type"];
-        _fbDialog = [[FBLoginDialog alloc] initWithURL:dialogURL loginParams:params delegate:self];
+        _fbDialog = [[FBLoginDialog alloc] initWithURL:dialogURL loginParams:params];
+		[self _applyLoginDialogHandlers:(FBLoginDialog*)_fbDialog];
     } else {
         [params setObject:_appId forKey:@"app_id"];
         if ([self isSessionValid]) {
@@ -1056,26 +1085,6 @@ lastRequestedPermissions = _lastRequestedPermissions;
 		void (^handler)(Facebook*,FacebookLoginState) = (void(^)(Facebook*,FacebookLoginState))obj;
 		handler(self, state);
 	}];
-}
-- (void)facebookDialogDidLogin:(NSString *)token expirationDate:(NSDate *)expirationDate {
-    self.accessToken = token;
-    self.expirationDate = expirationDate;
-    _lastAccessTokenUpdate = [NSDate date];
-	
-    [self reloadFrictionlessRecipientCache];
-	
-	[self storeAccessToken];
-	
-	[self fetchActiveUserPermissions];
-	
-	[self _applyLoginHandlers:FacebookLoginSuccess];
-}
-
-/**
- * Did not login call the not login delegate
- */
-- (void)facebookbDialogDidNotLogin:(BOOL)cancelled {
-	[self _applyLoginHandlers:(cancelled ? FacebookLoginCancelled : FacebookLoginFailed)];
 }
 
 #pragma mark - Friction

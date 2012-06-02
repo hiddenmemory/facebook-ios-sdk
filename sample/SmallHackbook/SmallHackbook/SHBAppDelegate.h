@@ -14,7 +14,6 @@
 @interface SHBAppDelegate : FBAppDelegate <UIApplicationDelegate>
 
 @property (strong, nonatomic) UIWindow *window;
-
 @property (strong, nonatomic) SHBViewController *viewController;
 
 @end

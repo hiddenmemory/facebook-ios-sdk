@@ -15,19 +15,13 @@
 
 - (void)viewDidLoad {
 	[super viewDidLoad];
-	
-	[[Facebook bind] fetchMe:^(NSDictionary *me) {
-		self.imageView.image = [UIImage imageWithData:[NSData dataWithContentsOfURL:[NSURL URLWithString:[me objectForKey:@"picture"]]]];
-	} error:nil];
+	[Facebook bind];
 }
-
-- (void)viewDidUnload
-{
+- (void)viewDidUnload {
 	[self setTextView:nil];
 	[self setImageView:nil];
     [super viewDidUnload];
 }
-
 - (void)_displayAlert:(NSString*)message {
 	UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"SmallHackbook!"
 													message:message
@@ -35,6 +29,14 @@
 										  cancelButtonTitle:@"OK"
 										  otherButtonTitles:nil];
 	[alert show];
+}
+
+- (void)viewDidAppear:(BOOL)animated {
+	[[Facebook shared] fetchMe:^(NSDictionary *me) {
+		NSURL *pictureURL = [NSURL URLWithString:[me objectForKey:@"picture"]];
+		NSData *pictureSource = [NSData dataWithContentsOfURL:pictureURL];
+		self.imageView.image = [UIImage imageWithData:pictureSource];
+	} error:nil];
 }
 
 - (IBAction)postStatus:(id)sender {

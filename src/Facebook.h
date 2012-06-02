@@ -1,4 +1,6 @@
 /*
+ * Copyright 2012 Chris Ross - hiddenMemory Ltd - chris@hiddenmemory.co.uk
+ * Copyright 2012 Kieran Gutteridge - IntoHand Ltd - kieran.gutteridge@intohand.com
  * Copyright 2010 Facebook
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -55,7 +57,7 @@ typedef enum {
 @property (copy) void (^requestStarted)();
 @property (copy) void (^requestFinished)();
 
-+ (Facebook*)shared:(NSString*)appID;
++ (Facebook*)bind:(NSString*)appID;
 + (Facebook*)shared;
 
 - (void)authorize:(NSArray *)permissions;

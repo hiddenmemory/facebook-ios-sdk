@@ -1,4 +1,6 @@
 /*
+ * Copyright 2012 Chris Ross - hiddenMemory Ltd - chris@hiddenmemory.co.uk
+ * Copyright 2012 Kieran Gutteridge - IntoHand Ltd - kieran.gutteridge@intohand.com
  * Copyright 2010 Facebook
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,11 +16,8 @@
  * limitations under the License.
  */
 
+#import <UIKit/UIKit.h>
 
-#import "Facebook.h"
-#import "FBDialog.h"
-#import "FBLoginDialog.h"
-#import "FBRequest.h"
-#import "Facebook+Delegate.h"
-#import "Facebook+Graph.h"
-#import "FBAppDelegate.h"
+@interface FBAppDelegate : UIResponder
+
+@end

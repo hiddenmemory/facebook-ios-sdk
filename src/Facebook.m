@@ -1,4 +1,6 @@
 /*
+ * Copyright 2012 Chris Ross - hiddenMemory Ltd - chris@hiddenmemory.co.uk
+ * Copyright 2012 Kieran Gutteridge - IntoHand Ltd - kieran.gutteridge@intohand.com
  * Copyright 2010 Facebook
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -74,22 +76,43 @@ lastRequestedPermissions = _lastRequestedPermissions;
 
 @synthesize requestStarted, requestFinished;
 
-+ (Facebook*)shared:(NSString *)appID {
++ (Facebook*)bind:(NSString *)appID {
 	static dispatch_once_t pred = 0; \
 	dispatch_once(&pred, ^{
+		NSLog(@"Binding to %@", appID);
 		facebookSharedObject = [[Facebook alloc] initWithAppID:appID];
 		if( facebookSharedObject.isSessionValid ) {
 			[facebookSharedObject fetchActiveUserPermissions];
 		}
 	});
-
 	return facebookSharedObject;
+}
++ (void)autobind:(NSNotification*)notification {
+	NSArray* aBundleURLTypes = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleURLTypes"];
+	if ([aBundleURLTypes isKindOfClass:[NSArray class]] && ([aBundleURLTypes count] > 0)) {
+		NSDictionary* aBundleURLTypes0 = [aBundleURLTypes objectAtIndex:0];
+		if ([aBundleURLTypes0 isKindOfClass:[NSDictionary class]]) {
+			NSArray* aBundleURLSchemes = [aBundleURLTypes0 objectForKey:@"CFBundleURLSchemes"];
+			if ([aBundleURLSchemes isKindOfClass:[NSArray class]] && ([aBundleURLSchemes count] > 0)) {
+				NSString *scheme = [aBundleURLSchemes objectAtIndex:0];
+				if ([scheme isKindOfClass:[NSString class]] && [scheme hasPrefix:@"fb"]) {
+					[self bind:[scheme substringFromIndex:2]];
+				}
+			}
+		}
+	}
 }
 + (Facebook*)shared {
 	if( !facebookSharedObject ) {
 		@throw [NSError errorWithDomain:@"com.facebook.iOS.RequiresAppIDError" code:42 userInfo:nil];
 	}
 	return facebookSharedObject;
+}
++ (void)load {
+	[[NSNotificationCenter defaultCenter] addObserver:self
+											 selector:@selector(autobind:)
+												 name:UIApplicationDidFinishLaunchingNotification
+											   object:nil];
 }
 
 - (void)applicationDidBecomeActive:(NSNotification*)notification {
@@ -114,9 +137,9 @@ lastRequestedPermissions = _lastRequestedPermissions;
 // private
 
 #define FBAccessTokenKey [NSString stringWithFormat:@"com.facebook.ios.token:%@", \
-[[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleIdentifier"]]
+							[[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleIdentifier"]]
 #define FBExpirationDateKey [NSString stringWithFormat:@"com.facebook.ios.expiration:%@", \
-[[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleIdentifier"]]
+								[[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleIdentifier"]]
 
 - (void)storeAccessToken {
 	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
@@ -1090,6 +1113,43 @@ lastRequestedPermissions = _lastRequestedPermissions;
 }
 - (void)addSessionInvalidatedHandler:(void(^)(Facebook*))handler {
 	[sessionInvalidHandlers addObject:[handler copy]];
+}
+
+@end
+
+#pragma mark - FacebookURLProtocol
+
+/* This protocol handles the URLs in the plist for the application.
+
+ When the application delegate is called with a URL, it should create a 
+ request and a connection; This will then call to this protocol to handle
+ the URL. This is described in the URL Loading System Programming Guide at 
+ https://developer.apple.com/library/mac/#documentation/Cocoa/Conceptual/URLLoadingSystem/Concepts/URLOverview.html#//apple_ref/doc/uid/20001834-155857
+ 
+ This has the benefit of allowing multiple libraries to have the chance to
+ handle the URL called to the app.
+*/
+
+@interface FacebookURLProtocol : NSURLProtocol
+@end
+
+@implementation FacebookURLProtocol
+
++ (void)load {
+	[self registerClass:[FacebookURLProtocol class]];
+}
++ (BOOL)canInitWithRequest:(NSURLRequest *)request {
+	if ([[request.URL scheme] hasPrefix:@"fb"])
+		return YES;
+	
+	return NO;
+}
+- (void)startLoading {
+	[[Facebook shared] handleOpenURL:self.request.URL];
+}
+- (void)stopLoading {}
++ (NSURLRequest *)canonicalRequestForRequest:(NSURLRequest *)request {
+	return request;
 }
 
 @end

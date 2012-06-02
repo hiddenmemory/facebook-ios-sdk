@@ -287,7 +287,7 @@
  * Graph API: Method to get the user's friends.
  */
 - (void)apiGraphFriends {
-	[[Facebook shared] friends:^(NSArray *friends) {
+	[[Facebook shared] fetchFriends:^(NSArray *friends) {
 		if( [friends count] ) {
 			NSMutableArray *list = [NSMutableArray array];
 			
@@ -543,7 +543,7 @@
 }
 
 - (void)getAppUsersFriendsNotUsing {
-	[[Facebook shared] friendsWithApp:^(NSArray *friendsWithApp) {
+	[[Facebook shared] fetchFriendsWithApp:^(NSArray *friendsWithApp) {
 		NSMutableSet *friendsWithAppSet = [NSMutableSet set];
 		
 		[friendsWithApp enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
@@ -552,7 +552,7 @@
 		}];
 		
 		
-		[[Facebook shared] friends:^(NSArray *friends) {
+		[[Facebook shared] fetchFriends:^(NSArray *friends) {
 			NSMutableArray *list = [NSMutableArray array];
 			
 			[friends enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
@@ -577,7 +577,7 @@
  * send a request to current app users.
  */
 - (void)getAppUsersFriendsUsing {
-	[[Facebook shared] friendsWithApp:^(NSArray *friends) {
+	[[Facebook shared] fetchFriendsWithApp:^(NSArray *friends) {
 		if( [friends count] ) {
 			NSMutableArray *list = [NSMutableArray array];
 			[friends enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
@@ -597,7 +597,7 @@
  * pick one to send a request.
  */
 - (void)getUserFriendTargetDialogRequest {
-	[[Facebook shared] friends:^(NSArray *friends) {
+	[[Facebook shared] fetchFriends:^(NSArray *friends) {
 		if( [friends count] ) {
 			int randomIndex = arc4random() % [friends count];	
 			NSString* randomFriend =  [[friends objectAtIndex:randomIndex] objectForKey:@"id"];
@@ -638,7 +638,7 @@
  * Graph API: Get the user's basic information, picking the name and picture fields.
  */
 - (void)apiGraphMe {
-	[[Facebook shared] me:^(NSDictionary *me) {
+	[[Facebook shared] fetchMe:^(NSDictionary *me) {
 		NSString *ID = [me objectForKey:@"id"];
 		NSString *name = [me objectForKey:@"name"];
 		NSString *pictureURL = [me objectForKey:@"picture"];
@@ -653,10 +653,7 @@
 																						  data:list
 																						action:@""];
 		[self.navigationController pushViewController:controller animated:YES];
-	} 
-					error:^(NSError *error) {
-						[self showMessage:NSLocalizedString(@"Unable to fetch your details", @"")];
-					}];
+	} error:[self errorHandler:NSLocalizedString(@"Unable to fetch your details", @"")]];
 }
 
 /*
@@ -767,41 +764,29 @@
 }
 
 /*
- * Helper method to kick off GPS to get the user's location.
- */
-- (void)getNearby {
-    // A warning if the user turned off location services.
-    if (![CLLocationManager locationServicesEnabled]) {
-        UIAlertView *servicesDisabledAlert = [[UIAlertView alloc] initWithTitle:@"Location Services Disabled" message:@"You currently have all location services for this device disabled. If you proceed, you will be asked to confirm whether location services should be reenabled." delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
-        [servicesDisabledAlert show];
-    }
-    // Start the location manager
-    self.locationManager = [[CLLocationManager alloc] init];
-    locationManager.delegate = self;
-    locationManager.desiredAccuracy = kCLLocationAccuracyBest;
-    [locationManager startUpdatingLocation];
-    // Time out if it takes too long to get a reading.
-    [self performSelector:@selector(processLocationData) withObject:nil afterDelay:15.0];
-}
-
-/*
  * Helper method to check the user permissions which were stored in the app session
  * when the app was started. After the check decide on whether to prompt for user
  * check-in permissions first or get the user's location which will in turn search
  * for nearby places the user can then check-in to.
  */
 - (void)getPermissionsCallNearby {
-    HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
-    if ([[delegate userPermissions] objectForKey:@"publish_checkins"]) {
-        [self getNearby];
-    } else {
-        currentAPICall = kDialogPermissionsCheckinForPlaces;
-        [self apiPromptCheckinPermissions];
-    }
+	[[Facebook shared] usingPermission:@"publish_checkin" request:^{
+		if (![CLLocationManager locationServicesEnabled]) {
+			UIAlertView *servicesDisabledAlert = [[UIAlertView alloc] initWithTitle:@"Location Services Disabled" message:@"You currently have all location services for this device disabled. If you proceed, you will be asked to confirm whether location services should be reenabled." delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
+			[servicesDisabledAlert show];
+		}
+		// Start the location manager
+		self.locationManager = [[CLLocationManager alloc] init];
+		locationManager.delegate = self;
+		locationManager.desiredAccuracy = kCLLocationAccuracyBest;
+		[locationManager startUpdatingLocation];
+		// Time out if it takes too long to get a reading.
+		[self performSelector:@selector(processLocationData) withObject:nil afterDelay:15.0];
+	}];
 }
 
 - (void)apiGraphUserAlbums {
-	[[Facebook shared] albums:^(NSArray *albums) {
+	[[Facebook shared] fetchAlbums:^(NSArray *albums) {
 		APIResultsViewController *controller = [[APIResultsViewController alloc] initWithTitle:@"Photo Albums"
 																						  data:albums
 																						action:nil];
@@ -833,7 +818,7 @@
 }
 
 - (void)apiGraphUserVideos {
-	[[Facebook shared] videos:^(NSArray *videos) {
+	[[Facebook shared] fetchVideos:^(NSArray *videos) {
 		NSMutableArray *list = [NSMutableArray array];
 		
 		[videos enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
@@ -1151,7 +1136,6 @@
             // granted, save them in app session then
             // get nearby locations
             [self updateCheckinPermissions];
-            [self getNearby];
             break;
         }
         case kDialogPermissionsExtended:

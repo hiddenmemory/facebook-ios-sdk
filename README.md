@@ -27,7 +27,7 @@
  - Made the Facebook object a singleton object to reduce complexity:
 
 		[Facebook shared]
-		[Facebook shared:APPID]
+		[Facebook bind:APPID]
     
  - Added quality of life change requestStarted and requestFinished block that will fire once for each request start and finish (whether error or not). Useful for UI setup and teardown like progress or wait views.
  - Added validation of URL schemes to the backend as it is required for successful authentication
@@ -42,6 +42,7 @@
                                 
    This is probably the most insanely great feature of the dub remix. We keep the permissions and the code that uses it together. If we don't need to authenticate the permissions, we wont. If we do, we will. Either way we end up with much cleaner code.
  - API to make common tasks easier and less error prone - [[Facebook+Graph.h]]
+ - Intelligent automatic binding to a Facebook AppID based upon the URL scheme within the application
 
 About:
 ======

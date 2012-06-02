@@ -1,6 +1,6 @@
-#Facebook iOS SDK [OverTheAir DUB REMIX]
+#Facebook iOS SDK [OverTheAir2012 DUB REMIX]
 
-#OverTheAir Changes:
+#OverTheAir 2012 Changes:
 
  - Runs on iOS5 only with ARC support for better memory management
  - Massive cleanup of API naming convention to be a better iOS citizen. e.g.:
@@ -44,6 +44,13 @@
  - API to make common tasks easier and less error prone - [[Facebook+Graph.h]]
  - Intelligent automatic binding to a Facebook AppID based upon the URL scheme within the application
 
+#OverTheAir Authors:
+
+Chris Ross @darkrock
+Kieran Gutteridge @kgutteridge 
+
+Special mention to Daniel Tull @danielctull and @chrisbanes
+
 About:
 ======
 
@@ -61,7 +68,7 @@ See our [iOS SDK Reference](https://developers.facebook.com/docs/reference/iossd
 Sample Applications
 ===============
 
-This SDK comes with a sample application that demonstrates authorization, making API calls, and invoking a dialog, to guide you in development.
+This SDK comes with a couple of applications that demonstrates authorization, making API calls, and invoking a dialog, to guide you in development.
 
 To build and run the sample application with Xcode:
 

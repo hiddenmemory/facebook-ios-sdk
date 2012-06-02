@@ -125,6 +125,38 @@ else {
     }
 }
 
+- (void)validateApplicationURLScheme {
+	// Now check that the URL scheme fb[app_id]://authorize is in the .plist and can
+	// be opened, doing a simple check without local app id factored in here
+	NSString *url = [NSString stringWithFormat:@"fb%@://authorize",kAppId];
+	BOOL bSchemeInPlist = NO; // find out if the sceme is in the plist file.
+	NSArray* aBundleURLTypes = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleURLTypes"];
+	if ([aBundleURLTypes isKindOfClass:[NSArray class]] && ([aBundleURLTypes count] > 0)) {
+		NSDictionary* aBundleURLTypes0 = [aBundleURLTypes objectAtIndex:0];
+		if ([aBundleURLTypes0 isKindOfClass:[NSDictionary class]]) {
+			NSArray* aBundleURLSchemes = [aBundleURLTypes0 objectForKey:@"CFBundleURLSchemes"];
+			if ([aBundleURLSchemes isKindOfClass:[NSArray class]] && ([aBundleURLSchemes count] > 0)) {
+				NSString *scheme = [aBundleURLSchemes objectAtIndex:0];
+				if ([scheme isKindOfClass:[NSString class]] && [url hasPrefix:scheme]) {
+					bSchemeInPlist = YES;
+				}
+			}
+		}
+	}
+
+	// Check if the authorization callback will work
+	BOOL bCanOpenUrl = [[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString: url]];
+	if (!bSchemeInPlist || !bCanOpenUrl) {
+		UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Setup Error", @"")
+															message:NSLocalizedString(@"Invalid or missing URL scheme. You cannot run the app until you set up a valid URL scheme in your .plist.", @"")
+														   delegate:self
+												  cancelButtonTitle:@"OK"
+												  otherButtonTitles:nil,
+								  nil];
+		[alertView show];
+	}
+}
+
 /**
  * Initialize the Facebook object with application ID.
  *
@@ -170,6 +202,8 @@ else {
 		self.requestFinished = ^{};
 		
 		[self loadAccessToken];
+		[self validateApplicationURLScheme];
+		
     }
     return self;
 }

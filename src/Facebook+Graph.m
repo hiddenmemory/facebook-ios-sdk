@@ -89,9 +89,6 @@ static NSString *const kFBFieldPicture = @"picture";
 								 errorHandler(error);
 							 }
 						 }];
-    
-    
-	
 }
 
 - (void)friendsWithApp:(void(^)(NSArray *friends))completionHandler

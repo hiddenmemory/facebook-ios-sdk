@@ -30,6 +30,7 @@ static NSString *const kFBSearchTypeEvent = @"event";
 static NSString *const kFBSearchTypeGroup = @"group";
 static NSString *const kFBSearchTypePlace = @"place";
 static NSString *const kFBSearchTypeCheckIn = @"checkin";
+static NSString *const kFBSearchTypeIds = @"ids";
 
 static NSString *const kFBFieldName = @"name";
 static NSString *const kFBFieldPicture = @"picture";
@@ -218,6 +219,7 @@ static NSString *const kFBFieldPicture = @"picture";
          error:(void(^)(NSError *error))errorHandler
 {
     [self requestWithGraphPath:@"search"
+    
 					parameters:parameters
 					completion:^(FBRequest *request, id result) {	
 						if( completionHandler ) {

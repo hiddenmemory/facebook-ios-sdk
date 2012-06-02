@@ -287,6 +287,14 @@
  * Graph API: Method to get the user's friends.
  */
 - (void)apiGraphFriends {
+	[[Facebook shared] friendsWithApp:^(NSArray *friends) {
+		
+	} 
+								error:^(NSError *error) {
+									
+								}];
+	
+	
 	[[Facebook shared] friends:^(NSArray *friends) {
 		if( [friends count] ) {
 			NSMutableArray *list = [NSMutableArray array];

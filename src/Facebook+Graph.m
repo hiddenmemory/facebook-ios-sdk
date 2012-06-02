@@ -63,6 +63,11 @@
 - (void)friendsWithApp:(void(^)(NSArray *friends))completionHandler
 				 error:(void(^)(NSError *error))errorHandler {
 	
+	[[Facebook shared] requestWithMethodName:@"friends.getAppUsers"
+								  parameters:[NSDictionary dictionaryWithObjectsAndKeys:@"name,picture", @"fields", nil]
+								  completion:^(FBRequest *request, id result) {
+									  NSLog(@"Result: %@", result);
+								  }];
 }
 
 - (void)albums:(void(^)(NSArray *albums))completionHandler

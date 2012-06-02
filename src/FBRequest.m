@@ -122,7 +122,7 @@ error = _error;
 - (void)addRawHandler:(void(^)(FBRequest*,NSData*))rawHandler {
 	[rawHandlers addObject:[rawHandler copy]];
 }
-- (void)addResponseHandler:(void(^)(FBRequest*,NSURLResponse*))responseHandler {
+- (void)addResponseHandler:(void(^)(FBRequest*,NSURLResponse*))responseHandler{
 	[completionHandlers addObject:[responseHandler copy]];
 }
 

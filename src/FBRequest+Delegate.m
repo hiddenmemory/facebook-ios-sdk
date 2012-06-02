@@ -11,7 +11,8 @@
 
 @implementation FBRequest (Delegate)
 
-- (void)setDelegate:(id<FBRequestDelegate>)delegate {
+- (void)setDelegate:(id<FBRequestDelegate>)delegate 
+{
 	__block FBRequest *weakSelf = self;
 	
 	id oldDelegate = objc_getAssociatedObject(self, _cmd);

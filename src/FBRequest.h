@@ -19,7 +19,8 @@
 
 @protocol FBRequestDelegate;
 
-enum {
+enum 
+{
     kFBRequestStateReady,
     kFBRequestStateLoading,
     kFBRequestStateComplete,

@@ -57,5 +57,5 @@
 @end
 
 @interface FBRequest (Delegate)
-@property(nonatomic,weak) id<FBRequestDelegate> delegate;
+    @property(nonatomic,weak) id<FBRequestDelegate> delegate;
 @end

@@ -41,6 +41,16 @@ static BOOL FBIsDeviceIPad() {
     return NO;
 }
 
+@interface FBDialog ()
+{
+    NSMutableArray *completionHandlers;
+    NSMutableArray *completionURLHandlers;
+    NSMutableArray *cancelledHandlers;
+    NSMutableArray *failedWithErrorHandlers;
+}
+
+@end
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 @implementation FBDialog
@@ -51,7 +61,20 @@ params   = _params;
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // private
 
-- (void)addRoundedRectToPath:(CGContextRef)context rect:(CGRect)rect radius:(float)radius {
+-(void)addCompletionHandler:(void(^)(FBDialog*, FacebookDialogState state))completionHandler{
+    [completionHandlers addObject:[completionHandler copy]];
+}
+
+- (void)addCompletionURLHandler:(void(^)(FBDialog *dialog, NSURL *url, FacebookDialogState state))completionURLHandler{
+    [completionURLHandlers addObject:[completionURLHandler copy]];
+}
+
+- (void)addErrorHandler:(void (^)(FBDialog *dialog, NSError *error))errorHandler{
+    [failedWithErrorHandlers addObject:[errorHandler copy]];
+}
+
+
+- (void)addRoundedRectToPath:(CGContextRef)context rect:(CGRect)rect radius:(float)radius{
     CGContextBeginPath(context);
     CGContextSaveGState(context);
     
@@ -334,6 +357,11 @@ params   = _params;
         _delegate = nil;
         _loadingURL = nil;
         _showingKeyboard = NO;
+        
+        completionHandlers = [NSMutableArray array];
+        completionURLHandlers = [NSMutableArray array];
+        cancelledHandlers = [NSMutableArray array];
+        failedWithErrorHandlers = [NSMutableArray array];
         
         self.backgroundColor = [UIColor clearColor];
         self.autoresizesSubviews = YES;

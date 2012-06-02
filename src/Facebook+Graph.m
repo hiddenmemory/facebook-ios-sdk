@@ -37,7 +37,6 @@ static NSString *const kFBFieldPicture = @"picture";
 #pragma mark - me
 - (void)me:(void(^)(NSDictionary *me))completionHandler
 	 error:(void(^)(NSError *error))errorHandler {
-
 	[self requestWithGraphPath:@"me"
 					parameters:[NSDictionary dictionaryWithObjectsAndKeys:@"name,picture", @"fields", nil]
 					completion:^(FBRequest *request, id result) {	
@@ -57,7 +56,7 @@ static NSString *const kFBFieldPicture = @"picture";
 - (void)friends:(void(^)(NSArray *friends))completionHandler
 		  error:(void(^)(NSError *error))errorHandler {
     
-    NSArray *keys = [NSArray arrayWithObjects:@"name",@"picture", nil];
+    NSArray *keys = [NSArray arrayWithObjects:kFBFieldName,kFBFieldPicture, nil];
     [self friendsWithKeys:keys completion:completionHandler error:errorHandler];
 }
 
@@ -103,15 +102,19 @@ static NSString *const kFBFieldPicture = @"picture";
 								  completion:^(FBRequest *request, id result) {
 									  NSLog(@"Result: %@", result);
 									  [self idsQuery:[NSString stringWithFormat:@"%@",[result componentsJoinedByString:@","]]
-												  fields:[NSArray arrayWithObjects:@"name", @"picture", nil]
-												   range:0
-											  completion:^(NSArray *people) {
-												  NSLog(@"People: %@", people);
-											  } 
-												   error:^(NSError *error) {
-                                                       NSLog(@"Error: %@",error);
-													   
-												   }];
+                                              fields:[NSArray arrayWithObjects:kFBFieldName, kFBFieldPicture, nil]
+                                               range:0
+                                          completion:^(NSArray *people) {
+                                              if( completionHandler ) {
+                                                  completionHandler(people);
+                                              }
+                                          } 
+                                               error:^(NSError *error) {
+                                                   if( errorHandler ) {
+                                                       errorHandler(error);
+                                                   }
+                                                   
+                                               }];
 								  }];
 }
 

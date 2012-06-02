@@ -25,6 +25,8 @@
 		8302AC3E1579FC6C007603BD /* FBRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 8302AC331579FC6C007603BD /* FBRequest.m */; };
 		8302AC3F1579FC6C007603BD /* FBRequest+Delegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 8302AC351579FC6C007603BD /* FBRequest+Delegate.m */; };
 		8395A8C8157A016B00FF16EA /* FBAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 8395A8C7157A016B00FF16EA /* FBAppDelegate.m */; };
+		8395A8F8157A23C200FF16EA /* FBDialog+Delegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 8395A8F5157A23C200FF16EA /* FBDialog+Delegate.m */; };
+		8395A8F9157A23C200FF16EA /* FBLoginDialog+Delegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 8395A8F7157A23C200FF16EA /* FBLoginDialog+Delegate.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -61,6 +63,10 @@
 		8302AC351579FC6C007603BD /* FBRequest+Delegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "FBRequest+Delegate.m"; path = "../../src/FBRequest+Delegate.m"; sourceTree = "<group>"; };
 		8395A8C6157A016B00FF16EA /* FBAppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FBAppDelegate.h; path = ../../src/FBAppDelegate.h; sourceTree = "<group>"; };
 		8395A8C7157A016B00FF16EA /* FBAppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FBAppDelegate.m; path = ../../src/FBAppDelegate.m; sourceTree = "<group>"; };
+		8395A8F4157A23C200FF16EA /* FBDialog+Delegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "FBDialog+Delegate.h"; path = "../../src/FBDialog+Delegate.h"; sourceTree = "<group>"; };
+		8395A8F5157A23C200FF16EA /* FBDialog+Delegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "FBDialog+Delegate.m"; path = "../../src/FBDialog+Delegate.m"; sourceTree = "<group>"; };
+		8395A8F6157A23C200FF16EA /* FBLoginDialog+Delegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "FBLoginDialog+Delegate.h"; path = "../../src/FBLoginDialog+Delegate.h"; sourceTree = "<group>"; };
+		8395A8F7157A23C200FF16EA /* FBLoginDialog+Delegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "FBLoginDialog+Delegate.m"; path = "../../src/FBLoginDialog+Delegate.m"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -132,13 +138,37 @@
 		8302AC401579FC7C007603BD /* Facebook */ = {
 			isa = PBXGroup;
 			children = (
+				8302AC291579FC6C007603BD /* FBConnect.h */,
+				8395A8FB157A23CC00FF16EA /* Delegates */,
+				8395A8FC157A23DE00FF16EA /* Background */,
 				8302AC231579FC6C007603BD /* Facebook.h */,
 				8302AC241579FC6C007603BD /* Facebook.m */,
-				8302AC251579FC6C007603BD /* Facebook+Delegate.h */,
-				8302AC261579FC6C007603BD /* Facebook+Delegate.m */,
+				8395A8C6157A016B00FF16EA /* FBAppDelegate.h */,
+				8395A8C7157A016B00FF16EA /* FBAppDelegate.m */,
 				8302AC271579FC6C007603BD /* Facebook+Graph.h */,
 				8302AC281579FC6C007603BD /* Facebook+Graph.m */,
-				8302AC291579FC6C007603BD /* FBConnect.h */,
+			);
+			name = Facebook;
+			sourceTree = "<group>";
+		};
+		8395A8FB157A23CC00FF16EA /* Delegates */ = {
+			isa = PBXGroup;
+			children = (
+				8395A8F4157A23C200FF16EA /* FBDialog+Delegate.h */,
+				8395A8F5157A23C200FF16EA /* FBDialog+Delegate.m */,
+				8395A8F6157A23C200FF16EA /* FBLoginDialog+Delegate.h */,
+				8395A8F7157A23C200FF16EA /* FBLoginDialog+Delegate.m */,
+				8302AC251579FC6C007603BD /* Facebook+Delegate.h */,
+				8302AC261579FC6C007603BD /* Facebook+Delegate.m */,
+				8302AC341579FC6C007603BD /* FBRequest+Delegate.h */,
+				8302AC351579FC6C007603BD /* FBRequest+Delegate.m */,
+			);
+			name = Delegates;
+			sourceTree = "<group>";
+		};
+		8395A8FC157A23DE00FF16EA /* Background */ = {
+			isa = PBXGroup;
+			children = (
 				8302AC2A1579FC6C007603BD /* FBDialog.bundle */,
 				8302AC2B1579FC6C007603BD /* FBDialog.h */,
 				8302AC2C1579FC6C007603BD /* FBDialog.m */,
@@ -148,12 +178,8 @@
 				8302AC301579FC6C007603BD /* FBLoginDialog.m */,
 				8302AC311579FC6C007603BD /* FBRequest.h */,
 				8302AC331579FC6C007603BD /* FBRequest.m */,
-				8302AC341579FC6C007603BD /* FBRequest+Delegate.h */,
-				8302AC351579FC6C007603BD /* FBRequest+Delegate.m */,
-				8395A8C6157A016B00FF16EA /* FBAppDelegate.h */,
-				8395A8C7157A016B00FF16EA /* FBAppDelegate.m */,
 			);
-			name = Facebook;
+			name = Background;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -233,6 +259,8 @@
 				8302AC3E1579FC6C007603BD /* FBRequest.m in Sources */,
 				8302AC3F1579FC6C007603BD /* FBRequest+Delegate.m in Sources */,
 				8395A8C8157A016B00FF16EA /* FBAppDelegate.m in Sources */,
+				8395A8F8157A23C200FF16EA /* FBDialog+Delegate.m in Sources */,
+				8395A8F9157A23C200FF16EA /* FBLoginDialog+Delegate.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

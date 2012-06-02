@@ -379,8 +379,6 @@
  * Dialog: Feed for the user
  */
 - (void)apiDialogFeedUser {
-    currentAPICall = kDialogFeedUser;
-	
     // The action links to be shown with the post in the feed
     NSArray* actionLinks = [NSArray arrayWithObjects:[NSDictionary dictionaryWithObjectsAndKeys:
                                                            @"Get Started",@"name",@"http://m.facebook.com/apps/hackbookios/",@"link", nil], nil];

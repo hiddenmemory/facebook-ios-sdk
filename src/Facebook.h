@@ -38,7 +38,7 @@ typedef enum {
  * and Graph APIs, and start user interface interactions (such as
  * pop-ups promoting for credentials, permissions, stream posts, etc.)
  */
-@interface Facebook : NSObject<FBLoginDialogDelegate>{
+@interface Facebook : NSObject {
     NSMutableSet* _requests;
     FBDialog* _loginDialog;
     FBDialog* _fbDialog;

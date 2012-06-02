@@ -11,7 +11,6 @@
 
 @implementation FBDialog (Delegate)
 
-
 - (void)setDelegate:(id<FBDialogDelegate>)delegate {
 	__block FBDialog *weakSelf = self;
 	

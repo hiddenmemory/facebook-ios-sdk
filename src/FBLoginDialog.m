@@ -19,6 +19,13 @@
 #import "FBDialog.h"
 #import "FBLoginDialog.h"
 
+@interface FBLoginDialog () {
+	NSMutableArray *loginHandlers;
+	NSMutableArray *didNotLoginHandlers;
+}
+
+@end
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 @implementation FBLoginDialog
@@ -30,13 +37,13 @@
  * initialize the FBLoginDialog with url and parameters
  */
 - (id)initWithURL:(NSString*) loginURL 
-      loginParams:(NSMutableDictionary*) params 
-         delegate:(id <FBLoginDialogDelegate>) delegate{
+      loginParams:(NSMutableDictionary*)params {
     
     self = [super init];
     _serverURL = loginURL;
     self.params = params;
-    _loginDelegate = delegate;
+	loginHandlers = [NSMutableArray array];
+	didNotLoginHandlers = [NSMutableArray array];
     return self;
 }
 
@@ -65,9 +72,10 @@
         [self dialogDidCancel:url];
         [self dismissWithSuccess:NO animated:YES];
     } else {
-        if ([_loginDelegate respondsToSelector:@selector(facebookDialogDidLogin:expirationDate:)]) {
-            [_loginDelegate facebookDialogDidLogin:token expirationDate:expirationDate];
-        }
+		[[loginHandlers copy] enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+			void (^handler)( NSString *token, NSDate *date ) = (void(^)(NSString *, NSDate *))obj;
+			handler(token, expirationDate);
+		}];
         [self dismissWithSuccess:YES animated:YES];
     }
     
@@ -78,19 +86,29 @@
  */
 - (void)dialogDidCancel:(NSURL *)url {
     [self dismissWithSuccess:NO animated:YES];
-    if ([_loginDelegate respondsToSelector:@selector(facebookbDialogDidNotLogin:)]) {
-        [_loginDelegate facebookbDialogDidNotLogin:YES];
-    }
+	[[didNotLoginHandlers copy] enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+		void (^handler)( BOOL success ) = (void(^)(BOOL))obj;
+		handler(YES);
+	}];
+
 }
 
 - (void)webView:(UIWebView *)webView didFailLoadWithError:(NSError *)error {
     if (!(([error.domain isEqualToString:@"NSURLErrorDomain"] && error.code == -999) ||
           ([error.domain isEqualToString:@"WebKitErrorDomain"] && error.code == 102))) {
         [super webView:webView didFailLoadWithError:error];
-        if ([_loginDelegate respondsToSelector:@selector(facebookbDialogDidNotLogin:)]) {
-            [_loginDelegate facebookbDialogDidNotLogin:NO];
-        }
+		
+		[[didNotLoginHandlers copy] enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+			void (^handler)( BOOL success ) = (void(^)(BOOL))obj;
+			handler(NO);
+		}];
     }
 }
 
+- (void)addLoginHandler:(void(^)( NSString *token, NSDate *expirationDate ))handler {
+	[loginHandlers addObject:handler];
+}
+- (void)addDidNotLoginHandler:(void(^)( BOOL cancelled ))handler {
+	[didNotLoginHandlers addObject:handler];
+}
 @end

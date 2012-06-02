@@ -235,6 +235,8 @@ lastRequestedPermissions = _lastRequestedPermissions;
 }
 
 - (void)invalidateSession {
+	_permissions = [NSSet set];
+	
     self.accessToken = nil;
     self.expirationDate = nil;
 	

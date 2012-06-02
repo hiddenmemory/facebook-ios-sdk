@@ -1,4 +1,6 @@
 /*
+ * Copyright 2012 Chris Ross - hiddenMemory Ltd - chris@hiddenmemory.co.uk
+ * Copyright 2012 Kieran Gutteridge - IntoHand Ltd - kieran.gutteridge@intohand.com
  * Copyright 2010 Facebook
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -110,11 +112,6 @@ lastRequestedPermissions = _lastRequestedPermissions;
 	[[NSNotificationCenter defaultCenter] addObserver:self
 											 selector:@selector(autobind:)
 												 name:UIApplicationDidFinishLaunchingNotification
-											   object:nil];
-	
-	[[NSNotificationCenter defaultCenter] addObserver:self
-											 selector:@selector(autobind:)
-												 name:UIApplicationDidBecomeActiveNotification
 											   object:nil];
 }
 

@@ -20,7 +20,6 @@
 
 @interface RootViewController : UIViewController <
 	FBSessionDelegate,
-	FBDialogDelegate,
 	UITableViewDataSource,
 	UITableViewDelegate
 > {

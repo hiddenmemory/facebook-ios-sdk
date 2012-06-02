@@ -51,22 +51,18 @@ typedef enum
 }
 
 /**
- * The delegate.
- */
-@property(nonatomic,assign) id<FBDialogDelegate> delegate;
-
-/**
  * The parameters.
  */
-@property(nonatomic, retain) NSMutableDictionary* params;
+@property(nonatomic, strong) NSMutableDictionary* params;
+
+@property (nonatomic, copy) BOOL (^shouldOpenURLInExternalBrowser)( NSURL *url );
 
 - (NSString *) getStringFromUrl: (NSString*) url needle:(NSString *) needle;
 
 - (id)initWithURL: (NSString *) loadingURL
 	   parameters: (NSDictionary *) params
   isViewInvisible: (BOOL) isViewInvisible
-frictionlessSettings: (FBFrictionlessRequestSettings *) frictionlessSettings
-         delegate: (id <FBDialogDelegate>) delegate;
+frictionlessSettings: (FBFrictionlessRequestSettings *) frictionlessSettings;
 
 /**
  * Displays the view with an animation.

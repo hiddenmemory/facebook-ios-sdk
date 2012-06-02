@@ -57,8 +57,8 @@ static BOOL FBIsDeviceIPad() {
 
 @implementation FBDialog
 
-@synthesize delegate = _delegate,
-params   = _params;
+@synthesize params   = _params;
+@synthesize shouldOpenURLInExternalBrowser;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // private
@@ -356,7 +356,6 @@ params   = _params;
 
 - (id)init {
     if ((self = [super initWithFrame:CGRectZero])) {
-        _delegate = nil;
         _loadingURL = nil;
         _showingKeyboard = NO;
         
@@ -495,8 +494,8 @@ params   = _params;
     } else if ([_loadingURL isEqual:url]) {
         return YES;
     } else if (navigationType == UIWebViewNavigationTypeLinkClicked) {
-        if ([_delegate respondsToSelector:@selector(dialog:shouldOpenURLInExternalBrowser:)]) {
-            if (![_delegate dialog:self shouldOpenURLInExternalBrowser:url]) {
+        if (self.shouldOpenURLInExternalBrowser) {
+            if (!self.shouldOpenURLInExternalBrowser(url)) {
                 return NO;
             }
         }
@@ -614,13 +613,11 @@ params   = _params;
 - (id)initWithURL: (NSString *) serverURL
 	   parameters: (NSDictionary *) params
   isViewInvisible: (BOOL)isViewInvisible
-frictionlessSettings: (FBFrictionlessRequestSettings*) frictionlessSettings
-         delegate: (id <FBDialogDelegate>) delegate {
+frictionlessSettings: (FBFrictionlessRequestSettings*) frictionlessSettings {
     
     self = [self init];
     _serverURL = serverURL;
     _params = (params ? [NSMutableDictionary dictionaryWithDictionary:params] : [NSMutableDictionary dictionary]);    
-    _delegate = delegate;
     _isViewInvisible = isViewInvisible;
     _frictionlessSettings = frictionlessSettings;
     
@@ -665,23 +662,19 @@ frictionlessSettings: (FBFrictionlessRequestSettings*) frictionlessSettings
 }
 
 - (void)dismissWithSuccess:(BOOL)success animated:(BOOL)animated {
-    if (success) {
-        if ([_delegate respondsToSelector:@selector(dialogDidComplete:)]) {
-            [_delegate dialogDidComplete:self];
-        }
-    } else {
-        if ([_delegate respondsToSelector:@selector(dialogWasCancelled:)]) {
-            [_delegate dialogWasCancelled:self];
-        }
-    }
+	[[completionHandlers copy] enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+		void (^handler)(FBDialog*,FacebookDialogState) = (void(^)(FBDialog*,FacebookDialogState))obj;
+		handler(self, (success ? FacebookDialogSuccess : FacebookDialogCancelled));
+	}];
     
     [self dismiss:animated];
 }
 
 - (void)dismissWithError:(NSError*)error animated:(BOOL)animated {
-    if ([_delegate respondsToSelector:@selector(dialog:didFailWithError:)]) {
-        [_delegate dialog:self didFailWithError:error];
-    }
+	[[failedWithErrorHandlers copy] enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+		void (^handler)(FBDialog*,NSError*) = (void(^)(FBDialog*,NSError*))obj;
+		handler(self, error);
+	}];
     
     [self dismiss:animated];
 }
@@ -693,17 +686,18 @@ frictionlessSettings: (FBFrictionlessRequestSettings*) frictionlessSettings
 }
 
 - (void)dialogDidSucceed:(NSURL *)url {
-    
-    if ([_delegate respondsToSelector:@selector(dialog:didCompleteWithURL:)]) {
-        [_delegate dialog:self didCompleteWithURL:url];
-    }
+	[[completionURLHandlers copy] enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+		void (^handler)(FBDialog*,NSURL*,FacebookDialogState) = (void(^)(FBDialog*,NSURL*,FacebookDialogState))obj;
+		handler(self, url, FacebookDialogSuccess);
+	}];
     [self dismissWithSuccess:YES animated:YES];
 }
 
 - (void)dialogDidCancel:(NSURL *)url {
-    if ([_delegate respondsToSelector:@selector(dialog:didNotCompleteWithURL:)]) {
-        [_delegate dialog:self didNotCompleteWithURL:url];
-    }
+	[[completionURLHandlers copy] enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+		void (^handler)(FBDialog*,NSURL*,FacebookDialogState) = (void(^)(FBDialog*,NSURL*,FacebookDialogState))obj;
+		handler(self, url, FacebookLoginCancelled);
+	}];
     [self dismissWithSuccess:NO animated:YES];
 }
 

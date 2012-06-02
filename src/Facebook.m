@@ -949,9 +949,9 @@ lastRequestedPermissions = _lastRequestedPermissions;
  *            dialog has completed.
  */
 - (void)dialog:(NSString *)action
-	  delegate:(id<FBDialogDelegate>)delegate {
+	  finalize:(void(^)(FBDialog *dialog))finalize {
     NSMutableDictionary * params = [NSMutableDictionary dictionary];
-    [self dialog:action parameters:params delegate:delegate];
+    [self dialog:action parameters:params finalize:finalize];
 }
 
 /**
@@ -968,7 +968,8 @@ lastRequestedPermissions = _lastRequestedPermissions;
  */
 - (void)dialog:(NSString *)action
 	parameters:(NSDictionary *)_params
-	  delegate:(id <FBDialogDelegate>)delegate {
+	  finalize:(void(^)(FBDialog *dialog))finalize {
+	
 	NSMutableDictionary *params = (_params ? [NSMutableDictionary dictionaryWithDictionary:_params] : [NSMutableDictionary dictionary]);
 
     NSString *dialogURL = [kDialogBaseURL stringByAppendingString:action];
@@ -1027,10 +1028,11 @@ lastRequestedPermissions = _lastRequestedPermissions;
         _fbDialog = [[FBDialog alloc] initWithURL:dialogURL
 									   parameters:params
                                   isViewInvisible:invisible
-                             frictionlessSettings:_frictionlessRequestSettings 
-                                         delegate:delegate];
+                             frictionlessSettings:_frictionlessRequestSettings];
     }
-    
+	
+	finalize(_fbDialog);
+
     [_fbDialog show];
 }
 

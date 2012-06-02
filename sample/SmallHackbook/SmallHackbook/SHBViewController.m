@@ -11,10 +11,20 @@
 
 @implementation SHBViewController
 @synthesize textView;
+@synthesize imageView;
+
+- (void)viewDidLoad {
+	[super viewDidLoad];
+	
+	[[Facebook bind] fetchMe:^(NSDictionary *me) {
+		self.imageView.image = [UIImage imageWithData:[NSData dataWithContentsOfURL:[NSURL URLWithString:[me objectForKey:@"picture"]]]];
+	} error:nil];
+}
 
 - (void)viewDidUnload
 {
 	[self setTextView:nil];
+	[self setImageView:nil];
     [super viewDidUnload];
 }
 

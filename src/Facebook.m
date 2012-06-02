@@ -87,7 +87,7 @@ lastRequestedPermissions = _lastRequestedPermissions;
 	});
 	return facebookSharedObject;
 }
-+ (void)autobind:(NSNotification*)notification {
++ (Facebook*)bind {
 	NSArray* aBundleURLTypes = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleURLTypes"];
 	if ([aBundleURLTypes isKindOfClass:[NSArray class]] && ([aBundleURLTypes count] > 0)) {
 		NSDictionary* aBundleURLTypes0 = [aBundleURLTypes objectAtIndex:0];
@@ -96,16 +96,19 @@ lastRequestedPermissions = _lastRequestedPermissions;
 			if ([aBundleURLSchemes isKindOfClass:[NSArray class]] && ([aBundleURLSchemes count] > 0)) {
 				NSString *scheme = [aBundleURLSchemes objectAtIndex:0];
 				if ([scheme isKindOfClass:[NSString class]] && [scheme hasPrefix:@"fb"]) {
-					[self bind:[scheme substringFromIndex:2]];
+					return [self bind:[scheme substringFromIndex:2]];
 				}
 			}
 		}
 	}
+	return nil;	
+}
++ (void)autobind:(NSNotification*)notification {
+	if( !facebookSharedObject ) {
+		[self bind];
+	}
 }
 + (Facebook*)shared {
-	if( !facebookSharedObject ) {
-		@throw [NSError errorWithDomain:@"com.facebook.iOS.RequiresAppIDError" code:42 userInfo:nil];
-	}
 	return facebookSharedObject;
 }
 + (void)load {

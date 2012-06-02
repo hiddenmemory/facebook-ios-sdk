@@ -1,5 +1,7 @@
 #Facebook iOS SDK [OverTheAir2012 DUB REMIX]
 
+Product of the OverTheAir 2012 Hack, this will be more throughly sanity checked soon - looking for feedback
+
 #OverTheAir 2012 Changes:
 
  - Runs on iOS5 only with ARC support for better memory management

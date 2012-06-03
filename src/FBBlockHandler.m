@@ -74,4 +74,8 @@
 	}
 }
 
+- (FBBlockHandler*)blockHandler {
+	return self;
+}
+
 @end

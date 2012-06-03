@@ -43,11 +43,6 @@ static void *finishedContext = @"finishedContext";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-static NSString *const kFBLoginHandlerKey = @"login";
-static NSString *const kFBExtendTokenHandlerKey = @"extend";
-static NSString *const kFBLogoutHandlerKey = @"logout";
-static NSString *const kFBSessionHandlerKey = @"session";
-
 @interface Facebook () {
 	BOOL _isExtendingAccessToken;
 }
@@ -220,12 +215,16 @@ lastRequestedPermissions = _lastRequestedPermissions;
 	[self _applyLoginHandlers:(cancelled ? FacebookLoginCancelled : FacebookLoginFailed)];
 }
 - (void)_applyLoginDialogHandlers:(FBLoginDialog*)dialog {	
-	[dialog addLoginHandler:^(NSString *token, NSDate *expirationDate) {
-		[self _handleLogin:token expirationDate:expirationDate];
-	}];
-	
-	[dialog addDidNotLoginHandler:^(BOOL cancelled) {
-		[self _handleLoginFailed:cancelled];
+	[dialog addLoginHandler:^(FacebookDialogState state, NSString *token, NSDate *expirationDate) {
+		switch (state) {
+			case FacebookDialogSuccess:
+				[self _handleLogin:token expirationDate:expirationDate];
+				break;
+				
+			default:
+				[self _handleLoginFailed:(state == FacebookDialogCancelled)];
+				break;
+		}
 	}];
 }
 

@@ -8,7 +8,15 @@
 
 #import <Foundation/Foundation.h>
 
-@interface FBBlockHandler : NSObject
+@class FBBlockHandler;
+
+@protocol FBBlockProvider <NSObject>
+
+- (FBBlockHandler*)blockHandler;
+
+@end
+
+@interface FBBlockHandler : NSObject <FBBlockProvider>
 
 - (void)registerEventHandler:(NSString*)event handler:(id)block;
 - (void)registerEventHandler:(NSString*)event discard:(BOOL)discard handler:(id)block;

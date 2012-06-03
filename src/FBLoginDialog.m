@@ -18,13 +18,7 @@
 
 #import "FBDialog.h"
 #import "FBLoginDialog.h"
-
-@interface FBLoginDialog () {
-	NSMutableArray *loginHandlers;
-	NSMutableArray *didNotLoginHandlers;
-}
-
-@end
+#import "Facebook.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -42,8 +36,6 @@
     self = [super init];
     _serverURL = loginURL;
     self.params = params;
-	loginHandlers = [NSMutableArray array];
-	didNotLoginHandlers = [NSMutableArray array];
     return self;
 }
 
@@ -72,13 +64,15 @@
         [self dialogDidCancel:url];
         [self dismissWithSuccess:NO animated:YES];
     } else {
-		[[loginHandlers copy] enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
-			void (^handler)( NSString *token, NSDate *date ) = (void(^)(NSString *, NSDate *))obj;
-			handler(token, expirationDate);
+		
+		[[self blockHandler] enumerateEventHandlers:kFBLoginHandlerKey block:^(id _handler) {
+			void (^handler)(FacebookDialogState state, NSString *token, NSDate *date ) = _handler;
+			handler(FacebookDialogSuccess, token, expirationDate);
 		}];
+
+		
         [self dismissWithSuccess:YES animated:YES];
     }
-    
 }
 
 /**
@@ -86,11 +80,11 @@
  */
 - (void)dialogDidCancel:(NSURL *)url {
     [self dismissWithSuccess:NO animated:YES];
-	[[didNotLoginHandlers copy] enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
-		void (^handler)( BOOL success ) = (void(^)(BOOL))obj;
-		handler(YES);
-	}];
 
+	[[self blockHandler] enumerateEventHandlers:kFBLoginHandlerKey block:^(id _handler) {
+		void (^handler)(FacebookDialogState state, NSString *token, NSDate *date ) = _handler;
+		handler(FacebookDialogCancelled, nil, nil);
+	}];
 }
 
 - (void)webView:(UIWebView *)webView didFailLoadWithError:(NSError *)error {
@@ -98,17 +92,15 @@
           ([error.domain isEqualToString:@"WebKitErrorDomain"] && error.code == 102))) {
         [super webView:webView didFailLoadWithError:error];
 		
-		[[didNotLoginHandlers copy] enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
-			void (^handler)( BOOL success ) = (void(^)(BOOL))obj;
-			handler(NO);
+		[[self blockHandler] enumerateEventHandlers:kFBLoginHandlerKey block:^(id _handler) {
+			void (^handler)(FacebookDialogState state, NSString *token, NSDate *date ) = _handler;
+			handler(FacebookDialogFailed, nil, nil);
 		}];
     }
 }
 
-- (void)addLoginHandler:(void(^)( NSString *token, NSDate *expirationDate ))handler {
-	[loginHandlers addObject:handler];
+- (void)addLoginHandler:(void(^)( FacebookDialogState state, NSString *token, NSDate *expirationDate ))handler {
+	[[self blockHandler] registerEventHandler:kFBLoginHandlerKey handler:handler];
 }
-- (void)addDidNotLoginHandler:(void(^)( BOOL cancelled ))handler {
-	[didNotLoginHandlers addObject:handler];
-}
+
 @end

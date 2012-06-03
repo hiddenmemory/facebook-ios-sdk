@@ -18,14 +18,13 @@
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
+#import "FBBlockHandler.h"
 
-typedef enum 
-{ 
+typedef enum { 
     FacebookDialogSuccess,
     FacebookDialogCancelled,
     FacebookDialogFailed
 } FacebookDialogState;
-
 
 @protocol FBDialogDelegate;
 @class FBFrictionlessRequestSettings;
@@ -36,7 +35,7 @@ typedef enum
  * Facebook dialog interface for start the facebook webView UIServer Dialog.
  */
 
-@interface FBDialog : UIView <UIWebViewDelegate> {
+@interface FBDialog : UIView <UIWebViewDelegate, FBBlockProvider> {
     NSString * _serverURL;
     NSURL* _loadingURL;
     UIWebView* _webView;

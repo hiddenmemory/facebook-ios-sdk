@@ -47,6 +47,7 @@
 	NSMutableArray *masterHandlers = [eventHandlers objectForKey:event];
 	
 	if( masterHandlers ) {
+		FBBlockHandler *strongSelf = self; // This is done to ensure we dont get released mid-enumeration
 		NSArray *handlers = [masterHandlers copy];
 		NSMutableArray *discardHandlers = [NSMutableArray array];
 		
@@ -62,10 +63,11 @@
 		
 		@synchronized(masterHandlers) {
 			[discardHandlers enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
-				NSLog(@"Discarding object: %@", obj);
 				[masterHandlers removeObject:obj];
 			}];
 		}
+		
+		strongSelf = nil;
 	}
 }
 - (void)clearEventHandlers:(NSString*)event {
@@ -73,7 +75,12 @@
 		[eventHandlers removeObjectForKey:event];
 	}
 }
-
+- (NSUInteger)eventHandlerCount:(NSString*)event {
+	if( [eventHandlers objectForKey:event] ) {
+		return [[eventHandlers objectForKey:event] count];
+	}
+	return 0;
+}
 - (FBBlockHandler*)blockHandler {
 	return self;
 }

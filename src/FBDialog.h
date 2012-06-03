@@ -35,6 +35,8 @@ typedef enum {
  * Facebook dialog interface for start the facebook webView UIServer Dialog.
  */
 
+#define kFBCompletionURLBlockHandlerKey @"completion-url"
+
 @interface FBDialog : UIView <UIWebViewDelegate, FBBlockProvider> {
     NSString * _serverURL;
     NSURL* _loadingURL;

@@ -44,10 +44,6 @@ static BOOL FBIsDeviceIPad() {
     return NO;
 }
 
-static NSString *const kFBCompletionHandlerKey = @"completion";
-static NSString *const kFBCompletionURLHandlerKey = @"completion-url";
-static NSString *const kFBErrorHandlerKey = @"error";
-
 @interface FBDialog () {
     FBBlockHandler *blocks;
 }
@@ -65,15 +61,15 @@ static NSString *const kFBErrorHandlerKey = @"error";
 // private
 
 -(void)addCompletionHandler:(void(^)(FBDialog*, FacebookDialogState state))completionHandler{
-	[blocks registerEventHandler:kFBCompletionHandlerKey handler:completionHandler];
+	[blocks registerEventHandler:kFBCompletionBlockHandlerKey handler:completionHandler];
 }
 
 - (void)addCompletionURLHandler:(void(^)(FBDialog *dialog, NSURL *url, FacebookDialogState state))completionURLHandler{
-	[blocks registerEventHandler:kFBCompletionURLHandlerKey handler:completionURLHandler];
+	[blocks registerEventHandler:kFBCompletionURLBlockHandlerKey handler:completionURLHandler];
 }
 
 - (void)addErrorHandler:(void (^)(FBDialog *dialog, NSError *error))errorHandler{
-	[blocks registerEventHandler:kFBErrorHandlerKey handler:errorHandler];
+	[blocks registerEventHandler:kFBErrorBlockHandlerKey handler:errorHandler];
 }
 
 - (void)addRoundedRectToPath:(CGContextRef)context rect:(CGRect)rect radius:(float)radius{
@@ -659,7 +655,7 @@ frictionlessSettings: (FBFrictionlessRequestSettings*) frictionlessSettings {
 }
 
 - (void)dismissWithSuccess:(BOOL)success animated:(BOOL)animated {
-	[blocks enumerateEventHandlers:kFBCompletionHandlerKey block:^(id _handler) {
+	[blocks enumerateEventHandlers:kFBCompletionBlockHandlerKey block:^(id _handler) {
 		void (^handler)(FBDialog*,FacebookDialogState) = _handler;
 		handler(self, (success ? FacebookDialogSuccess : FacebookDialogCancelled));
 	}];
@@ -668,7 +664,7 @@ frictionlessSettings: (FBFrictionlessRequestSettings*) frictionlessSettings {
 }
 
 - (void)dismissWithError:(NSError*)error animated:(BOOL)animated {
-	[blocks enumerateEventHandlers:kFBErrorHandlerKey block:^(id _handler) {
+	[blocks enumerateEventHandlers:kFBErrorBlockHandlerKey block:^(id _handler) {
 		void (^handler)(FBDialog*,NSError*)= _handler;
 		handler(self, error);
 	}];
@@ -683,7 +679,7 @@ frictionlessSettings: (FBFrictionlessRequestSettings*) frictionlessSettings {
 }
 
 - (void)dialogDidSucceed:(NSURL *)url {
-	[blocks enumerateEventHandlers:kFBCompletionURLHandlerKey block:^(id _handler) {
+	[blocks enumerateEventHandlers:kFBCompletionURLBlockHandlerKey block:^(id _handler) {
 		void (^handler)(FBDialog*,NSURL*,FacebookDialogState) = _handler;
 		handler(self, url, FacebookDialogSuccess);
 	}];
@@ -691,7 +687,7 @@ frictionlessSettings: (FBFrictionlessRequestSettings*) frictionlessSettings {
 }
 
 - (void)dialogDidCancel:(NSURL *)url {
-	[blocks enumerateEventHandlers:kFBCompletionURLHandlerKey block:^(id _handler) {
+	[blocks enumerateEventHandlers:kFBCompletionURLBlockHandlerKey block:^(id _handler) {
 		void (^handler)(FBDialog*,NSURL*,FacebookDialogState) = _handler;
 		handler(self, url, FacebookDialogCancelled);
 	}];

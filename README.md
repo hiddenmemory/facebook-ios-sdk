@@ -2,7 +2,7 @@
 
 Product of the OverTheAir 2012 Hack, this will be more throughly sanity checked soon - looking for feedback
 
-#OverTheAir 2012 Changes:
+##OverTheAir: Changes:
 
  - Runs on iOS5 only with ARC support for better memory management
  - Massive cleanup of API naming convention to be a better iOS citizen. e.g.:
@@ -43,34 +43,61 @@ Product of the OverTheAir 2012 Hack, this will be more throughly sanity checked 
                                 }];
                                 
    This is probably the most insanely great feature of the dub remix. We keep the permissions and the code that uses it together. If we don't need to authenticate the permissions, we wont. If we do, we will. Either way we end up with much cleaner code.
- - API to make common tasks easier and less error prone - [[Facebook+Graph.h]]
+ - API to make common tasks easier and less error prone - `Facebook+Graph.h`
  - Intelligent automatic binding to a Facebook AppID based upon the URL scheme within the application
 
-#OverTheAir Authors:
+##OverTheAir: Getting Started:
 
-Chris Ross @darkrock
-Kieran Gutteridge @kgutteridge 
+ - Setup your application in facebook as per normal with single sign on
+ - Make sure you have setup your URL handler with the scheme `fb`APPID as this is used not only on sign on but also to automatically bind the Facebook singleton object to your APPID
+ - If you do not wish to implement the URL handlers in the app delegate, then include `FBConnect.h` in your app delegate's header file and change the parent class from `UIResponder` to `FBAppDelegate`
+ - Now you just need to access facebook how you want to using the `[Facebook shared]` accessor. Please note, at the moment there is an issue with autobind that if you try using `[Facebook shared]` before `applicationDidFinishLaunching:` has finished running it will be null, you can always call `[Facebook bind]` in that case (say in the `viewDidLoad` method in the root view controller)
+ 
+If you want examples on how to use the new API, take a look at the `Facebook+Graph.m` code. There you will find how:
+
+ - to use the finalize block to setup blocks on `FBRequest`
+ - to configure permissions using the `usingPermission:request:` call on `Facebook` to easily elevate permissions
+ - many examples on how to use the `request...` calls
+ 
+If you have a look in the Hackbook and SmallHackbook example apps you will also find many examples on how the API is used.
+
+##OverTheAir: Plans
+
+This is currently our best estimate on how we want the Facebook client SDK to work and think it is pretty great. 
+
+The aim is to polish and refine the core API code but we think the API interface is pretty much solid so you can start using it. There are also plans to expand more of `Facebook+Graph.m` to abstract out the need to ask for permissions and write requests for common Facebook tasks (along with some stubs to group a list of permissions together to allow the app to request a group of them).
+
+We chatted a lot with Facebook at OverTheAir and they liked what we did and hoping that some of the ideas make their way in the official SDK.
+
+Stay tuned.
+
+##OverTheAir: Authors:
+
+ - Chris Ross @darkrock
+ - Kieran Gutteridge @kgutteridge 
 
 Special mention to Daniel Tull @danielctull and @chrisbanes
 
-About:
-======
+#About:
 
 This open source iOS library allows you to integrate Facebook into your iOS application include iPhone, iPad and iPod touch.
 
 Except as otherwise noted, the Facebook iOS SDK is licensed under the Apache License, Version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.html)
 
-Getting Started
-===============
+#Getting Started
 
 See our [iOS Tutorial](https://developers.facebook.com/docs/guides/mobile/ios/) for a tutorial to get you up and running.
 
 See our [iOS SDK Reference](https://developers.facebook.com/docs/reference/iossdk/) for more information on the SDK methods and protocols.
 
-Sample Applications
-===============
+Please note: with the large OverTheAir changes made to the codebase, a lot of the instruction has been made redundant, for quick guidelines please refer to the `OverTheAir: Getting Started:` above.
+
+#Sample Applications
 
 This SDK comes with a couple of applications that demonstrates authorization, making API calls, and invoking a dialog, to guide you in development.
+
+ - Hackbook is the large application that does most of the magic. Take a look in `APICallsViewController.m` and specifically the methods prefixed with `api` for the magic.
+ - SmallHackbook is an example of the smallest application you could write and demonstrates how little code you need to write to get going.
 
 To build and run the sample application with Xcode:
 
@@ -80,15 +107,13 @@ To build and run the sample application with Xcode:
 
 * Finally, select _Build_->_Build and Run_. This should compile the application and launch it.
 
-
-Debugging
-===============
+#Debugging
 
 Common problems and solutions:
 
 * What version of the iOS SDK must I compile my application against to use single sign-on?
 
-Single sign-on is available for apps built on version of iOS that support multitasking (generall v4.0 and higher--see Apple documentation for more information). Others applications will fall back to inline dialog-based authorization.
+This SDK now works on iOS 5.0 or above.
 
 * What version of the Facebook Application must a user have installed to use single sign-on?
 
@@ -107,4 +132,4 @@ Report Issues/Bugs
 ===============
 [Bugs](https://developers.facebook.com/bugs)
 
-[Questions](http://facebook.stackoverflow.com/questions/tagged/android)
+[Questions](http://facebook.stackoverflow.com/questions/tagged/ios)

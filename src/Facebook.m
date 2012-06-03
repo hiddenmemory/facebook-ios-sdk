@@ -43,11 +43,12 @@ static void *finishedContext = @"finishedContext";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+static NSString *const kFBLoginHandlerKey = @"login";
+static NSString *const kFBExtendTokenHandlerKey = @"extend";
+static NSString *const kFBLogoutHandlerKey = @"logout";
+static NSString *const kFBSessionHandlerKey = @"session";
+
 @interface Facebook () {
-	NSMutableArray *loginHandlers;
-	NSMutableArray *extendedTokenHandlers;
-	NSMutableArray *logoutHandlers;
-	NSMutableArray *sessionInvalidHandlers;
 	BOOL _isExtendingAccessToken;
 }
 
@@ -264,11 +265,6 @@ lastRequestedPermissions = _lastRequestedPermissions;
         self.urlSchemeSuffix = nil;
 		self.extendTokenOnApplicationActive = YES;
 		
-		loginHandlers = [NSMutableArray array];
-		extendedTokenHandlers = [NSMutableArray array];
-		logoutHandlers = [NSMutableArray array];
-		sessionInvalidHandlers = [NSMutableArray array];
-		
 		self.requestStarted = ^{};
 		self.requestFinished = ^{};
 		
@@ -353,9 +349,9 @@ lastRequestedPermissions = _lastRequestedPermissions;
     return _request;
 }
 
-- (void)_applyCoreHandlers:(NSArray*)list {
-	[[list copy] enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
-		void (^handler)(Facebook*) = (void(^)(Facebook*))obj;
+- (void)_applyCoreHandlers:(NSString*)event {
+	[self enumerateEventHandlers:event block:^(id _handler) {
+		void (^handler)(Facebook*) = _handler;
 		handler(self);
 	}];
 }
@@ -367,7 +363,7 @@ lastRequestedPermissions = _lastRequestedPermissions;
         if (requestState == kFBRequestStateComplete) {
             if ([_request sessionDidExpire]) {
                 [self invalidateSession];
-				[self _applyCoreHandlers:sessionInvalidHandlers];
+				[self _applyCoreHandlers:kFBSessionHandlerKey];
             }
             [_request removeObserver:self forKeyPath:requestFinishedKeyPath];
             [_requests removeObject:_request];
@@ -510,9 +506,8 @@ lastRequestedPermissions = _lastRequestedPermissions;
 	
 	void (^grantedHandler)(Facebook*) = [_grantedHandler copy];
 	void (^deniedHandler)(Facebook*) = [_deniedHandler copy];
-	id danglingPointerHolder = nil;
 	
-	void (^temporaryLoginHandler)(Facebook*,FacebookLoginState) = ^(Facebook *facebook, FacebookLoginState state) {
+	[self registerEventHandler:kFBLoginHandlerKey discard:YES handler:^(Facebook *facebook, FacebookLoginState state) {
 		if( state == FacebookLoginSuccess && grantedHandler ) {
 			NSMutableSet *new_permissions = [NSMutableSet setWithSet:_permissions];
 			[new_permissions addObjectsFromArray:permissions];
@@ -525,11 +520,7 @@ lastRequestedPermissions = _lastRequestedPermissions;
 		else if( deniedHandler ) {
 			deniedHandler(facebook);
 		}
-	
-		[loginHandlers removeObject:danglingPointerHolder];
-	};
-	
-	[loginHandlers addObject:(danglingPointerHolder = [temporaryLoginHandler copy])];
+	}];
 	
 	[self authorizeWithFBAppAuth:YES safariAuth:YES permissions:permissions];
 }
@@ -612,8 +603,8 @@ lastRequestedPermissions = _lastRequestedPermissions;
 							   
 							   [self storeAccessToken];
 							   
-							   [extendedTokenHandlers enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
-								   void (^handler)(Facebook*,NSString*,NSDate*) = (void(^)(Facebook*,NSString*,NSDate*))obj;
+							   [self enumerateEventHandlers:kFBExtendTokenHandlerKey block:^(id _handler) {
+								   void (^handler)(Facebook*,NSString*,NSDate*) = _handler;
 								   handler(self, accessToken, expirationDate);
 							   }];
 							   
@@ -738,7 +729,7 @@ lastRequestedPermissions = _lastRequestedPermissions;
  */
 - (void)logout {
     [self invalidateSession];
-	[self _applyCoreHandlers:logoutHandlers];
+	[self _applyCoreHandlers:kFBLogoutHandlerKey];
 }
 
 #pragma mark - Requests
@@ -1084,8 +1075,8 @@ lastRequestedPermissions = _lastRequestedPermissions;
  * Set the authToken and expirationDate after login succeed
  */
 - (void)_applyLoginHandlers:(FacebookLoginState)state {
-	[[loginHandlers copy] enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
-		void (^handler)(Facebook*,FacebookLoginState) = (void(^)(Facebook*,FacebookLoginState))obj;
+	[self enumerateEventHandlers:kFBLoginHandlerKey block:^(id _handler) {
+		void (^handler)(Facebook*,FacebookLoginState) = _handler;
 		handler(self, state);
 	}];
 }
@@ -1117,16 +1108,16 @@ lastRequestedPermissions = _lastRequestedPermissions;
 #pragma mark - Handlers
 
 - (void)addLoginHandler:(void(^)(Facebook*, FacebookLoginState))handler {
-	[loginHandlers addObject:[handler copy]];
+	[self registerEventHandler:kFBLoginHandlerKey handler:handler];
 }
 - (void)addExtendTokenHandler:(void(^)(Facebook *facebook, NSString *token, NSDate *expiresAt))handler {
-	[extendedTokenHandlers addObject:[handler copy]];
+	[self registerEventHandler:kFBExtendTokenHandlerKey handler:handler];
 }
 - (void)addLogoutHandler:(void(^)(Facebook*))handler {
-	[logoutHandlers addObject:[handler copy]];
+	[self registerEventHandler:kFBLogoutHandlerKey handler:handler];
 }
 - (void)addSessionInvalidatedHandler:(void(^)(Facebook*))handler {
-	[sessionInvalidHandlers addObject:[handler copy]];
+	[self registerEventHandler:kFBSessionHandlerKey handler:handler];
 }
 
 @end

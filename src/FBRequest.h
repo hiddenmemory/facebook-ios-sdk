@@ -18,6 +18,7 @@
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
+#import "FBBlockHandler.h"
 
 @protocol FBRequestDelegate;
 
@@ -33,7 +34,7 @@ typedef NSUInteger FBRequestState;
 /**
  * Do not use this interface directly, instead, use method in Facebook.h
  */
-@interface FBRequest : NSObject 
+@interface FBRequest : FBBlockHandler 
 
 /**
  * The URL which will be contacted to execute the request.

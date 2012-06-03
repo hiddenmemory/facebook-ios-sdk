@@ -46,18 +46,20 @@ static NSString *const kFBFieldPicture = @"picture";
 - (void)fetchMe:(void(^)(NSDictionary *me))completionHandler
 	 error:(void(^)(NSError *error))errorHandler {
 	
-	[self requestWithGraphPath:@"me"
-					parameters:[NSDictionary dictionaryWithObjectsAndKeys:@"name,picture", @"fields", nil]
-					completion:^(FBRequest *request, id result) {	
-						if( completionHandler ) {
-							completionHandler(result);
+	[self usingPermission:@"user_about_me" request:^{
+		[self requestWithGraphPath:@"me"
+						parameters:[NSDictionary dictionaryWithObjectsAndKeys:@"name,picture", @"fields", nil]
+						completion:^(FBRequest *request, id result) {	
+							if( completionHandler ) {
+								completionHandler(result);
+							}
 						}
-					}
-						 error:^(FBRequest *request, NSError *error) {
-							 if( errorHandler ) {
-								 errorHandler(error);
-							 }
-						 }];
+							 error:^(FBRequest *request, NSError *error) {
+								 if( errorHandler ) {
+									 errorHandler(error);
+								 }
+							 }];
+	}];
 }
 
 - (void)deletePermissions:(void (^)(Facebook*))completionHandler {

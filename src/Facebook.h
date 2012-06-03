@@ -18,10 +18,16 @@
 
 #import "FBLoginDialog.h"
 #import "FBRequest.h"
+#import "FBBlockHandler.h"
 
 #define FBMethodPost   @"POST"
 #define FBMethodGet    @"GET"
 #define FBMethodDelete @"DELETE"
+
+#define kFBLoginHandlerKey @"login"
+#define kFBExtendTokenHandlerKey @"extend"
+#define kFBLogoutHandlerKey @"logout"
+#define kFBSessionHandlerKey @"session"
 
 typedef enum {
 	FacebookLoginSuccess,
@@ -38,7 +44,7 @@ typedef enum {
  * and Graph APIs, and start user interface interactions (such as
  * pop-ups promoting for credentials, permissions, stream posts, etc.)
  */
-@interface Facebook : NSObject {
+@interface Facebook : FBBlockHandler {
     NSMutableSet* _requests;
     FBDialog* _loginDialog;
     FBDialog* _fbDialog;

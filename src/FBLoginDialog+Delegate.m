@@ -19,11 +19,16 @@
 	
 	if (oldDelegate) return;
 	
-	[self addLoginHandler:^( NSString *token, NSDate *expirationDate ) {
-		[((FBLoginDialog*)weakSelf).delegate facebookDialogDidLogin:token expirationDate:expirationDate];
-	}];
-	[self addDidNotLoginHandler:^( BOOL cancelled ) {
-		[((FBLoginDialog*)weakSelf).delegate facebookbDialogDidNotLogin:cancelled];
+	[self addLoginHandler:^( FacebookDialogState state, NSString *token, NSDate *expirationDate ) {
+		switch (state) {
+			case FacebookDialogSuccess:
+				[((FBLoginDialog*)weakSelf).delegate facebookDialogDidLogin:token expirationDate:expirationDate];
+				break;
+				
+			default:
+				[((FBLoginDialog*)weakSelf).delegate facebookbDialogDidNotLogin:(state == FacebookDialogCancelled)];
+				break;
+		}
 	}];
 }
 

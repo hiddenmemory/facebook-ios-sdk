@@ -32,8 +32,7 @@
 - (id)initWithURL:(NSString *) loginURL
       loginParams:(NSMutableDictionary *) params;
 
-- (void)addLoginHandler:(void(^)( NSString *token, NSDate *expirationDate ))handler;
-- (void)addDidNotLoginHandler:(void(^)( BOOL cancelled ))handler;
+- (void)addLoginHandler:(void(^)( FacebookDialogState state, NSString *token, NSDate *expirationDate ))handler;
 
 @end
 

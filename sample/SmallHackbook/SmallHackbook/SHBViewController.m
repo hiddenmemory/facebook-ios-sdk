@@ -33,9 +33,10 @@
 
 - (void)viewDidAppear:(BOOL)animated {
 	[[Facebook shared] fetchMe:^(NSDictionary *me) {
-		NSURL *pictureURL = [NSURL URLWithString:[me objectForKey:@"picture"]];
-		NSData *pictureSource = [NSData dataWithContentsOfURL:pictureURL];
-		self.imageView.image = [UIImage imageWithData:pictureSource];
+		[[Facebook shared] fetchProfilePictureWithID:[me objectForKey:@"id"]
+										  completion:^(UIImage *pic) {
+											  self.imageView.image = pic;
+										  } error:nil];
 	} error:nil];
 }
 

@@ -62,6 +62,28 @@ static NSString *const kFBFieldPicture = @"picture";
 	}];
 }
 
+- (void)fetchProfilePictureWithID:(NSString *)ID
+					   completion:(void (^)(UIImage *pic))completionHandler
+							error:(void (^)(NSError *error))errorHandler {
+    
+	[self usingPermissions:[NSArray arrayWithObjects:@"user_about_me", @"friends_about_me", nil] request:^{
+		[self requestWithGraphPath:[NSString stringWithFormat:@"%@/picture?type=square", ID]
+						  finalize:^(FBRequest *request) {
+							  [request addRawHandler:^(FBRequest *request, NSData *raw) {
+								  if( completionHandler ) {
+									  completionHandler([UIImage imageWithData:raw]);
+								  }
+							  }];
+							  if (errorHandler) {
+								  [request addErrorHandler:^(FBRequest *request, NSError *error) {
+									  errorHandler(error);
+								  }];
+							  }
+						  }];
+		
+	}];
+}
+
 - (void)deletePermissions:(void (^)(Facebook*))completionHandler {
 	[[Facebook shared] addLogoutHandler:completionHandler];
 

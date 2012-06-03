@@ -26,6 +26,10 @@
 
 - (void)deletePermissions:(void(^)(Facebook*))completionHandler;
 
+- (void)fetchProfilePictureWithID:(NSString *)ID
+					   completion:(void (^)(UIImage *pic))completionHandler
+							error:(void (^)(NSError *error))errorHandler;
+
 #pragma mark - friends
 // ID, Name, Picture URL
 - (void)fetchFriends:(void(^)(NSArray *friends))completionHandler

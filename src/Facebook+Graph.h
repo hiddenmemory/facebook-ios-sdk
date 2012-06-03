@@ -20,6 +20,8 @@
 
 @interface Facebook (Graph)
 
+- (NSArray*)permissionsRequired;
+
 #pragma mark - me
 - (void)fetchMe:(void(^)(NSDictionary *me))completionHandler
 	 error:(void(^)(NSError *error))errorHandler;

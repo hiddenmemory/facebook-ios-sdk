@@ -42,6 +42,16 @@ static NSString *const kFBSearchTypeCheckIn = @"checkin";
 static NSString *const kFBFieldName = @"name";
 static NSString *const kFBFieldPicture = @"picture";
 
+- (NSArray*)permissionsRequired {
+	return [NSArray arrayWithObjects:
+			@"user_about_me",
+			@"friends_about_me",
+			@"publish_stream",
+			@"user_photos",
+			@"user_videos",
+			nil];
+}
+
 #pragma mark - me
 - (void)fetchMe:(void(^)(NSDictionary *me))completionHandler
 	 error:(void(^)(NSError *error))errorHandler {
@@ -63,7 +73,7 @@ static NSString *const kFBFieldPicture = @"picture";
 }
 
 - (void)fetchProfilePictureWithID:(NSString *)ID
-					   completion:(void (^)(UIImage *pic))completionHandler
+					   completion:(void (^)(UIImage *picture))completionHandler
 							error:(void (^)(NSError *error))errorHandler {
     
 	[self usingPermissions:[NSArray arrayWithObjects:@"user_about_me", @"friends_about_me", nil] request:^{

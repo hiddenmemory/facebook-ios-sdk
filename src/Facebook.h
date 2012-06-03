@@ -24,10 +24,10 @@
 #define FBMethodGet    @"GET"
 #define FBMethodDelete @"DELETE"
 
-#define kFBLoginHandlerKey @"login"
-#define kFBExtendTokenHandlerKey @"extend"
-#define kFBLogoutHandlerKey @"logout"
-#define kFBSessionHandlerKey @"session"
+#define kFBLoginBlockHandlerKey @"login"
+#define kFBExtendTokenBlockHandlerKey @"extend"
+#define kFBLogoutBlockHandlerKey @"logout"
+#define kFBSessionBlockHandlerKey @"session"
 
 typedef enum {
 	FacebookLoginSuccess,

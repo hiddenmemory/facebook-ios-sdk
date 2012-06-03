@@ -37,12 +37,6 @@ static const NSTimeInterval kTimeoutInterval = 180.0;
 @property (nonatomic,readwrite) BOOL sessionDidExpire;
 @end
 
-static NSString *const kFBCompletionHandlerKey = @"completion";
-static NSString *const kFBErrorHandlerKey = @"error";
-static NSString *const kFBLoadHandlerKey = @"load";
-static NSString *const kFBRawHandlerKey = @"raw";
-static NSString *const kFBResponseHandlerKey = @"response";
-
 @implementation FBRequest
 
 @synthesize url = _url,
@@ -114,19 +108,19 @@ error = _error;
 }
 
 - (void)addCompletionHandler:(void(^)(FBRequest*,id))completionHandler {
-	[self registerEventHandler:kFBCompletionHandlerKey handler:completionHandler];
+	[self registerEventHandler:kFBCompletionBlockHandlerKey handler:completionHandler];
 }
 - (void)addErrorHandler:(void(^)(FBRequest*,NSError *))errorHandler {
-	[self registerEventHandler:kFBErrorHandlerKey handler:errorHandler];
+	[self registerEventHandler:kFBErrorBlockHandlerKey handler:errorHandler];
 }
 - (void)addLoadHandler:(void(^)(FBRequest*))loadHandler {
-	[self registerEventHandler:kFBLoadHandlerKey handler:loadHandler];
+	[self registerEventHandler:kFBLoadBlockHandlerKey handler:loadHandler];
 }
 - (void)addRawHandler:(void(^)(FBRequest*,NSData*))rawHandler {
-	[self registerEventHandler:kFBRawHandlerKey handler:rawHandler];
+	[self registerEventHandler:kFBRawBlockHandlerKey handler:rawHandler];
 }
 - (void)addResponseHandler:(void(^)(FBRequest*,NSURLResponse*))responseHandler{
-	[self registerEventHandler:kFBResponseHandlerKey handler:responseHandler];
+	[self registerEventHandler:kFBResponseBlockHandlerKey handler:responseHandler];
 }
 
 /**
@@ -274,7 +268,7 @@ error = _error;
  */
 
 - (void)_reportError:(NSError*)error {
-	[self enumerateEventHandlers:kFBErrorHandlerKey block:^(id _handler) {
+	[self enumerateEventHandlers:kFBErrorBlockHandlerKey block:^(id _handler) {
 		void (^handler)(FBRequest*,NSError *) = _handler;
 		handler(self, error);
 	}];
@@ -291,7 +285,7 @@ error = _error;
  * private helper function: handle the response data
  */
 - (void)handleResponseData:(NSData *)data {
-	[self enumerateEventHandlers:kFBRawHandlerKey block:^(id _handler) {
+	[self enumerateEventHandlers:kFBRawBlockHandlerKey block:^(id _handler) {
 		void (^handler)(FBRequest*,NSData *) = _handler;
 		handler(self, data);
 	}];
@@ -304,7 +298,7 @@ error = _error;
 		[self _reportError:error];
 	}
 	else {
-		[self enumerateEventHandlers:kFBCompletionHandlerKey block:^(id _handler) {
+		[self enumerateEventHandlers:kFBCompletionBlockHandlerKey block:^(id _handler) {
 			void (^handler)(FBRequest*,id) = _handler;
 			handler(self, result);
 		}];
@@ -331,7 +325,7 @@ error = _error;
 		[Facebook shared].requestStarted();
 	}
 	
-	[self enumerateEventHandlers:kFBLoadHandlerKey block:^(id _handler) {
+	[self enumerateEventHandlers:kFBLoadBlockHandlerKey block:^(id _handler) {
 		void (^handler)(FBRequest*) = _handler;
 		handler(self);
 	}];
@@ -366,6 +360,15 @@ error = _error;
 	[_connection cancel];
 }
 
+- (void)setState:(FBRequestState)_ {
+	_state = _;
+	
+	[self enumerateEventHandlers:kFBStateChangeBlockHandlerKey block:^(id _handler) {
+		void (^handler)(FBRequest *, FBRequestState) = _handler;
+		handler(self, _);
+	}];
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // NSURLConnectionDelegate
 
@@ -376,7 +379,7 @@ error = _error;
 	
 	NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse*)response;
 	
-	[self enumerateEventHandlers:kFBResponseHandlerKey block:^(id _handler) {
+	[self enumerateEventHandlers:kFBResponseBlockHandlerKey block:^(id _handler) {
 		void (^handler)(FBRequest*,NSURLResponse*) = _handler;
 		handler(self, httpResponse);
 	}];

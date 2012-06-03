@@ -338,7 +338,16 @@ lastRequestedPermissions = _lastRequestedPermissions;
 												requestMethod:httpMethod
 												   requestURL:url];
     [_requests addObject:_request];
-    [_request addObserver:self forKeyPath:requestFinishedKeyPath options:0 context:finishedContext];
+	
+	[_request registerEventHandler:kFBStateChangeBlockHandlerKey handler:^(FBRequest *request, FBRequestState state) {
+		if( state == kFBRequestStateComplete ) {
+			if( [request sessionDidExpire] ) {
+				[self invalidateSession];
+				[self _applyCoreHandlers:kFBSessionBlockHandlerKey];
+			}
+			[_requests removeObject:request];
+		}
+	}];
 	
 	if( finalize ) {
 		finalize(_request);
@@ -353,21 +362,6 @@ lastRequestedPermissions = _lastRequestedPermissions;
 		void (^handler)(Facebook*) = _handler;
 		handler(self);
 	}];
-}
-
-- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
-    if (context == finishedContext) {
-        FBRequest* _request = (FBRequest*)object;
-        FBRequestState requestState = [_request state];
-        if (requestState == kFBRequestStateComplete) {
-            if ([_request sessionDidExpire]) {
-                [self invalidateSession];
-				[self _applyCoreHandlers:kFBSessionHandlerKey];
-            }
-            [_request removeObserver:self forKeyPath:requestFinishedKeyPath];
-            [_requests removeObject:_request];
-        }
-    }
 }
 
 /**
@@ -506,7 +500,7 @@ lastRequestedPermissions = _lastRequestedPermissions;
 	void (^grantedHandler)(Facebook*) = [_grantedHandler copy];
 	void (^deniedHandler)(Facebook*) = [_deniedHandler copy];
 	
-	[self registerEventHandler:kFBLoginHandlerKey discard:YES handler:^(Facebook *facebook, FacebookLoginState state) {
+	[self registerEventHandler:kFBLoginBlockHandlerKey discard:YES handler:^(Facebook *facebook, FacebookLoginState state) {
 		if( state == FacebookLoginSuccess && grantedHandler ) {
 			NSMutableSet *new_permissions = [NSMutableSet setWithSet:_permissions];
 			[new_permissions addObjectsFromArray:permissions];
@@ -602,7 +596,7 @@ lastRequestedPermissions = _lastRequestedPermissions;
 							   
 							   [self storeAccessToken];
 							   
-							   [self enumerateEventHandlers:kFBExtendTokenHandlerKey block:^(id _handler) {
+							   [self enumerateEventHandlers:kFBExtendTokenBlockHandlerKey block:^(id _handler) {
 								   void (^handler)(Facebook*,NSString*,NSDate*) = _handler;
 								   handler(self, accessToken, expirationDate);
 							   }];
@@ -728,7 +722,7 @@ lastRequestedPermissions = _lastRequestedPermissions;
  */
 - (void)logout {
     [self invalidateSession];
-	[self _applyCoreHandlers:kFBLogoutHandlerKey];
+	[self _applyCoreHandlers:kFBLogoutBlockHandlerKey];
 }
 
 #pragma mark - Requests
@@ -1074,7 +1068,7 @@ lastRequestedPermissions = _lastRequestedPermissions;
  * Set the authToken and expirationDate after login succeed
  */
 - (void)_applyLoginHandlers:(FacebookLoginState)state {
-	[self enumerateEventHandlers:kFBLoginHandlerKey block:^(id _handler) {
+	[self enumerateEventHandlers:kFBLoginBlockHandlerKey block:^(id _handler) {
 		void (^handler)(Facebook*,FacebookLoginState) = _handler;
 		handler(self, state);
 	}];
@@ -1107,16 +1101,16 @@ lastRequestedPermissions = _lastRequestedPermissions;
 #pragma mark - Handlers
 
 - (void)addLoginHandler:(void(^)(Facebook*, FacebookLoginState))handler {
-	[self registerEventHandler:kFBLoginHandlerKey handler:handler];
+	[self registerEventHandler:kFBLoginBlockHandlerKey handler:handler];
 }
 - (void)addExtendTokenHandler:(void(^)(Facebook *facebook, NSString *token, NSDate *expiresAt))handler {
-	[self registerEventHandler:kFBExtendTokenHandlerKey handler:handler];
+	[self registerEventHandler:kFBExtendTokenBlockHandlerKey handler:handler];
 }
 - (void)addLogoutHandler:(void(^)(Facebook*))handler {
-	[self registerEventHandler:kFBLogoutHandlerKey handler:handler];
+	[self registerEventHandler:kFBLogoutBlockHandlerKey handler:handler];
 }
 - (void)addSessionInvalidatedHandler:(void(^)(Facebook*))handler {
-	[self registerEventHandler:kFBSessionHandlerKey handler:handler];
+	[self registerEventHandler:kFBSessionBlockHandlerKey handler:handler];
 }
 
 @end

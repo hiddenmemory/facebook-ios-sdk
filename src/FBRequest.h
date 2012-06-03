@@ -31,6 +31,13 @@ enum
 };
 typedef NSUInteger FBRequestState;
 
+#define kFBCompletionBlockHandlerKey @"completion"
+#define kFBErrorBlockHandlerKey @"error"
+#define kFBLoadBlockHandlerKey @"load"
+#define kFBRawBlockHandlerKey @"raw"
+#define kFBResponseBlockHandlerKey @"response"
+#define kFBStateChangeBlockHandlerKey @"state"
+
 /**
  * Do not use this interface directly, instead, use method in Facebook.h
  */

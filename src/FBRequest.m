@@ -285,23 +285,26 @@ error = _error;
  * private helper function: handle the response data
  */
 - (void)handleResponseData:(NSData *)data {
-	[self enumerateEventHandlers:kFBRawBlockHandlerKey block:^(id _handler) {
-		void (^handler)(FBRequest*,NSData *) = _handler;
-		handler(self, data);
-	}];
-	
-	NSError* error = nil;
-	id result = [self parseJsonResponse:data error:&error];
-	self.error = error;  
-	
-	if( error ) {
-		[self _reportError:error];
+	if( [self eventHandlerCount:kFBRawBlockHandlerKey] > 0 ) {
+		[self enumerateEventHandlers:kFBRawBlockHandlerKey block:^(id _handler) {
+			void (^handler)(FBRequest*,NSData *) = _handler;
+			handler(self, data);
+		}];
 	}
 	else {
-		[self enumerateEventHandlers:kFBCompletionBlockHandlerKey block:^(id _handler) {
-			void (^handler)(FBRequest*,id) = _handler;
-			handler(self, result);
-		}];
+		NSError* error = nil;
+		id result = [self parseJsonResponse:data error:&error];
+		self.error = error;  
+		
+		if( error ) {
+			[self _reportError:error];
+		}
+		else {
+			[self enumerateEventHandlers:kFBCompletionBlockHandlerKey block:^(id _handler) {
+				void (^handler)(FBRequest*,id) = _handler;
+				handler(self, result);
+			}];
+		}
 	}
 }
 
@@ -375,7 +378,7 @@ error = _error;
 #pragma mark - NSURLConnection Delegate
 
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
-	_responseText = [[NSMutableData alloc] init];
+	_responseText = [NSMutableData data];
 	
 	NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse*)response;
 	

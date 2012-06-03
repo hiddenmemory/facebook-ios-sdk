@@ -21,6 +21,7 @@
 - (void)registerEventHandler:(NSString*)event handler:(id)block;
 - (void)registerEventHandler:(NSString*)event discard:(BOOL)discard handler:(id)block;
 - (void)enumerateEventHandlers:(NSString*)event block:(void(^)(id _handler))block;
+- (NSUInteger)eventHandlerCount:(NSString*)event;
 - (void)clearEventHandlers:(NSString*)event;
 
 @end

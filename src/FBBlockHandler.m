@@ -75,7 +75,12 @@
 		[eventHandlers removeObjectForKey:event];
 	}
 }
-
+- (NSUInteger)eventHandlerCount:(NSString*)event {
+	if( [eventHandlers objectForKey:event] ) {
+		return [[eventHandlers objectForKey:event] count];
+	}
+	return 0;
+}
 - (FBBlockHandler*)blockHandler {
 	return self;
 }

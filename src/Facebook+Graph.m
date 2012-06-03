@@ -222,6 +222,36 @@ static NSString *const kFBFieldPicture = @"picture";
 	}];
 }
 
+#pragma mark - post to wall
+
+//parameters
+//message, picture, link, name, caption, description...
+//note: picture is a URL to an already existing picture online
+-(void)postWithParameters:(NSDictionary *)parameters 
+               completion:(void (^)(NSString *))completionHandler 
+                    error:(void (^)(NSError *))errorHandler {
+    
+	[self usingPermission:@"publish_stream" request:^{
+		[[Facebook shared] requestWithGraphPath:@"me/feed"
+									 parameters:parameters
+								  requestMethod:FBMethodPost
+									   finalize:^(FBRequest *request) {
+										   if( completionHandler ) {
+											   [request addCompletionHandler:^(FBRequest *request, id result) {
+												   NSLog(@"Result: %@", request);
+												   completionHandler([result objectForKey:@"id"]);
+											   }];
+										   }
+										   if( errorHandler ) {
+											   [request addErrorHandler:^(FBRequest *request, NSError *error) {
+												   NSLog(@"Error: %@", error);
+												   errorHandler(error);
+											   }];
+										   }
+									   }];
+	}];
+}
+
 #pragma mark - sharing content
 
 /**
@@ -238,40 +268,72 @@ static NSString *const kFBFieldPicture = @"picture";
     return params;
 }
 
+/**
+ * Moved the main workings of this to the generic method postWithParameters...
+ */
 - (void)setStatus:(NSString*)status
 	   completion:(void(^)(NSString *status))completionHandler
 			error:(void(^)(NSError *error))errorHandler {
+    
+    NSMutableDictionary *params = [NSMutableDictionary dictionaryWithObjectsAndKeys:
+                                   status, @"message",
+                                   nil];
+    
+    [self postWithParameters:params
+                  completion:^(NSString *postID) {
+                      completionHandler(status);
+                  }
+                       error:^(NSError *error) {
+                           errorHandler(error);
+                       }];
+}
 
-	[self usingPermission:@"publish_stream" request:^{
-		NSMutableDictionary *params = [NSMutableDictionary dictionaryWithObjectsAndKeys:
-									   status, @"message",
-									   nil];
-		
-		[[Facebook shared] requestWithGraphPath:@"feed"
-									 parameters:params
-								  requestMethod:FBMethodPost
-									   finalize:^(FBRequest *request) {
-										   if( completionHandler ) {
-											   [request addCompletionHandler:^(FBRequest *request, id result) {
-												   NSLog(@"Result: %@", request);
-												   completionHandler(status);
-											   }];
-										   }
-										   if( errorHandler ) {
-											   [request addErrorHandler:^(FBRequest *request, NSError *error) {
-												   NSLog(@"Error: %@", error);
-												   errorHandler(error);
-											   }];
-										   }
-									   }];
-	}];
+-(void)shareLink:(NSString*)link
+     withMessage:(NSString*)message
+      completion:(void(^)(NSString *linkID))completionHandler
+           error:(void(^)(NSError *error))errorHandler {
+    
+    NSMutableDictionary *requestParams = [NSMutableDictionary dictionary];
+    [requestParams setObject:link forKey:@"link"];
+    if (message) {
+        [requestParams setObject:message forKey:@"message"];
+    }
+    
+    [self usingPermission:@"publish_stream" request:^{
+        [self requestWithGraphPath:@"me/links"
+                        parameters:requestParams
+                        requestMethod:FBMethodPost
+                            finalize:^(FBRequest *request) {
+                                if( completionHandler ) {
+                                    [request addCompletionHandler:^(FBRequest *request, id result) {
+                                        NSLog(@"Result: %@", result);
+                                        completionHandler([result objectForKey:@"id"]);
+                                    }];
+                                }
+                                if( errorHandler ) {
+                                    [request addErrorHandler:^(FBRequest *request, NSError *error) {
+                                        NSLog(@"Error: %@", error);
+                                        errorHandler(error);
+                                    }];
+                                }
+                            }];
+    }];
 }
 
 - (void)sharePhoto:(UIImage*)image
 			 title:(NSString*)title
 		completion:(void(^)(NSString *photoID))completionHandler
 			 error:(void(^)(NSError *error))errorHandler {
-
+    
+    [self sharePhoto:image 
+               album:@"me"
+               title:title
+          completion:^(NSString *photoID) {
+              NSLog(@"%@", photoID);
+          }
+               error:^(NSError *error) {
+                   NSLog(@"%@", error.description);
+               }];
 }
 
 - (void)sharePhoto:(UIImage*)image
@@ -279,7 +341,29 @@ static NSString *const kFBFieldPicture = @"picture";
 			 title:(NSString*)title
 		completion:(void(^)(NSString *photoID))completionHandler
 			 error:(void(^)(NSError *error))errorHandler {
-
+    
+    NSDictionary *params = [NSDictionary dictionaryWithObjectsAndKeys:image, @"picture", title, @"name", nil];
+    
+    [self usingPermission:@"publish_stream" request:^{
+        [self requestWithGraphPath:[NSString stringWithFormat:@"%@/photos", album]
+                        parameters:params
+                     requestMethod:FBMethodPost
+                          finalize:^(FBRequest *request) {
+                              if( completionHandler ) {
+                                  [request addCompletionHandler:^(FBRequest *request, id result) {
+                                      NSLog(@"Result: %@", result);
+                                      completionHandler([result objectForKey:@"id"]);
+                                  }];
+                              }
+                              if( errorHandler ) {
+                                  [request addErrorHandler:^(FBRequest *request, NSError *error) {
+                                      NSLog(@"Error: %@", error);
+                                      errorHandler(error);
+                                  }];
+                              }
+                          }];
+    }];
+    
 }
 
 - (void)shareVideo:(NSData*)video
@@ -287,6 +371,37 @@ static NSString *const kFBFieldPicture = @"picture";
 		completion:(void(^)(NSString *videoID))completionHandler
 			 error:(void(^)(NSError *error))errorHandler {
 
+}
+
+#pragma mark - OpenGraph
+
+-(void)shareOpenGraphActivityWithNamespace:(NSString*)namespace
+                                    action:(NSString*)action
+                                parameters:(NSDictionary*)parameters
+                                completion:(void(^)(NSString *response))completionHandler
+                                     error:(void(^)(NSError *error))errorHandler {
+    NSString *path = [NSString stringWithFormat:@"me/%@:%@", namespace, action];
+    NSMutableDictionary *requestParams = [NSMutableDictionary dictionaryWithDictionary:parameters];
+    
+    [self usingPermission:@"publish_stream" request:^{
+        [self requestWithGraphPath:path
+                        parameters:requestParams
+                     requestMethod:FBMethodPost
+                          finalize:^(FBRequest *request) {
+                              if( completionHandler ) {
+                                  [request addCompletionHandler:^(FBRequest *request, id result) {
+                                      NSLog(@"Result: %@", result);
+                                      completionHandler([result objectForKey:@"id"]);
+                                  }];
+                              }
+                              if( errorHandler ) {
+                                  [request addErrorHandler:^(FBRequest *request, NSError *error) {
+                                      NSLog(@"Error: %@", error);
+                                      errorHandler(error);
+                                  }];
+                              }
+                          }];
+    }];
 }
 
 #pragma mark - search

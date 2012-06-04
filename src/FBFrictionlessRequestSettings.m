@@ -52,21 +52,21 @@
 
 - (void)reloadRecipientCacheWithFacebook:(Facebook *)facebook {
     // request the list of frictionless recipients from the server
-   [facebook requestWithGraphPath:@"me/apprequestformerrecipients"
-                                    finalize:^(FBRequest *request) {
-										[request addCompletionHandler:^(FBRequest *request, id result) {
-											int items = [[result objectForKey: @"data"] count];
-											NSMutableArray* recipients = [[NSMutableArray alloc] initWithCapacity: items];
-											
-											for (int i = 0; i < items; i++) {
-												[recipients addObject: [[[result objectForKey: @"data"] 
-																		 objectAtIndex: i] 
-																		objectForKey: @"recipient_id"]] ;
-											}
-											
-											self.allowedRecipients = recipients; 
-										}];
-									}];
+	[facebook requestWithGraphPath:@"me/apprequestformerrecipients"
+						  finalize:^(FBRequest *request) {
+							  [request addCompletionHandler:^(FBRequest *request, id result) {
+								  int items = [[result objectForKey: @"data"] count];
+								  NSMutableArray* recipients = [[NSMutableArray alloc] initWithCapacity: items];
+								  
+								  for (int i = 0; i < items; i++) {
+									  [recipients addObject: [[[result objectForKey: @"data"] 
+															   objectAtIndex: i] 
+															  objectForKey: @"recipient_id"]] ;
+								  }
+								  
+								  self.allowedRecipients = recipients; 
+							  }];
+						  }];
 }
 
 - (void)updateRecipientCacheWithRecipients:(NSArray*)ids {
@@ -80,8 +80,8 @@
 - (BOOL)isFrictionlessEnabledForRecipient:(NSString *)fbid {
     // trim whitespace from edges
     fbid = [fbid stringByTrimmingCharactersInSet:
-                             [NSCharacterSet whitespaceCharacterSet]];
-
+			[NSCharacterSet whitespaceCharacterSet]];
+	
     // linear search through cache for a match
     for (NSString *entry in self.allowedRecipients) {
         if ([entry isEqualToString:fbid]) {

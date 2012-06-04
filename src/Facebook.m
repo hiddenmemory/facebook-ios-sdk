@@ -254,7 +254,7 @@ lastRequestedPermissions = _lastRequestedPermissions;
  *   and redirect the user to Safari.
  * @param delegate the FBSessionDelegate
  */
-- (id)initWithAppID:(NSString *)_appId {
+- (id)initWithAppID:(NSString *)_potentialAppID {
     self = [super init];
     if (self) {
         _requests = [NSMutableSet set];
@@ -262,15 +262,23 @@ lastRequestedPermissions = _lastRequestedPermissions;
         _frictionlessRequestSettings = [[FBFrictionlessRequestSettings alloc] init];
 		
 		NSCharacterSet *characterSet = [NSCharacterSet characterSetWithCharactersInString:@"0123456789"];
-		NSRange range = [_appId rangeOfCharacterFromSet:characterSet];
+		NSRange range = NSMakeRange(0, 0);
 		
-        self.appId = [_appId substringWithRange:range];
+		for( range.length = 0; range.length < [_potentialAppID length]; range.length++ ) {
+			if( ![characterSet characterIsMember:[_potentialAppID characterAtIndex:range.length]] ) {
+				break;
+			}
+		}
+		
+        self.appId = [_potentialAppID substringWithRange:range];
         self.urlSchemeSuffix = nil;
 		
 		if( (range.location + range.length) < [_appId length] ) {
-			self.urlSchemeSuffix = [_appId substringFromIndex:(range.location + range.length)];
-		}
-		
+			self.urlSchemeSuffix = [_potentialAppID substringFromIndex:(range.location + range.length)];
+		} 
+																 
+		NSLog(@"Application ID: '%@', URL suffix: '%@'", self.appId, self.urlSchemeSuffix);
+																 
 		self.extendTokenOnApplicationActive = YES;
 		
 		self.requestStarted = ^(FBRequest*_){};

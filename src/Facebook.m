@@ -264,8 +264,8 @@ lastRequestedPermissions = _lastRequestedPermissions;
         self.urlSchemeSuffix = nil;
 		self.extendTokenOnApplicationActive = YES;
 		
-		self.requestStarted = ^{};
-		self.requestFinished = ^{};
+		self.requestStarted = ^(FBRequest*_){};
+		self.requestFinished = ^(FBRequest*_){};
 		
 		[self loadAccessToken];
 		[self validateApplicationURLScheme];

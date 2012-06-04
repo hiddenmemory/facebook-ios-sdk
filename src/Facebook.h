@@ -74,10 +74,10 @@ typedef enum {
 		   denied:(void(^)(Facebook*))_deniedHandler;
 
 - (void)usingPermissions:(NSArray*)permissions
-				 request:(void(^)())_request;
+				 request:(void(^)(BOOL success))_request;
 
 - (void)usingPermission:(NSString*)permission
-				request:(void(^)())_request;
+				request:(void(^)(BOOL success))_request;
 
 - (void)extendAccessToken;
 

@@ -84,7 +84,7 @@ lastRequestedPermissions = _lastRequestedPermissions;
 	});
 	return facebookSharedObject;
 }
-+ (Facebook*)bind {
++ (NSString*)URLScheme {
 	NSArray* aBundleURLTypes = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleURLTypes"];
 	if ([aBundleURLTypes isKindOfClass:[NSArray class]] && ([aBundleURLTypes count] > 0)) {
 		NSDictionary* aBundleURLTypes0 = [aBundleURLTypes objectAtIndex:0];
@@ -93,12 +93,19 @@ lastRequestedPermissions = _lastRequestedPermissions;
 			if ([aBundleURLSchemes isKindOfClass:[NSArray class]] && ([aBundleURLSchemes count] > 0)) {
 				NSString *scheme = [aBundleURLSchemes objectAtIndex:0];
 				if ([scheme isKindOfClass:[NSString class]] && [scheme hasPrefix:@"fb"]) {
-					return [self bind:[scheme substringFromIndex:2]];
+					return scheme;
 				}
 			}
 		}
 	}
 	return nil;	
+}
++ (Facebook*)bind {
+	NSString *scheme = [self URLScheme];
+	if( scheme ) {
+		return [self bind:[scheme substringFromIndex:2]];
+	}
+	return nil;
 }
 + (void)autobind:(NSNotification*)notification {
 	if( !facebookSharedObject ) {
@@ -161,20 +168,7 @@ lastRequestedPermissions = _lastRequestedPermissions;
 	// Now check that the URL scheme fb[app_id]://authorize is in the .plist and can
 	// be opened, doing a simple check without local app id factored in here
 	NSString *url = [NSString stringWithFormat:@"fb%@://authorize", self.appId];
-	BOOL bSchemeInPlist = NO; // find out if the sceme is in the plist file.
-	NSArray* aBundleURLTypes = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleURLTypes"];
-	if ([aBundleURLTypes isKindOfClass:[NSArray class]] && ([aBundleURLTypes count] > 0)) {
-		NSDictionary* aBundleURLTypes0 = [aBundleURLTypes objectAtIndex:0];
-		if ([aBundleURLTypes0 isKindOfClass:[NSDictionary class]]) {
-			NSArray* aBundleURLSchemes = [aBundleURLTypes0 objectForKey:@"CFBundleURLSchemes"];
-			if ([aBundleURLSchemes isKindOfClass:[NSArray class]] && ([aBundleURLSchemes count] > 0)) {
-				NSString *scheme = [aBundleURLSchemes objectAtIndex:0];
-				if ([scheme isKindOfClass:[NSString class]] && [url hasPrefix:scheme]) {
-					bSchemeInPlist = YES;
-				}
-			}
-		}
-	}
+	BOOL bSchemeInPlist = ([Facebook URLScheme] == nil ? NO : YES); // find out if the sceme is in the plist file.
 
 	// Check if the authorization callback will work
 	BOOL bCanOpenUrl = [[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString: url]];
@@ -553,7 +547,7 @@ lastRequestedPermissions = _lastRequestedPermissions;
 }
 
 - (void)usingPermissions:(NSArray*)permissions
-				 request:(void(^)())_request
+				 request:(void(^)(BOOL success))_request
 {
 	
 	BOOL mustAuthorise = NO;
@@ -571,14 +565,12 @@ lastRequestedPermissions = _lastRequestedPermissions;
 	}
 	
 	if( mustAuthorise ) {
-		void (^request)() = [_request copy];
+		void (^request)(BOOL success) = [_request copy];
 		
 		if( _permissions ) {
 			[[Facebook shared] authorize:permissions
-								 granted:^(Facebook *facebook) {
-									 request();
-								 }
-								  denied:nil];
+								 granted:^(Facebook *facebook) { request(YES); }
+								  denied:^(Facebook *facebook) { request(NO); }];
 		}
 		else {
 			[pendingPermissionRequests addObject:[^{
@@ -587,12 +579,12 @@ lastRequestedPermissions = _lastRequestedPermissions;
 		}
 	}
 	else {
-		_request();
+		_request(YES);
 	}
 }
 
 - (void)usingPermission:(NSString*)permission
-				request:(void(^)())_request {	
+				request:(void(^)(BOOL success))_request {	
 	[self usingPermissions:[NSArray arrayWithObject:permission] request:_request];
 }
 

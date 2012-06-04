@@ -21,10 +21,10 @@
 @interface Facebook (GraphPrivate)
 
 - (void)search:(NSString *)query
-                fields:(NSArray *)fields
-				 range:(NSUInteger)range
-			completion:(void(^)(NSArray *locations))completionHandler
-				 error:(void(^)(NSError *error))errorHandler;
+		fields:(NSArray *)fields
+		 range:(NSUInteger)range
+	completion:(void(^)(NSArray *locations))completionHandler
+		 error:(void(^)(NSError *error))errorHandler;
 
 
 @end
@@ -54,21 +54,28 @@ static NSString *const kFBFieldPicture = @"picture";
 
 #pragma mark - me
 - (void)fetchMe:(void(^)(NSDictionary *me))completionHandler
-	 error:(void(^)(NSError *error))errorHandler {
+		  error:(void(^)(NSError *error))errorHandler {
 	
-	[self usingPermission:@"user_about_me" request:^{
-		[self requestWithGraphPath:@"me"
-						parameters:[NSDictionary dictionaryWithObjectsAndKeys:@"name,picture", @"fields", nil]
-						completion:^(FBRequest *request, id result) {	
-							if( completionHandler ) {
-								completionHandler(result);
+	[self usingPermission:@"user_about_me" request:^( BOOL success ) {
+		if( success ) {
+			[self requestWithGraphPath:@"me"
+							parameters:[NSDictionary dictionaryWithObjectsAndKeys:@"name,picture", @"fields", nil]
+							completion:^(FBRequest *request, id result) {	
+								if( completionHandler ) {
+									completionHandler(result);
+								}
 							}
-						}
-							 error:^(FBRequest *request, NSError *error) {
-								 if( errorHandler ) {
-									 errorHandler(error);
-								 }
-							 }];
+								 error:^(FBRequest *request, NSError *error) {
+									 if( errorHandler ) {
+										 errorHandler(error);
+									 }
+								 }];
+		}
+		else {
+			if( errorHandler ) {
+				errorHandler(NULL);
+			}
+		}
 	}];
 }
 
@@ -76,27 +83,33 @@ static NSString *const kFBFieldPicture = @"picture";
 					   completion:(void (^)(UIImage *picture))completionHandler
 							error:(void (^)(NSError *error))errorHandler {
     
-	[self usingPermissions:[NSArray arrayWithObjects:@"user_about_me", @"friends_about_me", nil] request:^{
-		[self requestWithGraphPath:[NSString stringWithFormat:@"%@/picture?type=square", ID]
-						  finalize:^(FBRequest *request) {
-							  [request addRawHandler:^(FBRequest *request, NSData *raw) {
-								  if( completionHandler ) {
-									  completionHandler([UIImage imageWithData:raw]);
+	[self usingPermissions:[NSArray arrayWithObjects:@"user_about_me", @"friends_about_me", nil] request:^(BOOL success){
+		if( success ) {
+			[self requestWithGraphPath:[NSString stringWithFormat:@"%@/picture?type=square", ID]
+							  finalize:^(FBRequest *request) {
+								  [request addRawHandler:^(FBRequest *request, NSData *raw) {
+									  if( completionHandler ) {
+										  completionHandler([UIImage imageWithData:raw]);
+									  }
+								  }];
+								  if (errorHandler) {
+									  [request addErrorHandler:^(FBRequest *request, NSError *error) {
+										  errorHandler(error);
+									  }];
 								  }
 							  }];
-							  if (errorHandler) {
-								  [request addErrorHandler:^(FBRequest *request, NSError *error) {
-									  errorHandler(error);
-								  }];
-							  }
-						  }];
-		
+		}
+		else {
+			if( errorHandler ) {
+				errorHandler(NULL);
+			}
+		}
 	}];
 }
 
 - (void)deletePermissions:(void (^)(Facebook*))completionHandler {
 	[[Facebook shared] addLogoutHandler:completionHandler];
-
+	
 	[[Facebook shared] requestWithGraphPath:@"me/permissions"
 								 parameters:[NSDictionary dictionary]
 							  requestMethod:@"DELETE"
@@ -111,18 +124,18 @@ static NSString *const kFBFieldPicture = @"picture";
 #pragma mark - friends
 
 - (void)fetchFriends:(void(^)(NSArray *friends))completionHandler
-		  error:(void(^)(NSError *error))errorHandler {
+			   error:(void(^)(NSError *error))errorHandler {
     
     NSArray *keys = [NSArray arrayWithObjects:kFBFieldName,kFBFieldPicture, nil];
     [self fetchFriendsWithKeys:keys completion:completionHandler error:errorHandler];
 }
 
 - (void)fetchFriendsWithKeys:(NSArray*)keys 
-			 completion:(void(^)(NSArray *friends))completionHandler
-				  error:(void(^)(NSError *error))errorHandler {
+				  completion:(void(^)(NSArray *friends))completionHandler
+					   error:(void(^)(NSError *error))errorHandler {
     NSString *keysString = [keys componentsJoinedByString:@","];
     NSDictionary *parameters = [NSDictionary dictionaryWithObject:keysString forKey:@"fields"];
-
+	
     [self requestWithGraphPath:@"me/friends"
 					parameters:parameters
 					completion:^(FBRequest *request, id result) {
@@ -147,77 +160,91 @@ static NSString *const kFBFieldPicture = @"picture";
 }
 
 - (void)fetchFriendsWithApp:(void(^)(NSArray *friends))completionHandler
-				 error:(void(^)(NSError *error))errorHandler {
-
+					  error:(void(^)(NSError *error))errorHandler {
+	
 	[self requestWithMethodName:@"friends.getAppUsers"
-								  parameters:[NSDictionary dictionaryWithObjectsAndKeys:@"name,picture", @"fields", nil]
-								  completion:^(FBRequest *request, id result) {
-									  [self fetchIDsQuery:result
-                                              fields:[NSArray arrayWithObjects:kFBFieldName, kFBFieldPicture, nil]
-                                               range:0
-                                          completion:^(NSDictionary *people) {
-                                              if( completionHandler ) {
-                                                  completionHandler([people allValues]);
-                                              }
-                                          } 
-                                               error:^(NSError *error) {
-                                                   if( errorHandler ) {
-                                                       errorHandler(error);
-                                                   }
-                                               }];
-								  }];
+					 parameters:[NSDictionary dictionaryWithObjectsAndKeys:@"name,picture", @"fields", nil]
+					 completion:^(FBRequest *request, id result) {
+						 [self fetchIDsQuery:result
+									  fields:[NSArray arrayWithObjects:kFBFieldName, kFBFieldPicture, nil]
+									   range:0
+								  completion:^(NSDictionary *people) {
+									  if( completionHandler ) {
+										  completionHandler([people allValues]);
+									  }
+								  } 
+									   error:^(NSError *error) {
+										   if( errorHandler ) {
+											   errorHandler(error);
+										   }
+									   }];
+					 }];
 }
 
 #pragma mark - fetching content
 - (void)fetchAlbums:(void(^)(NSArray *albums))completionHandler
-		 error:(void(^)(NSError *error))errorHandler {
-
-	[self usingPermission:@"user_photos" request:^{
-		[self requestWithGraphPath:@"me/albums"
-						  finalize:^(FBRequest *request) {
-							  [request addCompletionHandler:^(FBRequest *request, id result) {
-								  if( completionHandler ) {
-									  if( [[result class] isSubclassOfClass:[NSDictionary class]] ) {
-										  result = [result objectForKey:@"data"];
+			  error:(void(^)(NSError *error))errorHandler {
+	
+	[self usingPermission:@"user_photos" request:^( BOOL success ) {
+		if( success ) {
+			[self requestWithGraphPath:@"me/albums"
+							  finalize:^(FBRequest *request) {
+								  [request addCompletionHandler:^(FBRequest *request, id result) {
+									  if( completionHandler ) {
+										  if( [[result class] isSubclassOfClass:[NSDictionary class]] ) {
+											  result = [result objectForKey:@"data"];
+										  }
+										  completionHandler(result);
 									  }
-									  completionHandler(result);
-								  }
-							  }];
-							  [request addErrorHandler:^(FBRequest *request, NSError *error) {
-								  if( errorHandler ) {
-									  errorHandler(error);
-								  }
-							  }];
-						  }];	
+								  }];
+								  [request addErrorHandler:^(FBRequest *request, NSError *error) {
+									  if( errorHandler ) {
+										  errorHandler(error);
+									  }
+								  }];
+							  }];	
+		}
+		else {
+			if( errorHandler ) {
+				errorHandler(NULL);
+			}
+		}
 	}];
 }
 
 - (void)fetchPhotosInAlbum:(NSString*)album
-		   completion:(void(^)(NSArray *photos))completionHandler
-				error:(void(^)(NSError *error))errorHandler {
-
+				completion:(void(^)(NSArray *photos))completionHandler
+					 error:(void(^)(NSError *error))errorHandler {
+	
 }
 
 - (void)fetchVideos:(void(^)(NSArray *photos))completionHandler
-		 error:(void(^)(NSError *error))errorHandler {
+			  error:(void(^)(NSError *error))errorHandler {
 	
-	[self usingPermission:@"user_videos" request:^{
-		[self requestWithGraphPath:@"me/videos/uploaded"
-						  finalize:^(FBRequest *request) {
-							  [request addCompletionHandler:^(FBRequest *request, id result) {
-								  if( completionHandler ) {
-									  if( [[result class] isSubclassOfClass:[NSDictionary class]] ) {
-										  result = [result objectForKey:@"data"];
+	[self usingPermission:@"user_videos" request:^(BOOL success){
+		if( success ) {
+			[self requestWithGraphPath:@"me/videos/uploaded"
+							  finalize:^(FBRequest *request) {
+								  [request addCompletionHandler:^(FBRequest *request, id result) {
+									  if( completionHandler ) {
+										  if( [[result class] isSubclassOfClass:[NSDictionary class]] ) {
+											  result = [result objectForKey:@"data"];
+										  }
+										  completionHandler(result);
 									  }
-									  completionHandler(result);
-								  }
+								  }];
+								  [request addErrorHandler:^(FBRequest *request, NSError *error) {
+									  if( errorHandler ) {
+										  errorHandler(error);
+									  }
+								  }];
 							  }];
-							  [request addErrorHandler:^(FBRequest *request, NSError *error) {
-								  if( errorHandler ) {
-									  errorHandler(error);
-								  }
-							  }];
-						  }];
+		}
+		else {
+			if( errorHandler ) {
+				errorHandler(NULL);
+			}
+		}
 	}];
 }
 
@@ -230,22 +257,29 @@ static NSString *const kFBFieldPicture = @"picture";
                completion:(void (^)(NSString *))completionHandler 
                     error:(void (^)(NSError *))errorHandler {
     
-	[self usingPermission:@"publish_stream" request:^{
-		[[Facebook shared] requestWithGraphPath:@"me/feed"
-									 parameters:parameters
-								  requestMethod:FBMethodPost
-									   finalize:^(FBRequest *request) {
-										   if( completionHandler ) {
-											   [request addCompletionHandler:^(FBRequest *request, id result) {
-												   completionHandler([result objectForKey:@"id"]);
-											   }];
-										   }
-										   if( errorHandler ) {
-											   [request addErrorHandler:^(FBRequest *request, NSError *error) {
-												   errorHandler(error);
-											   }];
-										   }
-									   }];
+	[self usingPermission:@"publish_stream" request:^(BOOL success){
+		if( success ) {
+			[[Facebook shared] requestWithGraphPath:@"me/feed"
+										 parameters:parameters
+									  requestMethod:FBMethodPost
+										   finalize:^(FBRequest *request) {
+											   if( completionHandler ) {
+												   [request addCompletionHandler:^(FBRequest *request, id result) {
+													   completionHandler([result objectForKey:@"id"]);
+												   }];
+											   }
+											   if( errorHandler ) {
+												   [request addErrorHandler:^(FBRequest *request, NSError *error) {
+													   errorHandler(error);
+												   }];
+											   }
+										   }];
+		}
+		else {
+			if( errorHandler ) {
+				errorHandler(NULL);
+			}
+		}
 	}];
 }
 
@@ -286,7 +320,7 @@ static NSString *const kFBFieldPicture = @"picture";
 }
 
 -(void)shareLink:(NSString*)link
-     message:(NSString*)message
+		 message:(NSString*)message
       completion:(void(^)(NSString *linkID))completionHandler
            error:(void(^)(NSError *error))errorHandler {
     
@@ -298,22 +332,29 @@ static NSString *const kFBFieldPicture = @"picture";
         [requestParams setObject:message forKey:kFBPostMessageKey];
     }
     
-    [self usingPermission:@"publish_stream" request:^{
-        [self requestWithGraphPath:@"me/links"
-                        parameters:requestParams
-                        requestMethod:FBMethodPost
-                            finalize:^(FBRequest *request) {
-                                if( completionHandler ) {
-                                    [request addCompletionHandler:^(FBRequest *request, id result) {
-                                        completionHandler([result objectForKey:@"id"]);
-                                    }];
-                                }
-                                if( errorHandler ) {
-                                    [request addErrorHandler:^(FBRequest *request, NSError *error) {
-                                        errorHandler(error);
-                                    }];
-                                }
-                            }];
+    [self usingPermission:@"publish_stream" request:^( BOOL success ){
+		if( success ) {
+			[self requestWithGraphPath:@"me/links"
+							parameters:requestParams
+						 requestMethod:FBMethodPost
+							  finalize:^(FBRequest *request) {
+								  if( completionHandler ) {
+									  [request addCompletionHandler:^(FBRequest *request, id result) {
+										  completionHandler([result objectForKey:@"id"]);
+									  }];
+								  }
+								  if( errorHandler ) {
+									  [request addErrorHandler:^(FBRequest *request, NSError *error) {
+										  errorHandler(error);
+									  }];
+								  }
+							  }];
+		}
+		else {
+			if( errorHandler ) {
+				errorHandler(NULL);
+			}
+		}
     }];
 }
 
@@ -340,22 +381,29 @@ static NSString *const kFBFieldPicture = @"picture";
 							title, kFBPostNameKey, 
 							nil];
     
-    [self usingPermission:@"publish_stream" request:^{
-        [self requestWithGraphPath:[NSString stringWithFormat:@"%@/photos", album]
-                        parameters:params
-                     requestMethod:FBMethodPost
-                          finalize:^(FBRequest *request) {
-                              if( completionHandler ) {
-                                  [request addCompletionHandler:^(FBRequest *request, id result) {
-                                      completionHandler([result objectForKey:@"id"]);
-                                  }];
-                              }
-                              if( errorHandler ) {
-                                  [request addErrorHandler:^(FBRequest *request, NSError *error) {
-                                      errorHandler(error);
-                                  }];
-                              }
-                          }];
+    [self usingPermission:@"publish_stream" request:^(BOOL success){
+		if( success ) {
+			[self requestWithGraphPath:[NSString stringWithFormat:@"%@/photos", album]
+							parameters:params
+						 requestMethod:FBMethodPost
+							  finalize:^(FBRequest *request) {
+								  if( completionHandler ) {
+									  [request addCompletionHandler:^(FBRequest *request, id result) {
+										  completionHandler([result objectForKey:@"id"]);
+									  }];
+								  }
+								  if( errorHandler ) {
+									  [request addErrorHandler:^(FBRequest *request, NSError *error) {
+										  errorHandler(error);
+									  }];
+								  }
+							  }];
+		}
+		else {
+			if( errorHandler ) {
+				errorHandler(NULL);
+			}
+		}
     }];
     
 }
@@ -364,7 +412,7 @@ static NSString *const kFBFieldPicture = @"picture";
 			 title:(NSString*)title
 		completion:(void(^)(NSString *videoID))completionHandler
 			 error:(void(^)(NSError *error))errorHandler {
-
+	
 }
 
 #pragma mark - OpenGraph
@@ -374,33 +422,40 @@ static NSString *const kFBFieldPicture = @"picture";
                                 parameters:(NSDictionary*)parameters
                                 completion:(void(^)(NSString *response))completionHandler
                                      error:(void(^)(NSError *error))errorHandler {
-
+	
     NSString *path = [NSString stringWithFormat:@"me/%@:%@", namespace, action];
 	
     NSMutableDictionary *requestParams = [NSMutableDictionary dictionaryWithDictionary:parameters];
     
-    [self usingPermission:@"publish_stream" request:^{
-        [self requestWithGraphPath:path
-                        parameters:requestParams
-                     requestMethod:FBMethodPost
-                          finalize:^(FBRequest *request) {
-                              if( completionHandler ) {
-                                  [request addCompletionHandler:^(FBRequest *request, id result) {
-                                      completionHandler([result objectForKey:@"id"]);
-                                  }];
-                              }
-                              if( errorHandler ) {
-                                  [request addErrorHandler:^(FBRequest *request, NSError *error) {
-                                      errorHandler(error);
-                                  }];
-                              }
-                          }];
+    [self usingPermission:@"publish_stream" request:^( BOOL success ) {
+		if( success ) {
+			[self requestWithGraphPath:path
+							parameters:requestParams
+						 requestMethod:FBMethodPost
+							  finalize:^(FBRequest *request) {
+								  if( completionHandler ) {
+									  [request addCompletionHandler:^(FBRequest *request, id result) {
+										  completionHandler([result objectForKey:@"id"]);
+									  }];
+								  }
+								  if( errorHandler ) {
+									  [request addErrorHandler:^(FBRequest *request, NSError *error) {
+										  errorHandler(error);
+									  }];
+								  }
+							  }];
+		}
+		else {
+			if( errorHandler ) {
+				errorHandler(NULL);
+			}
+		}
     }];
 }
 
 #pragma mark - search
 - (void)searchLocation:(NSString *)query
-              coordinate:(CLLocationCoordinate2D)coordinate
+			coordinate:(CLLocationCoordinate2D)coordinate
               distance:(int)distance
                 fields:(NSArray *)fields
 				 range:(NSUInteger)range
@@ -416,14 +471,14 @@ static NSString *const kFBFieldPicture = @"picture";
     NSString *distanceString = [NSString stringWithFormat:@"%i",distance];
     
     NSDictionary *parameters = [NSDictionary dictionaryWithObjectsAndKeys:
-                                   kFBSearchTypePlace,  @"type",
-                                   centerLocation, @"center",
-                                   distanceString, @"distance",
-                                     fieldString, @"fields", 
+								kFBSearchTypePlace,  @"type",
+								centerLocation, @"center",
+								distanceString, @"distance",
+								fieldString, @"fields", 
                                 nil];
     
     [self search:query parameters:parameters range:range completion:completionHandler error:errorHandler];
-
+	
 }
 
 
@@ -453,12 +508,12 @@ static NSString *const kFBFieldPicture = @"picture";
     NSString *fieldString = [fields componentsJoinedByString:@","];
     
     NSDictionary *parameters = [NSDictionary dictionaryWithObjectsAndKeys:
-                                    kFBSearchTypeUser, @"type",
-                                          fieldString, @"fields", 
-                                       nil];
+								kFBSearchTypeUser, @"type",
+								fieldString, @"fields", 
+								nil];
     
     [self search:query parameters:parameters range:range completion:completionHandler error:errorHandler];
-
+	
 }
 
 - (void)searchPages:(NSString *)query
@@ -512,10 +567,10 @@ static NSString *const kFBFieldPicture = @"picture";
 #pragma mark - id query
 
 - (void)fetchIDsQuery:(NSArray *)query   
-           fields:(NSArray *)fields
-            range:(NSUInteger)range
-       completion:(void(^)(NSDictionary *objectMap))completionHandler
-            error:(void(^)(NSError *error))errorHandler
+			   fields:(NSArray *)fields
+				range:(NSUInteger)range
+		   completion:(void(^)(NSDictionary *objectMap))completionHandler
+				error:(void(^)(NSError *error))errorHandler
 {
     NSString *fieldString = [fields componentsJoinedByString:@","];
     
@@ -562,4 +617,5 @@ static NSString *const kFBFieldPicture = @"picture";
 							 }
 						 }];
 }
+
 @end

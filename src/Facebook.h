@@ -20,9 +20,9 @@
 #import "FBRequest.h"
 #import "FBBlockHandler.h"
 
-#define FBMethodPost   @"POST"
-#define FBMethodGet    @"GET"
-#define FBMethodDelete @"DELETE"
+#define kFBMethodPost   @"POST"
+#define kFBMethodGet    @"GET"
+#define kFBMethodDelete @"DELETE"
 
 #define kFBLoginBlockHandlerKey @"login"
 #define kFBExtendTokenBlockHandlerKey @"extend"
@@ -30,10 +30,11 @@
 #define kFBSessionBlockHandlerKey @"session"
 
 typedef enum {
-	FacebookLoginSuccess,
-	FacebookLoginCancelled,
-	FacebookLoginFailed
-} FacebookLoginState;
+	kFBLoginSuccess,
+	kFBLoginCancelled,
+	kFBLoginFailed,
+	kFBLoginRevoked
+} FBLoginState;
 
 @class FBFrictionlessRequestSettings;
 @protocol FBSessionDelegate;
@@ -74,10 +75,10 @@ typedef enum {
 		   denied:(void(^)(Facebook*))_deniedHandler;
 
 - (void)usingPermissions:(NSArray*)permissions
-				 request:(void(^)())_request;
+				 request:(void(^)(BOOL success))_request;
 
 - (void)usingPermission:(NSString*)permission
-				request:(void(^)())_request;
+				request:(void(^)(BOOL success))_request;
 
 - (void)extendAccessToken;
 
@@ -145,10 +146,10 @@ typedef enum {
 
 - (BOOL)isFrictionlessEnabledForRecipients:(NSArray*)fbids;
 
-- (void)addLoginHandler:(void(^)(Facebook*, FacebookLoginState state))handler;
+- (void)addLoginHandler:(void(^)(Facebook*facebook, FBLoginState state))handler;
 - (void)addExtendTokenHandler:(void(^)(Facebook *facebook, NSString *token, NSDate *expiresAt))handler;
-- (void)addLogoutHandler:(void(^)(Facebook*))handler;
-- (void)addSessionInvalidatedHandler:(void(^)(Facebook*))handler;
+- (void)addLogoutHandler:(void(^)(Facebook*facebook))handler;
+- (void)addSessionInvalidatedHandler:(void(^)(Facebook*facebook))handler;
 
 @end
 

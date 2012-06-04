@@ -21,10 +21,10 @@
 #import "FBBlockHandler.h"
 
 typedef enum { 
-    FacebookDialogSuccess,
-    FacebookDialogCancelled,
-    FacebookDialogFailed
-} FacebookDialogState;
+    kFBDialogSuccess,
+    kFBDialogCancelled,
+    kFBDialogFailed
+} FBDialogState;
 
 @protocol FBDialogDelegate;
 @class FBFrictionlessRequestSettings;
@@ -120,8 +120,8 @@ frictionlessSettings: (FBFrictionlessRequestSettings *) frictionlessSettings;
 - (void)dialogDidCancel:(NSURL *)url;
 
 
-- (void)addCompletionHandler:(void(^)(FBDialog *dialog, FacebookDialogState state))completionHandler;
-- (void)addCompletionURLHandler:(void(^)(FBDialog *dialog, NSURL *url, FacebookDialogState state))completionURLHandler;
+- (void)addCompletionHandler:(void(^)(FBDialog *dialog, FBDialogState state))completionHandler;
+- (void)addCompletionURLHandler:(void(^)(FBDialog *dialog, NSURL *url, FBDialogState state))completionURLHandler;
 - (void)addErrorHandler:(void (^)(FBDialog *dialog, NSError *error))errorHandler;
 
 

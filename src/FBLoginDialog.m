@@ -66,8 +66,8 @@
     } else {
 		
 		[[self blockHandler] enumerateEventHandlers:kFBLoginBlockHandlerKey block:^(id _handler) {
-			void (^handler)(FacebookDialogState state, NSString *token, NSDate *date ) = _handler;
-			handler(FacebookDialogSuccess, token, expirationDate);
+			void (^handler)(FBDialogState state, NSString *token, NSDate *date ) = _handler;
+			handler(kFBDialogSuccess, token, expirationDate);
 		}];
 
 		
@@ -82,8 +82,8 @@
     [self dismissWithSuccess:NO animated:YES];
 
 	[[self blockHandler] enumerateEventHandlers:kFBLoginBlockHandlerKey block:^(id _handler) {
-		void (^handler)(FacebookDialogState state, NSString *token, NSDate *date ) = _handler;
-		handler(FacebookDialogCancelled, nil, nil);
+		void (^handler)(FBDialogState state, NSString *token, NSDate *date ) = _handler;
+		handler(kFBDialogCancelled, nil, nil);
 	}];
 }
 
@@ -93,13 +93,13 @@
         [super webView:webView didFailLoadWithError:error];
 		
 		[[self blockHandler] enumerateEventHandlers:kFBLoginBlockHandlerKey block:^(id _handler) {
-			void (^handler)(FacebookDialogState state, NSString *token, NSDate *date ) = _handler;
-			handler(FacebookDialogFailed, nil, nil);
+			void (^handler)(FBDialogState state, NSString *token, NSDate *date ) = _handler;
+			handler(kFBDialogFailed, nil, nil);
 		}];
     }
 }
 
-- (void)addLoginHandler:(void(^)( FacebookDialogState state, NSString *token, NSDate *expirationDate ))handler {
+- (void)addLoginHandler:(void(^)( FBDialogState state, NSString *token, NSDate *expirationDate ))handler {
 	[[self blockHandler] registerEventHandler:kFBLoginBlockHandlerKey handler:handler];
 }
 

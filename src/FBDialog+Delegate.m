@@ -23,9 +23,9 @@
     if( [weakSelf.delegate respondsToSelector:@selector(dialogDidComplete:)] || 
 	    [weakSelf.delegate respondsToSelector:@selector(dialogWasCancelled:)]  ) 
     {
-        [self addCompletionHandler:^(FBDialog *dialog, FacebookDialogState state) {
+        [self addCompletionHandler:^(FBDialog *dialog, FBDialogState state) {
             switch (state) {
-                case FacebookDialogSuccess:
+                case kFBDialogSuccess:
                 {
                     if( [weakSelf.delegate respondsToSelector:@selector(dialogDidComplete:)] ) 
                     {
@@ -33,7 +33,7 @@
                     }
                 }
                     break;
-                case FacebookDialogCancelled:
+                case kFBDialogCancelled:
                 {
                     if( [weakSelf.delegate respondsToSelector:@selector(dialogWasCancelled:)] ) 
                     {
@@ -51,10 +51,10 @@
 	    [weakSelf.delegate respondsToSelector:@selector(dialog:didNotCompleteWithURL:)] )
     {
         
-        [self addCompletionURLHandler:^(FBDialog *dialog, NSURL *url, FacebookDialogState state) {
+        [self addCompletionURLHandler:^(FBDialog *dialog, NSURL *url, FBDialogState state) {
 
             switch (state) {
-                case FacebookDialogSuccess:
+                case kFBDialogSuccess:
                 {
                     if( [weakSelf.delegate respondsToSelector:@selector(dialog:didCompleteWithURL:)]  )
                     {
@@ -62,8 +62,8 @@
                     }
                 }
                     break;
-                case FacebookDialogCancelled:
-                case FacebookDialogFailed:
+                case kFBDialogCancelled:
+                case kFBDialogFailed:
                 {
                     if( [weakSelf.delegate respondsToSelector:@selector(dialog:didNotCompleteWithURL:)] )
                     {

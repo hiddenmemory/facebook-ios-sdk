@@ -84,7 +84,7 @@ lastRequestedPermissions = _lastRequestedPermissions;
 	});
 	return facebookSharedObject;
 }
-+ (Facebook*)bind {
++ (NSString*)URLScheme {
 	NSArray* aBundleURLTypes = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleURLTypes"];
 	if ([aBundleURLTypes isKindOfClass:[NSArray class]] && ([aBundleURLTypes count] > 0)) {
 		NSDictionary* aBundleURLTypes0 = [aBundleURLTypes objectAtIndex:0];
@@ -93,12 +93,19 @@ lastRequestedPermissions = _lastRequestedPermissions;
 			if ([aBundleURLSchemes isKindOfClass:[NSArray class]] && ([aBundleURLSchemes count] > 0)) {
 				NSString *scheme = [aBundleURLSchemes objectAtIndex:0];
 				if ([scheme isKindOfClass:[NSString class]] && [scheme hasPrefix:@"fb"]) {
-					return [self bind:[scheme substringFromIndex:2]];
+					return scheme;
 				}
 			}
 		}
 	}
 	return nil;	
+}
++ (Facebook*)bind {
+	NSString *scheme = [self URLScheme];
+	if( scheme ) {
+		return [self bind:[scheme substringFromIndex:2]];
+	}
+	return nil;
 }
 + (void)autobind:(NSNotification*)notification {
 	if( !facebookSharedObject ) {
@@ -161,20 +168,7 @@ lastRequestedPermissions = _lastRequestedPermissions;
 	// Now check that the URL scheme fb[app_id]://authorize is in the .plist and can
 	// be opened, doing a simple check without local app id factored in here
 	NSString *url = [NSString stringWithFormat:@"fb%@://authorize", self.appId];
-	BOOL bSchemeInPlist = NO; // find out if the sceme is in the plist file.
-	NSArray* aBundleURLTypes = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleURLTypes"];
-	if ([aBundleURLTypes isKindOfClass:[NSArray class]] && ([aBundleURLTypes count] > 0)) {
-		NSDictionary* aBundleURLTypes0 = [aBundleURLTypes objectAtIndex:0];
-		if ([aBundleURLTypes0 isKindOfClass:[NSDictionary class]]) {
-			NSArray* aBundleURLSchemes = [aBundleURLTypes0 objectForKey:@"CFBundleURLSchemes"];
-			if ([aBundleURLSchemes isKindOfClass:[NSArray class]] && ([aBundleURLSchemes count] > 0)) {
-				NSString *scheme = [aBundleURLSchemes objectAtIndex:0];
-				if ([scheme isKindOfClass:[NSString class]] && [url hasPrefix:scheme]) {
-					bSchemeInPlist = YES;
-				}
-			}
-		}
-	}
+	BOOL bSchemeInPlist = ([Facebook URLScheme] == nil ? NO : YES); // find out if the sceme is in the plist file.
 
 	// Check if the authorization callback will work
 	BOOL bCanOpenUrl = [[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString: url]];
@@ -216,25 +210,36 @@ lastRequestedPermissions = _lastRequestedPermissions;
 	
 	[self fetchActiveUserPermissions];
 	
-	[self _applyLoginHandlers:FacebookLoginSuccess];
+	[self _applyLoginHandlers:kFBLoginSuccess];
 }
 - (void)_handleLoginFailed:(BOOL)cancelled {
-	[self _applyLoginHandlers:(cancelled ? FacebookLoginCancelled : FacebookLoginFailed)];
+	[self _applyLoginHandlers:(cancelled ? kFBLoginCancelled : kFBLoginFailed)];
 }
 - (void)_applyLoginDialogHandlers:(FBLoginDialog*)dialog {	
-	[dialog addLoginHandler:^(FacebookDialogState state, NSString *token, NSDate *expirationDate) {
+	[dialog addLoginHandler:^(FBDialogState state, NSString *token, NSDate *expirationDate) {
 		switch (state) {
-			case FacebookDialogSuccess:
+			case kFBDialogSuccess:
 				[self _handleLogin:token expirationDate:expirationDate];
 				break;
 				
 			default:
-				[self _handleLoginFailed:(state == FacebookDialogCancelled)];
+				[self _handleLoginFailed:(state == kFBDialogCancelled)];
 				break;
 		}
 	}];
 }
-
+- (void)_applyLoginHandlers:(FBLoginState)state {
+	[self enumerateEventHandlers:kFBLoginBlockHandlerKey block:^(id _handler) {
+		void (^handler)(Facebook*,FBLoginState) = _handler;
+		handler(self, state);
+	}];
+}
+- (void)_applyCoreHandlers:(NSString*)event {
+	[self enumerateEventHandlers:event block:^(id _handler) {
+		void (^handler)(Facebook*) = _handler;
+		handler(self);
+	}];
+}
 
 /**
  * Initialize the Facebook object with application ID.
@@ -385,12 +390,6 @@ lastRequestedPermissions = _lastRequestedPermissions;
     return _request;
 }
 
-- (void)_applyCoreHandlers:(NSString*)event {
-	[self enumerateEventHandlers:event block:^(id _handler) {
-		void (^handler)(Facebook*) = _handler;
-		handler(self);
-	}];
-}
 
 /**
  * A private function for getting the app's base url.
@@ -528,8 +527,8 @@ lastRequestedPermissions = _lastRequestedPermissions;
 	void (^grantedHandler)(Facebook*) = [_grantedHandler copy];
 	void (^deniedHandler)(Facebook*) = [_deniedHandler copy];
 	
-	[self registerEventHandler:kFBLoginBlockHandlerKey discard:YES handler:^(Facebook *facebook, FacebookLoginState state) {
-		if( state == FacebookLoginSuccess && grantedHandler ) {
+	[self registerEventHandler:kFBLoginBlockHandlerKey discard:YES handler:^(Facebook *facebook, FBLoginState state) {
+		if( state == kFBLoginSuccess && grantedHandler ) {
 			NSMutableSet *new_permissions = [NSMutableSet setWithSet:_permissions];
 			[new_permissions addObjectsFromArray:permissions];
 			_permissions = new_permissions;
@@ -553,7 +552,7 @@ lastRequestedPermissions = _lastRequestedPermissions;
 }
 
 - (void)usingPermissions:(NSArray*)permissions
-				 request:(void(^)())_request
+				 request:(void(^)(BOOL success))_request
 {
 	
 	BOOL mustAuthorise = NO;
@@ -571,14 +570,12 @@ lastRequestedPermissions = _lastRequestedPermissions;
 	}
 	
 	if( mustAuthorise ) {
-		void (^request)() = [_request copy];
+		void (^request)(BOOL success) = [_request copy];
 		
 		if( _permissions ) {
 			[[Facebook shared] authorize:permissions
-								 granted:^(Facebook *facebook) {
-									 request();
-								 }
-								  denied:nil];
+								 granted:^(Facebook *facebook) { request(YES); }
+								  denied:^(Facebook *facebook) { request(NO); }];
 		}
 		else {
 			[pendingPermissionRequests addObject:[^{
@@ -587,12 +584,12 @@ lastRequestedPermissions = _lastRequestedPermissions;
 		}
 	}
 	else {
-		_request();
+		_request(YES);
 	}
 }
 
 - (void)usingPermission:(NSString*)permission
-				request:(void(^)())_request {	
+				request:(void(^)(BOOL success))_request {	
 	[self usingPermissions:[NSArray arrayWithObject:permission] request:_request];
 }
 
@@ -762,7 +759,7 @@ lastRequestedPermissions = _lastRequestedPermissions;
  */
 - (void)logout {
     [self invalidateSession];
-	[self _applyCoreHandlers:kFBLogoutBlockHandlerKey];
+	[self _applyLoginHandlers:kFBLoginRevoked];
 }
 
 #pragma mark - Requests
@@ -1096,9 +1093,7 @@ lastRequestedPermissions = _lastRequestedPermissions;
  * @return boolean - whether this object has an non-expired session token
  */
 - (BOOL)isSessionValid {
-    return (self.accessToken != nil && self.expirationDate != nil
-            && NSOrderedDescending == [self.expirationDate compare:[NSDate date]]);
-    
+    return (self.accessToken != nil && self.expirationDate != nil && NSOrderedDescending == [self.expirationDate compare:[NSDate date]]);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1107,12 +1102,6 @@ lastRequestedPermissions = _lastRequestedPermissions;
 /**
  * Set the authToken and expirationDate after login succeed
  */
-- (void)_applyLoginHandlers:(FacebookLoginState)state {
-	[self enumerateEventHandlers:kFBLoginBlockHandlerKey block:^(id _handler) {
-		void (^handler)(Facebook*,FacebookLoginState) = _handler;
-		handler(self, state);
-	}];
-}
 
 #pragma mark - Friction
 
@@ -1140,7 +1129,7 @@ lastRequestedPermissions = _lastRequestedPermissions;
 
 #pragma mark - Handlers
 
-- (void)addLoginHandler:(void(^)(Facebook*, FacebookLoginState))handler {
+- (void)addLoginHandler:(void(^)(Facebook*, FBLoginState))handler {
 	[self registerEventHandler:kFBLoginBlockHandlerKey handler:handler];
 }
 - (void)addExtendTokenHandler:(void(^)(Facebook *facebook, NSString *token, NSDate *expiresAt))handler {

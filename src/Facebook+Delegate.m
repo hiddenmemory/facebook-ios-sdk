@@ -28,14 +28,15 @@
 	
 	if (oldDelegate) return;
 
-	[self addLoginHandler:^(Facebook *facebook, FacebookLoginState state) {
+	[self addLoginHandler:^(Facebook *facebook, FBLoginState state) {
 		switch (state) {
-			case FacebookLoginSuccess:
+			case kFBLoginSuccess:
 				[weakSelf.delegate facebookDidLogin:facebook];
 				break;
-			case FacebookLoginCancelled:
-			case FacebookLoginFailed:
-				[weakSelf.delegate facebook:weakSelf didNotLogin:(state == FacebookLoginCancelled)];
+			case kFBLoginCancelled:
+			case kFBLoginFailed:
+			case kFBLoginRevoked:
+				[weakSelf.delegate facebook:weakSelf didNotLogin:(state == kFBLoginCancelled)];
 				break;
 		}
 	}];

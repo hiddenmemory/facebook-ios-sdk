@@ -36,137 +36,78 @@
     // Release any cached data, images, etc that aren't in use.
 }
 
-#pragma mark - Facebook API Calls
-/**
- * Make a Graph API Call to get information about the current logged in user.
- */
-- (void)apiFQLIMe {
-    // Using the "pic" picture since this currently has a maximum width of 100 pixels
-    // and since the minimum profile picture size is 180 pixels wide we should be able
-    // to get a 100 pixel wide version of the profile picture
-    NSMutableDictionary *params = [NSMutableDictionary dictionaryWithObjectsAndKeys:
-                                   @"SELECT uid, name, pic FROM user WHERE uid=me()", @"query",
-                                   nil];
+- (void)updateLoggedIn {
+	[self.navigationController setNavigationBarHidden:NO animated:NO];
 	
-	[[Facebook shared] requestWithMethodName:@"fql.query"
-								  parameters:params
-							   requestMethod:@"POST"
-									finalize:^(FBRequest *request) {
-										[request addCompletionHandler:^(FBRequest *request, id result) {
-											if ([result isKindOfClass:[NSArray class]]) {
-												result = [result objectAtIndex:0];
-											}
-											// This callback can be a result of getting the user's basic
-											// information or getting the user's permissions.
-											if ([result objectForKey:@"name"]) {
-												// If basic information callback, set the UI objects to
-												// display this.
-												nameLabel.text = [result objectForKey:@"name"];
-												// Get the profile image
-												UIImage *image = [UIImage imageWithData:[NSData dataWithContentsOfURL:[NSURL URLWithString:[result objectForKey:@"pic"]]]];
-												
-												// Resize, crop the image to make sure it is square and renders
-												// well on Retina display
-												float ratio;
-												float delta;
-												float px = 100; // Double the pixels of the UIImageView (to render on Retina)
-												CGPoint offset;
-												CGSize size = image.size;
-												if (size.width > size.height) {
-													ratio = px / size.width;
-													delta = (ratio*size.width - ratio*size.height);
-													offset = CGPointMake(delta/2, 0);
-												} else {
-													ratio = px / size.height;
-													delta = (ratio*size.height - ratio*size.width);
-													offset = CGPointMake(0, delta/2);
-												}
-												CGRect clipRect = CGRectMake(-offset.x, -offset.y,
-																			 (ratio * size.width) + delta,
-																			 (ratio * size.height) + delta);
-												UIGraphicsBeginImageContext(CGSizeMake(px, px));
-												UIRectClip(clipRect);
-												[image drawInRect:clipRect];
-												UIImage *imgThumb = UIGraphicsGetImageFromCurrentImageContext();
-												UIGraphicsEndImageContext();
-												[profilePhotoImageView setImage:imgThumb];
-												
-												[self apiGraphUserPermissions];
-											}
-											else {
-												NSLog(@"Something went wrong.");
-											}
-										}];
-									}];
+	self.backgroundImageView.hidden = YES;
+	loginButton.hidden = YES;
+	self.menuTableView.hidden = NO;
+	
+	[[Facebook shared] fetchMe:^(NSDictionary *me) {
+		nameLabel.text = [me objectForKey:@"name"];
+		[[Facebook shared] fetchProfilePictureWithID:[me objectForKey:@"id"]
+										  completion:^(UIImage *pic) {
+											  profilePhotoImageView.image = pic;
+										  } error:nil];
+	} error:nil];
+}
+- (void)updateLoggedOut {
+	[self.navigationController setNavigationBarHidden:YES animated:NO];
+	
+	self.menuTableView.hidden = YES;
+	self.backgroundImageView.hidden = NO;
+	loginButton.hidden = NO;
+	
+	// Clear personal info
+	nameLabel.text = @"";
+	// Get the profile image
+	[profilePhotoImageView setImage:nil];
+	
+	[[self navigationController] popToRootViewControllerAnimated:YES];
+}
+- (void)viewDidLoad {
+	[super viewDidLoad];
+	
+	[[Facebook shared] addLoginHandler:^(Facebook *facebook, FBLoginState state) {
+		if( state == kFBDialogSuccess ) {
+			[self updateLoggedIn];
+		}
+		else {
+			[self updateLoggedOut];
+		}
+	}];
+	
+	[[Facebook shared] addSessionInvalidatedHandler:^(Facebook *facebook) {
+		UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"Auth Exception"
+															message:@"Your session has expired."
+														   delegate:nil
+												  cancelButtonTitle:@"OK"
+												  otherButtonTitles:nil];
+		[alertView show];
+		[self updateLoggedOut];
+	}];
 }
 
-- (void)apiGraphUserPermissions {
-	[[Facebook shared] requestWithGraphPath:@"me/permissions"
-								   finalize:^(FBRequest *request) {
-									   [request addCompletionHandler:^(FBRequest *request, id result) {
-										   if ([result isKindOfClass:[NSArray class]]) {
-											   result = [result objectAtIndex:0];
-										   }
-										   HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
-										   [delegate setUserPermissions:[[result objectForKey:@"data"] objectAtIndex:0]];
-									   }];
-								   }];
-}
+#pragma mark - Facebook API Calls
 
-
-#pragma - Private Helper Methods
-
-/**
- * Show the logged in menu
- */
-
-- (void)showLoggedIn {
-    [self.navigationController setNavigationBarHidden:NO animated:NO];
-    
-    self.backgroundImageView.hidden = YES;
-    loginButton.hidden = YES;
-    self.menuTableView.hidden = NO;
-    
-    [self apiFQLIMe];
-}
-
-/**
- * Show the logged in menu
- */
-
-- (void)showLoggedOut {
-    [self.navigationController setNavigationBarHidden:YES animated:NO];
-    
-    self.menuTableView.hidden = YES;
-    self.backgroundImageView.hidden = NO;
-    loginButton.hidden = NO;
-    
-    // Clear personal info
-    nameLabel.text = @"";
-    // Get the profile image
-    [profilePhotoImageView setImage:nil];
-    
-    [[self navigationController] popToRootViewControllerAnimated:YES];
-}
 
 /**
  * Show the authorization dialog.
  */
 - (void)login {
-    HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
-    if (![[delegate facebook] isSessionValid]) {
-        [[delegate facebook] authorize:permissions];
-    } else {
-        [self showLoggedIn];
-    }
+	if( [[Facebook shared] isSessionValid] ) {
+		[self updateLoggedIn];
+	}
+	else {
+		[[Facebook shared] authorize:[NSArray arrayWithObject:@"user_about_me"]];
+	}
 }
 
 /**
  * Invalidate the access token and clear the cookie.
  */
 - (void)logout {
-    HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
-    [[delegate facebook] logout];
+	[[Facebook shared] logout];
 }
 
 /**
@@ -187,13 +128,9 @@
 #pragma mark - View lifecycle
 // Implement loadView to create a view hierarchy programmatically, without using a nib.
 - (void)loadView {
-    UIView *view = [[UIView alloc] initWithFrame:[UIScreen
-                                                  mainScreen].applicationFrame];
+    UIView *view = [[UIView alloc] initWithFrame:[UIScreen mainScreen].applicationFrame];
     [view setBackgroundColor:[UIColor whiteColor]];
     self.view = view;
-    
-    // Initialize permissions
-    permissions = [[NSArray alloc] initWithObjects:@"offline_access", nil];
     
     // Main menu items
     mainMenuItems = [[NSMutableArray alloc] initWithCapacity:1];
@@ -210,9 +147,9 @@
     
     self.navigationItem.backBarButtonItem =
     [[UIBarButtonItem alloc] initWithTitle:@"Back"
-                                      style:UIBarButtonItemStyleBordered
-                                     target:nil
-                                     action:nil];
+									 style:UIBarButtonItemStyleBordered
+									target:nil
+									action:nil];
     
     // Background Image
     backgroundImageView = [[UIImageView alloc]
@@ -225,17 +162,17 @@
     
     // Login Button
     loginButton = [UIButton buttonWithType:UIButtonTypeCustom];
-    CGFloat xLoginButtonOffset = self.view.center.x - (318/2);
-    CGFloat yLoginButtonOffset = self.view.bounds.size.height - (58 + 13);
-    loginButton.frame = CGRectMake(xLoginButtonOffset,yLoginButtonOffset,318,58);
+    CGFloat xLoginButtonOffset = self.view.center.x - (159/2);
+    CGFloat yLoginButtonOffset = self.view.bounds.size.height - (29 + 13);
+    loginButton.frame = CGRectMake(xLoginButtonOffset,yLoginButtonOffset,159,29);
     [loginButton addTarget:self
                     action:@selector(login)
           forControlEvents:UIControlEventTouchUpInside];
     [loginButton setImage:
-     [UIImage imageNamed:@"FBConnect.bundle/images/LoginWithFacebookNormal@2x.png"]
+     [UIImage imageNamed:@"FBConnect.bundle/images/LoginWithFacebookNormal"]
                  forState:UIControlStateNormal];
     [loginButton setImage:
-     [UIImage imageNamed:@"FBConnect.bundle/images/LoginWithFacebookPressed@2x.png"]
+     [UIImage imageNamed:@"FBConnect.bundle/images/LoginWithFacebookPressed"]
                  forState:UIControlStateHighlighted];
     [loginButton sizeToFit];
     [self.view addSubview:loginButton];
@@ -284,11 +221,10 @@
     //[self.navigationController setNavigationBarHidden:YES animated:animated];
     [super viewWillAppear:animated];
     
-    HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
-    if (![[delegate facebook] isSessionValid]) {
-        [self showLoggedOut];
+    if( [[Facebook shared] isSessionValid] ) {
+        [self updateLoggedIn];
     } else {
-        [self showLoggedIn];
+        [self updateLoggedOut];
     }
 }
 
@@ -345,51 +281,6 @@
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     
-}
-
-#pragma mark - FBSessionDelegate Methods
-
-/**
- * Called when the user has logged in successfully.
- */
-- (void)facebookDidLogin:(Facebook*)facebook {
-    [self showLoggedIn];
-        
-    [pendingApiCallsController userDidGrantPermission];
-}
-
--(void)facebook:(Facebook*)facebook didExtendToken:(NSString *)accessToken expiresAt:(NSDate *)expiresAt {
-    NSLog(@"token extended");
-}
-
-/**
- * Called when the user canceled the authorization dialog.
- */
--(void)facebook:(Facebook*)facebook didNotLogin:(BOOL)cancelled {
-    [pendingApiCallsController userDidNotGrantPermission];
-}
-
-/**
- * Called when the request logout has succeeded.
- */
-- (void)facebookDidLogout:(Facebook*)facebook {
-    pendingApiCallsController = nil;    
-    [self showLoggedOut];
-}
-
-/**
- * Called when the session has expired.
- */
-- (void)facebookSessionInvalidated:(Facebook*)facebook {
-    UIAlertView *alertView = [[UIAlertView alloc]
-                              initWithTitle:@"Auth Exception"
-                              message:@"Your session has expired."
-                              delegate:nil
-                              cancelButtonTitle:@"OK"
-                              otherButtonTitles:nil,
-                              nil];
-    [alertView show];
-    [self facebookDidLogout:facebook];
 }
 
 @end

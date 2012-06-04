@@ -145,15 +145,6 @@
 }
 
 #pragma mark - Private Helper Methods
-/*
- * This method is called to store the check-in permissions
- * in the app session after the permissions have been updated.
- */
-- (void)updateCheckinPermissions {
-    HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
-    [[delegate userPermissions] setObject:@"1" forKey:@"user_checkins"];
-    [[delegate userPermissions] setObject:@"1" forKey:@"publish_checkins"];
-}
 
 /*
  * This method shows the activity indicator and
@@ -230,8 +221,8 @@
 - (void)viewWillAppear:(BOOL)animated {
 	[super viewWillAppear:animated];
 	
-	[Facebook shared].requestStarted = ^{ [self showActivityIndicator]; };
-	[Facebook shared].requestFinished = ^{ [self hideActivityIndicator]; };
+	[Facebook shared].requestStarted = ^(FBRequest *_){ [self showActivityIndicator]; };
+	[Facebook shared].requestFinished = ^(FBRequest *_){ [self hideActivityIndicator]; };
 }
 
 /*
@@ -241,8 +232,8 @@
 - (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
 	
-	[Facebook shared].requestStarted = ^{};
-	[Facebook shared].requestFinished = ^{};
+	[Facebook shared].requestStarted = ^(FBRequest *_){};
+	[Facebook shared].requestFinished = ^(FBRequest *_){};
 	
     // Hide the activitiy indicator
     [self hideActivityIndicator];
@@ -261,7 +252,10 @@
     // which menu button was clicked.
     SEL selector = NSSelectorFromString([[apiMenuItems objectAtIndex:[sender tag]] objectForKey:@"method"]);
     if ([self respondsToSelector:selector]) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
         [self performSelector:selector];
+#pragma clang diagnostic pop
     }
 }
 
@@ -309,19 +303,6 @@
 	} error:^(NSError *error) {
 		[self showMessage:NSLocalizedString(@"Unable to fetch friends list", @"")];
 	}];
-}
-
-/*
- * Graph API: Method to get the user's permissions for this app.
- */
-- (void)apiGraphUserPermissions {
-    #warning Not implemented
-    currentAPICall = kAPIGraphUserPermissions;
-	[[Facebook shared] requestWithGraphPath:@"me/permissions"
-								 parameters:[NSDictionary dictionary]
-								 completion:^(FBRequest *request, id result) {
-									 
-								 }];
 }
 
 /*
@@ -396,7 +377,7 @@
 	[[Facebook shared] dialog:@"feed" 
 				   parameters:params 
 					 finalize:^(FBDialog *dialog) {
-						 [dialog addCompletionURLHandler:^(FBDialog *dialog, NSURL *url, FacebookDialogState state) {
+						 [dialog addCompletionURLHandler:^(FBDialog *dialog, NSURL *url, FBDialogState state) {
 							 if (![url query]) {
 								 NSLog(@"User canceled dialog or there was an error");
 								 return;
@@ -461,7 +442,7 @@
 	[[Facebook shared] dialog:@"feed" 
 				   parameters:params
 					 finalize:^(FBDialog *dialog) {
-						 [dialog addCompletionURLHandler:^(FBDialog *dialog, NSURL *url, FacebookDialogState state) {
+						 [dialog addCompletionURLHandler:^(FBDialog *dialog, NSURL *url, FBDialogState state) {
 							 if (![url query]) {
 								 NSLog(@"User canceled dialog or there was an error");
 								 return;
@@ -504,7 +485,7 @@
 	[[Facebook shared] dialog:@"apprequests" 
 				   parameters:params 
 					 finalize:^(FBDialog *dialog) {
-						 [dialog addCompletionURLHandler:^(FBDialog *dialog, NSURL *url, FacebookDialogState state) {
+						 [dialog addCompletionURLHandler:^(FBDialog *dialog, NSURL *url, FBDialogState state) {
 							 if (![url query]) {
 								 NSLog(@"User canceled dialog or there was an error");
 								 return;
@@ -542,11 +523,10 @@
                                    selectIDsStr, @"suggestions",
                                    nil];
 
-    HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
-    [[delegate facebook] dialog:@"apprequests"
+    [[Facebook shared] dialog:@"apprequests"
                       parameters:params
                     finalize:^(FBDialog *dialog) {
-						[dialog addCompletionURLHandler:^(FBDialog *dialog, NSURL *url, FacebookDialogState state) {
+						[dialog addCompletionURLHandler:^(FBDialog *dialog, NSURL *url, FBDialogState state) {
 							if (![url query]) {
 								NSLog(@"User canceled dialog or there was an error");
 								return;
@@ -583,11 +563,10 @@
                                    selectIDsStr, @"suggestions",
                                    nil];
 
-    HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
-    [[delegate facebook] dialog:@"apprequests"
+    [[Facebook shared] dialog:@"apprequests"
 					 parameters:params
 					   finalize:^(FBDialog *dialog) {
-						   [dialog addCompletionURLHandler:^(FBDialog *dialog, NSURL *url, FacebookDialogState state) {
+						   [dialog addCompletionURLHandler:^(FBDialog *dialog, NSURL *url, FBDialogState state) {
 							   if (![url query]) {
 								   NSLog(@"User canceled dialog or there was an error");
 								   return;
@@ -622,11 +601,10 @@
                                    friend, @"to",
                                    nil];
 
-    HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
-    [[delegate facebook] dialog:@"apprequests"
+    [[Facebook shared] dialog:@"apprequests"
 					 parameters:params
 					   finalize:^(FBDialog *dialog) {
-						   [dialog addCompletionURLHandler:^(FBDialog *dialog, NSURL *url, FacebookDialogState state) {
+						   [dialog addCompletionURLHandler:^(FBDialog *dialog, NSURL *url, FBDialogState state) {
 							   if (![url query]) {
 								   NSLog(@"User canceled dialog or there was an error");
 								   return;
@@ -791,33 +769,35 @@
 - (void)apiGraphUserCheckins {
     currentAPICall = kAPIGraphUserCheckins;
 	
-	[[Facebook shared] requestWithGraphPath:@"me/checkins"
-								 parameters:nil
-								 completion:^(FBRequest *request, id result) {
-									 if ([result isKindOfClass:[NSArray class]] && ([result count] > 0)) {
-										 result = [result objectAtIndex:0];
-									 }
-									 
-									 NSMutableArray *places = [[NSMutableArray alloc] initWithCapacity:1];
-									 NSArray *resultData = [result objectForKey:@"data"];
-									 for (NSUInteger i=0; i<[resultData count] && i < 5; i++) {
-										 NSString *placeID = [[[resultData objectAtIndex:i] objectForKey:@"place"] objectForKey:@"id"];
-										 NSString *placeName = [[[resultData objectAtIndex:i] objectForKey:@"place"] objectForKey:@"name"];
-										 NSString *checkinMessage = [[resultData objectAtIndex:i] objectForKey:@"message"] ?
-										 [[resultData objectAtIndex:i] objectForKey:@"message"] : @"";
-										 [places addObject:[NSDictionary dictionaryWithObjectsAndKeys:
-															placeID,@"id",
-															placeName,@"name",
-															checkinMessage,@"details",
-															nil]];
-									 }
-									 // Show the user's recent check-ins a new view controller
-									 APIResultsViewController *controller = [[APIResultsViewController alloc]
-																			 initWithTitle:@"Recent Check-ins"
-																			 data:places
-																			 action:@"recentcheckins"];
-									 [self.navigationController pushViewController:controller animated:YES];
-								 }];
+	[[Facebook shared] usingPermissions:[NSArray arrayWithObjects:@"user_checkins", @"publish_checkins", nil] request:^(BOOL success) {
+		[[Facebook shared] requestWithGraphPath:@"me/checkins"
+									 parameters:nil
+									 completion:^(FBRequest *request, id result) {
+										 if ([result isKindOfClass:[NSArray class]] && ([result count] > 0)) {
+											 result = [result objectAtIndex:0];
+										 }
+										 
+										 NSMutableArray *places = [[NSMutableArray alloc] initWithCapacity:1];
+										 NSArray *resultData = [result objectForKey:@"data"];
+										 for (NSUInteger i=0; i<[resultData count] && i < 5; i++) {
+											 NSString *placeID = [[[resultData objectAtIndex:i] objectForKey:@"place"] objectForKey:@"id"];
+											 NSString *placeName = [[[resultData objectAtIndex:i] objectForKey:@"place"] objectForKey:@"name"];
+											 NSString *checkinMessage = [[resultData objectAtIndex:i] objectForKey:@"message"] ?
+											 [[resultData objectAtIndex:i] objectForKey:@"message"] : @"";
+											 [places addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+																placeID,@"id",
+																placeName,@"name",
+																checkinMessage,@"details",
+																nil]];
+										 }
+										 // Show the user's recent check-ins a new view controller
+										 APIResultsViewController *controller = [[APIResultsViewController alloc]
+																				 initWithTitle:@"Recent Check-ins"
+																				 data:places
+																				 action:@"recentcheckins"];
+										 [self.navigationController pushViewController:controller animated:YES];
+									 }];
+	}];
 }
 
 /*
@@ -826,13 +806,7 @@
  * check-in permissions first or get the check-in information.
  */
 - (void)getPermissionsCallUserCheckins {
-    HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
-    if ([[delegate userPermissions] objectForKey:@"user_checkins"]) {
-        [self apiGraphUserCheckins];
-    } else {
-        currentAPICall = kDialogPermissionsCheckinForRecent;
-        [self apiPromptCheckinPermissions];
-    }
+	[self apiGraphUserCheckins];
 }
 
 /*
@@ -891,18 +865,23 @@
  * for nearby places the user can then check-in to.
  */
 - (void)getPermissionsCallNearby {
-	[[Facebook shared] usingPermission:@"publish_checkin" request:^{
-		if (![CLLocationManager locationServicesEnabled]) {
-			UIAlertView *servicesDisabledAlert = [[UIAlertView alloc] initWithTitle:@"Location Services Disabled" message:@"You currently have all location services for this device disabled. If you proceed, you will be asked to confirm whether location services should be reenabled." delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
-			[servicesDisabledAlert show];
+	[[Facebook shared] usingPermission:@"publish_checkin" request:^( BOOL success ) {
+		if( success ) {
+			if (![CLLocationManager locationServicesEnabled]) {
+				UIAlertView *servicesDisabledAlert = [[UIAlertView alloc] initWithTitle:@"Location Services Disabled" message:@"You currently have all location services for this device disabled. If you proceed, you will be asked to confirm whether location services should be reenabled." delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
+				[servicesDisabledAlert show];
+			}
+			// Start the location manager
+			self.locationManager = [[CLLocationManager alloc] init];
+			locationManager.delegate = self;
+			locationManager.desiredAccuracy = kCLLocationAccuracyBest;
+			[locationManager startUpdatingLocation];
+			// Time out if it takes too long to get a reading.
+			[self performSelector:@selector(processLocationData) withObject:nil afterDelay:15.0];
 		}
-		// Start the location manager
-		self.locationManager = [[CLLocationManager alloc] init];
-		locationManager.delegate = self;
-		locationManager.desiredAccuracy = kCLLocationAccuracyBest;
-		[locationManager startUpdatingLocation];
-		// Time out if it takes too long to get a reading.
-		[self performSelector:@selector(processLocationData) withObject:nil afterDelay:15.0];
+		else {
+			[self showMessage:NSLocalizedString(@"The publish checkin permission is required for location based Facebook fun", @"")];
+		}
 	}];
 }
 
@@ -1247,16 +1226,7 @@
             // After the check-in permissions have been
             // granted, save them in app session then
             // retrieve recent check-ins
-            [self updateCheckinPermissions];
             [self apiGraphUserCheckins];
-            break;
-        }
-        case kDialogPermissionsCheckinForPlaces:
-        {
-            // After the check-in permissions have been
-            // granted, save them in app session then
-            // get nearby locations
-            [self updateCheckinPermissions];
             break;
         }
         case kDialogPermissionsExtended:

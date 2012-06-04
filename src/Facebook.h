@@ -32,7 +32,8 @@
 typedef enum {
 	FacebookLoginSuccess,
 	FacebookLoginCancelled,
-	FacebookLoginFailed
+	FacebookLoginFailed,
+	FacebookLoginRevoked
 } FacebookLoginState;
 
 @class FBFrictionlessRequestSettings;

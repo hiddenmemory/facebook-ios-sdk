@@ -306,19 +306,6 @@
 }
 
 /*
- * Graph API: Method to get the user's permissions for this app.
- */
-- (void)apiGraphUserPermissions {
-    #warning Not implemented
-    currentAPICall = kAPIGraphUserPermissions;
-	[[Facebook shared] requestWithGraphPath:@"me/permissions"
-								 parameters:[NSDictionary dictionary]
-								 completion:^(FBRequest *request, id result) {
-									 
-								 }];
-}
-
-/*
  * Dialog: Authorization to grant the app check-in permissions.
  */
 - (void)apiPromptCheckinPermissions {

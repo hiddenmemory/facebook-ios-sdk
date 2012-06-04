@@ -759,7 +759,7 @@ lastRequestedPermissions = _lastRequestedPermissions;
  */
 - (void)logout {
     [self invalidateSession];
-	[self _applyLoginHandlers:FacebookLoginFailed];
+	[self _applyLoginHandlers:FacebookLoginRevoked];
 }
 
 #pragma mark - Requests

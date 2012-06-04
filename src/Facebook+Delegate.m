@@ -35,6 +35,7 @@
 				break;
 			case FacebookLoginCancelled:
 			case FacebookLoginFailed:
+			case FacebookLoginRevoked:
 				[weakSelf.delegate facebook:weakSelf didNotLogin:(state == FacebookLoginCancelled)];
 				break;
 		}

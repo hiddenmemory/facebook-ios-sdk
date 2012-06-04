@@ -152,7 +152,6 @@ static NSString *const kFBFieldPicture = @"picture";
 	[self requestWithMethodName:@"friends.getAppUsers"
 								  parameters:[NSDictionary dictionaryWithObjectsAndKeys:@"name,picture", @"fields", nil]
 								  completion:^(FBRequest *request, id result) {
-									  NSLog(@"Result: %@", result);
 									  [self fetchIDsQuery:result
                                               fields:[NSArray arrayWithObjects:kFBFieldName, kFBFieldPicture, nil]
                                                range:0
@@ -238,13 +237,11 @@ static NSString *const kFBFieldPicture = @"picture";
 									   finalize:^(FBRequest *request) {
 										   if( completionHandler ) {
 											   [request addCompletionHandler:^(FBRequest *request, id result) {
-												   NSLog(@"Result: %@", request);
 												   completionHandler([result objectForKey:@"id"]);
 											   }];
 										   }
 										   if( errorHandler ) {
 											   [request addErrorHandler:^(FBRequest *request, NSError *error) {
-												   NSLog(@"Error: %@", error);
 												   errorHandler(error);
 											   }];
 										   }
@@ -276,7 +273,7 @@ static NSString *const kFBFieldPicture = @"picture";
 			error:(void(^)(NSError *error))errorHandler {
     
     NSMutableDictionary *params = [NSMutableDictionary dictionaryWithObjectsAndKeys:
-                                   status, @"message",
+                                   status, kFBPostMessageKey,
                                    nil];
     
     [self postWithParameters:params
@@ -289,14 +286,16 @@ static NSString *const kFBFieldPicture = @"picture";
 }
 
 -(void)shareLink:(NSString*)link
-     withMessage:(NSString*)message
+     message:(NSString*)message
       completion:(void(^)(NSString *linkID))completionHandler
            error:(void(^)(NSError *error))errorHandler {
     
     NSMutableDictionary *requestParams = [NSMutableDictionary dictionary];
-    [requestParams setObject:link forKey:@"link"];
+    
+	[requestParams setObject:link forKey:kFBPostLinkKey];
+	
     if (message) {
-        [requestParams setObject:message forKey:@"message"];
+        [requestParams setObject:message forKey:kFBPostMessageKey];
     }
     
     [self usingPermission:@"publish_stream" request:^{
@@ -306,13 +305,11 @@ static NSString *const kFBFieldPicture = @"picture";
                             finalize:^(FBRequest *request) {
                                 if( completionHandler ) {
                                     [request addCompletionHandler:^(FBRequest *request, id result) {
-                                        NSLog(@"Result: %@", result);
                                         completionHandler([result objectForKey:@"id"]);
                                     }];
                                 }
                                 if( errorHandler ) {
                                     [request addErrorHandler:^(FBRequest *request, NSError *error) {
-                                        NSLog(@"Error: %@", error);
                                         errorHandler(error);
                                     }];
                                 }
@@ -328,12 +325,8 @@ static NSString *const kFBFieldPicture = @"picture";
     [self sharePhoto:image 
                album:@"me"
                title:title
-          completion:^(NSString *photoID) {
-              NSLog(@"%@", photoID);
-          }
-               error:^(NSError *error) {
-                   NSLog(@"%@", error.description);
-               }];
+          completion:completionHandler
+               error:errorHandler];
 }
 
 - (void)sharePhoto:(UIImage*)image
@@ -342,7 +335,10 @@ static NSString *const kFBFieldPicture = @"picture";
 		completion:(void(^)(NSString *photoID))completionHandler
 			 error:(void(^)(NSError *error))errorHandler {
     
-    NSDictionary *params = [NSDictionary dictionaryWithObjectsAndKeys:image, @"picture", title, @"name", nil];
+    NSDictionary *params = [NSDictionary dictionaryWithObjectsAndKeys:
+							image, kFBPostPictureKey, 
+							title, kFBPostNameKey, 
+							nil];
     
     [self usingPermission:@"publish_stream" request:^{
         [self requestWithGraphPath:[NSString stringWithFormat:@"%@/photos", album]
@@ -351,13 +347,11 @@ static NSString *const kFBFieldPicture = @"picture";
                           finalize:^(FBRequest *request) {
                               if( completionHandler ) {
                                   [request addCompletionHandler:^(FBRequest *request, id result) {
-                                      NSLog(@"Result: %@", result);
                                       completionHandler([result objectForKey:@"id"]);
                                   }];
                               }
                               if( errorHandler ) {
                                   [request addErrorHandler:^(FBRequest *request, NSError *error) {
-                                      NSLog(@"Error: %@", error);
                                       errorHandler(error);
                                   }];
                               }
@@ -380,7 +374,9 @@ static NSString *const kFBFieldPicture = @"picture";
                                 parameters:(NSDictionary*)parameters
                                 completion:(void(^)(NSString *response))completionHandler
                                      error:(void(^)(NSError *error))errorHandler {
+
     NSString *path = [NSString stringWithFormat:@"me/%@:%@", namespace, action];
+	
     NSMutableDictionary *requestParams = [NSMutableDictionary dictionaryWithDictionary:parameters];
     
     [self usingPermission:@"publish_stream" request:^{
@@ -390,13 +386,11 @@ static NSString *const kFBFieldPicture = @"picture";
                           finalize:^(FBRequest *request) {
                               if( completionHandler ) {
                                   [request addCompletionHandler:^(FBRequest *request, id result) {
-                                      NSLog(@"Result: %@", result);
                                       completionHandler([result objectForKey:@"id"]);
                                   }];
                               }
                               if( errorHandler ) {
                                   [request addErrorHandler:^(FBRequest *request, NSError *error) {
-                                      NSLog(@"Error: %@", error);
                                       errorHandler(error);
                                   }];
                               }

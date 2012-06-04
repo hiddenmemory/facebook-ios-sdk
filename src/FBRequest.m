@@ -124,12 +124,14 @@ error = _error;
 }
 
 - (void)addDebugOutputHandlers {
-	[self addCompletionHandler:^(FBRequest *request, id result) {
-		NSLog(@"FBRequest: Success: %@: %@", self.url, result);
+	[self addResponseHandler:^(FBRequest *request, NSURLResponse *response) {
+		NSLog(@"FBRequest: Response: %@: %@", request.url, response);
 	}];
-	
+	[self addCompletionHandler:^(FBRequest *request, id result) {
+		NSLog(@"FBRequest: Success: %@: %@", request.url, result);
+	}];
 	[self addErrorHandler:^(FBRequest *request, NSError *error) {
-		NSLog(@"FBRequest: Error: %@: %@", self.url, error);
+		NSLog(@"FBRequest: Error: %@: %@", request.url, error);
 	}];
 }
 
@@ -333,7 +335,7 @@ error = _error;
  */
 - (void)connect {
 	if( [Facebook shared].requestStarted ) {
-		[Facebook shared].requestStarted();
+		[Facebook shared].requestStarted(self);
 	}
 	
 	[self enumerateEventHandlers:kFBLoadBlockHandlerKey block:^(id _handler) {
@@ -407,7 +409,7 @@ error = _error;
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
 	if( [Facebook shared].requestFinished ) {
-		[Facebook shared].requestFinished();
+		[Facebook shared].requestFinished(self);
 	}
 
 	[self handleResponseData:_responseText];
@@ -419,7 +421,7 @@ error = _error;
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
 	if( [Facebook shared].requestFinished ) {
-		[Facebook shared].requestFinished();
+		[Facebook shared].requestFinished(self);
 	}
 	
 	[self failWithError:error];

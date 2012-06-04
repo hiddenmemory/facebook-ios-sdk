@@ -60,8 +60,8 @@ typedef enum {
 @property (nonatomic, assign) BOOL extendTokenOnApplicationActive;
 @property (nonatomic, readonly) NSSet *permissions;
 
-@property (copy) void (^requestStarted)();
-@property (copy) void (^requestFinished)();
+@property (copy) void (^requestStarted)(FBRequest*);
+@property (copy) void (^requestFinished)(FBRequest*);
 
 + (Facebook*)bind:(NSString*)appID;
 + (Facebook*)bind;

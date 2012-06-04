@@ -210,10 +210,10 @@ lastRequestedPermissions = _lastRequestedPermissions;
 	
 	[self fetchActiveUserPermissions];
 	
-	[self _applyLoginHandlers:FacebookLoginSuccess];
+	[self _applyLoginHandlers:kFBLoginSuccess];
 }
 - (void)_handleLoginFailed:(BOOL)cancelled {
-	[self _applyLoginHandlers:(cancelled ? FacebookLoginCancelled : FacebookLoginFailed)];
+	[self _applyLoginHandlers:(cancelled ? kFBLoginCancelled : kFBLoginFailed)];
 }
 - (void)_applyLoginDialogHandlers:(FBLoginDialog*)dialog {	
 	[dialog addLoginHandler:^(FacebookDialogState state, NSString *token, NSDate *expirationDate) {
@@ -528,7 +528,7 @@ lastRequestedPermissions = _lastRequestedPermissions;
 	void (^deniedHandler)(Facebook*) = [_deniedHandler copy];
 	
 	[self registerEventHandler:kFBLoginBlockHandlerKey discard:YES handler:^(Facebook *facebook, FacebookLoginState state) {
-		if( state == FacebookLoginSuccess && grantedHandler ) {
+		if( state == kFBLoginSuccess && grantedHandler ) {
 			NSMutableSet *new_permissions = [NSMutableSet setWithSet:_permissions];
 			[new_permissions addObjectsFromArray:permissions];
 			_permissions = new_permissions;
@@ -759,7 +759,7 @@ lastRequestedPermissions = _lastRequestedPermissions;
  */
 - (void)logout {
     [self invalidateSession];
-	[self _applyLoginHandlers:FacebookLoginRevoked];
+	[self _applyLoginHandlers:kFBLoginRevoked];
 }
 
 #pragma mark - Requests

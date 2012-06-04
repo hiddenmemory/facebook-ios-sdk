@@ -112,7 +112,7 @@ static NSString *const kFBFieldPicture = @"picture";
 	
 	[[Facebook shared] requestWithGraphPath:@"me/permissions"
 								 parameters:[NSDictionary dictionary]
-							  requestMethod:@"DELETE"
+							  requestMethod:kFBMethodDelete
 								   finalize:^(FBRequest *request) {
 									   [request addCompletionHandler:^(FBRequest *request, id result) {
 										   [[Facebook shared] logout];
@@ -261,7 +261,7 @@ static NSString *const kFBFieldPicture = @"picture";
 		if( success ) {
 			[[Facebook shared] requestWithGraphPath:@"me/feed"
 										 parameters:parameters
-									  requestMethod:FBMethodPost
+									  requestMethod:kFBMethodPost
 										   finalize:^(FBRequest *request) {
 											   if( completionHandler ) {
 												   [request addCompletionHandler:^(FBRequest *request, id result) {
@@ -336,7 +336,7 @@ static NSString *const kFBFieldPicture = @"picture";
 		if( success ) {
 			[self requestWithGraphPath:@"me/links"
 							parameters:requestParams
-						 requestMethod:FBMethodPost
+						 requestMethod:kFBMethodPost
 							  finalize:^(FBRequest *request) {
 								  if( completionHandler ) {
 									  [request addCompletionHandler:^(FBRequest *request, id result) {
@@ -385,7 +385,7 @@ static NSString *const kFBFieldPicture = @"picture";
 		if( success ) {
 			[self requestWithGraphPath:[NSString stringWithFormat:@"%@/photos", album]
 							parameters:params
-						 requestMethod:FBMethodPost
+						 requestMethod:kFBMethodPost
 							  finalize:^(FBRequest *request) {
 								  if( completionHandler ) {
 									  [request addCompletionHandler:^(FBRequest *request, id result) {
@@ -431,7 +431,7 @@ static NSString *const kFBFieldPicture = @"picture";
 		if( success ) {
 			[self requestWithGraphPath:path
 							parameters:requestParams
-						 requestMethod:FBMethodPost
+						 requestMethod:kFBMethodPost
 							  finalize:^(FBRequest *request) {
 								  if( completionHandler ) {
 									  [request addCompletionHandler:^(FBRequest *request, id result) {

@@ -20,9 +20,9 @@
 #import "FBRequest.h"
 #import "FBBlockHandler.h"
 
-#define FBMethodPost   @"POST"
-#define FBMethodGet    @"GET"
-#define FBMethodDelete @"DELETE"
+#define kFBMethodPost   @"POST"
+#define kFBMethodGet    @"GET"
+#define kFBMethodDelete @"DELETE"
 
 #define kFBLoginBlockHandlerKey @"login"
 #define kFBExtendTokenBlockHandlerKey @"extend"
@@ -30,10 +30,10 @@
 #define kFBSessionBlockHandlerKey @"session"
 
 typedef enum {
-	FacebookLoginSuccess,
-	FacebookLoginCancelled,
-	FacebookLoginFailed,
-	FacebookLoginRevoked
+	kFBLoginSuccess,
+	kFBLoginCancelled,
+	kFBLoginFailed,
+	kFBLoginRevoked
 } FacebookLoginState;
 
 @class FBFrictionlessRequestSettings;

@@ -149,7 +149,4 @@ error:(void(^)(NSError *error))errorHandler;
 		   completion:(void(^)(NSDictionary *objectMap))completionHandler
 				error:(void(^)(NSError *error))errorHandler;
 
-
-
-
 @end

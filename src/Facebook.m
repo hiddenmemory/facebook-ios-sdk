@@ -45,6 +45,7 @@ static void *finishedContext = @"finishedContext";
 
 @interface Facebook () {
 	BOOL _isExtendingAccessToken;
+	NSMutableArray *pendingPermissionRequests;
 }
 
 // private properties
@@ -194,6 +195,12 @@ lastRequestedPermissions = _lastRequestedPermissions;
 						  [request addCompletionHandler:^(FBRequest *request, id result) {
 							  _permissions = [NSSet setWithArray:[[[result objectForKey:@"data"] objectAtIndex:0] allKeys]];
 							  NSLog(@"Permissions: %@", self.permissions);
+							  
+							  for( id _handler in pendingPermissionRequests ) {
+								  void (^handler)() = _handler;
+								  handler();
+							  }
+							  [pendingPermissionRequests removeAllObjects];
 						  }];
 					  }];
 }
@@ -284,7 +291,11 @@ lastRequestedPermissions = _lastRequestedPermissions;
 		self.requestStarted = ^(FBRequest*_){};
 		self.requestFinished = ^(FBRequest*_){};
 		
+		_permissions = nil;
+		pendingPermissionRequests = [NSMutableArray array];
+		
 		[self loadAccessToken];
+		
 		[self validateApplicationURLScheme];
 	}
     return self;
@@ -547,21 +558,36 @@ lastRequestedPermissions = _lastRequestedPermissions;
 	
 	BOOL mustAuthorise = NO;
 	
-	for( NSString *permission in permissions ) {
-		if( ![_permissions containsObject:permission] ) {
-			mustAuthorise = YES;
-			break;
+	if( _permissions ) {
+		for( NSString *permission in permissions ) {
+			if( ![_permissions containsObject:permission] ) {
+				mustAuthorise = YES;
+				break;
+			}
 		}
+	}
+	else {
+		mustAuthorise = YES;
 	}
 	
 	if( mustAuthorise ) {
 		void (^request)() = [_request copy];
+		void (^action)() = ^{
+			[[Facebook shared] authorize:permissions
+								 granted:^(Facebook *facebook) {
+									 request();
+								 }
+								  denied:nil];
+		};
 		
-		[[Facebook shared] authorize:permissions
-							 granted:^(Facebook *facebook) {
-								 request();
-							 }
-							  denied:nil];
+		if( _permissions ) {
+			action();
+		}
+		else {
+			[pendingPermissionRequests addObject:[^{
+				[[Facebook shared] usingPermissions:permissions request:request];
+			} copy]];
+		}
 	}
 	else {
 		_request();

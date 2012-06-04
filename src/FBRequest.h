@@ -88,7 +88,9 @@ typedef NSUInteger FBRequestState;
 - (void)addErrorHandler:(void(^)(FBRequest*request,NSError *error))errorHandler;
 - (void)addLoadHandler:(void(^)(FBRequest*request))loadHandler;
 - (void)addRawHandler:(void(^)(FBRequest*request,NSData*raw))rawHandler;
-- (void)addResponseHandler:(void(^)(FBRequest*request,NSURLResponse*))responseHandler;
+- (void)addResponseHandler:(void(^)(FBRequest*request,NSURLResponse*response))responseHandler;
+
+- (void)addDebugOutputHandlers;
 
 @end
 

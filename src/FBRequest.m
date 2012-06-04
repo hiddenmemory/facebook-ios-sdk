@@ -123,6 +123,16 @@ error = _error;
 	[self registerEventHandler:kFBResponseBlockHandlerKey handler:responseHandler];
 }
 
+- (void)addDebugOutputHandlers {
+	[self addCompletionHandler:^(FBRequest *request, id result) {
+		NSLog(@"FBRequest: Success: %@: %@", self.url, result);
+	}];
+	
+	[self addErrorHandler:^(FBRequest *request, NSError *error) {
+		NSLog(@"FBRequest: Error: %@: %@", self.url, error);
+	}];
+}
+
 /**
  * Body append for POST method
  */

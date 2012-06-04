@@ -56,11 +56,22 @@
 - (void)fetchVideos:(void(^)(NSArray *photos))completionHandler
 		 error:(void(^)(NSError *error))errorHandler;
 
+#pragma mark - post to wall
+
+-(void)postWithParameters:(NSDictionary*)parameters
+               completion:(void(^)(NSString *postID))completionHandler
+                    error:(void(^)(NSError *error))errorHandler;
+
 #pragma mark - sharing content
 
 - (void)setStatus:(NSString*)status
 	   completion:(void(^)(NSString *status))completionHandler
 			error:(void(^)(NSError *error))errorHandler;
+
+-(void)shareLink:(NSString*)link
+     withMessage:(NSString*)message
+      completion:(void(^)(NSString *linkID))completionHandler
+           error:(void(^)(NSError *error))errorHandler;
 
 - (void)sharePhoto:(UIImage*)image
 			 title:(NSString*)title
@@ -77,6 +88,14 @@
 			 title:(NSString*)title
 		completion:(void(^)(NSString *videoID))completionHandler
 			 error:(void(^)(NSError *error))errorHandler;
+
+#pragma mark - OpenGraph
+
+-(void)shareOpenGraphActivityWithNamespace:(NSString*)namespace
+                                    action:(NSString*)action
+                                parameters:(NSDictionary*)parameters
+                                completion:(void(^)(NSString *response))completionHandler
+                                     error:(void(^)(NSError *error))errorHandler;
 
 #pragma mark - search
 - (void)searchLocation:(NSString *)query

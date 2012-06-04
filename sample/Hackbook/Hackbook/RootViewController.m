@@ -68,8 +68,8 @@
 - (void)viewDidLoad {
 	[super viewDidLoad];
 	
-	[[Facebook shared] addLoginHandler:^(Facebook *facebook, FacebookLoginState state) {
-		if( state == FacebookDialogSuccess ) {
+	[[Facebook shared] addLoginHandler:^(Facebook *facebook, FBLoginState state) {
+		if( state == kFBDialogSuccess ) {
 			[self updateLoggedIn];
 		}
 		else {

@@ -60,11 +60,11 @@ static BOOL FBIsDeviceIPad() {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // private
 
--(void)addCompletionHandler:(void(^)(FBDialog*, FacebookDialogState state))completionHandler{
+-(void)addCompletionHandler:(void(^)(FBDialog*, FBDialogState state))completionHandler{
 	[blocks registerEventHandler:kFBCompletionBlockHandlerKey handler:completionHandler];
 }
 
-- (void)addCompletionURLHandler:(void(^)(FBDialog *dialog, NSURL *url, FacebookDialogState state))completionURLHandler{
+- (void)addCompletionURLHandler:(void(^)(FBDialog *dialog, NSURL *url, FBDialogState state))completionURLHandler{
 	[blocks registerEventHandler:kFBCompletionURLBlockHandlerKey handler:completionURLHandler];
 }
 
@@ -656,8 +656,8 @@ frictionlessSettings: (FBFrictionlessRequestSettings*) frictionlessSettings {
 
 - (void)dismissWithSuccess:(BOOL)success animated:(BOOL)animated {
 	[blocks enumerateEventHandlers:kFBCompletionBlockHandlerKey block:^(id _handler) {
-		void (^handler)(FBDialog*,FacebookDialogState) = _handler;
-		handler(self, (success ? FacebookDialogSuccess : FacebookDialogCancelled));
+		void (^handler)(FBDialog*,FBDialogState) = _handler;
+		handler(self, (success ? kFBDialogSuccess : kFBDialogCancelled));
 	}];
     
     [self dismiss:animated];
@@ -680,16 +680,16 @@ frictionlessSettings: (FBFrictionlessRequestSettings*) frictionlessSettings {
 
 - (void)dialogDidSucceed:(NSURL *)url {
 	[blocks enumerateEventHandlers:kFBCompletionURLBlockHandlerKey block:^(id _handler) {
-		void (^handler)(FBDialog*,NSURL*,FacebookDialogState) = _handler;
-		handler(self, url, FacebookDialogSuccess);
+		void (^handler)(FBDialog*,NSURL*,FBDialogState) = _handler;
+		handler(self, url, kFBDialogSuccess);
 	}];
     [self dismissWithSuccess:YES animated:YES];
 }
 
 - (void)dialogDidCancel:(NSURL *)url {
 	[blocks enumerateEventHandlers:kFBCompletionURLBlockHandlerKey block:^(id _handler) {
-		void (^handler)(FBDialog*,NSURL*,FacebookDialogState) = _handler;
-		handler(self, url, FacebookDialogCancelled);
+		void (^handler)(FBDialog*,NSURL*,FBDialogState) = _handler;
+		handler(self, url, kFBDialogCancelled);
 	}];
     [self dismissWithSuccess:NO animated:YES];
 }

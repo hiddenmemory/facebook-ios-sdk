@@ -216,21 +216,21 @@ lastRequestedPermissions = _lastRequestedPermissions;
 	[self _applyLoginHandlers:(cancelled ? kFBLoginCancelled : kFBLoginFailed)];
 }
 - (void)_applyLoginDialogHandlers:(FBLoginDialog*)dialog {	
-	[dialog addLoginHandler:^(FacebookDialogState state, NSString *token, NSDate *expirationDate) {
+	[dialog addLoginHandler:^(FBDialogState state, NSString *token, NSDate *expirationDate) {
 		switch (state) {
-			case FacebookDialogSuccess:
+			case kFBDialogSuccess:
 				[self _handleLogin:token expirationDate:expirationDate];
 				break;
 				
 			default:
-				[self _handleLoginFailed:(state == FacebookDialogCancelled)];
+				[self _handleLoginFailed:(state == kFBDialogCancelled)];
 				break;
 		}
 	}];
 }
-- (void)_applyLoginHandlers:(FacebookLoginState)state {
+- (void)_applyLoginHandlers:(FBLoginState)state {
 	[self enumerateEventHandlers:kFBLoginBlockHandlerKey block:^(id _handler) {
-		void (^handler)(Facebook*,FacebookLoginState) = _handler;
+		void (^handler)(Facebook*,FBLoginState) = _handler;
 		handler(self, state);
 	}];
 }
@@ -527,7 +527,7 @@ lastRequestedPermissions = _lastRequestedPermissions;
 	void (^grantedHandler)(Facebook*) = [_grantedHandler copy];
 	void (^deniedHandler)(Facebook*) = [_deniedHandler copy];
 	
-	[self registerEventHandler:kFBLoginBlockHandlerKey discard:YES handler:^(Facebook *facebook, FacebookLoginState state) {
+	[self registerEventHandler:kFBLoginBlockHandlerKey discard:YES handler:^(Facebook *facebook, FBLoginState state) {
 		if( state == kFBLoginSuccess && grantedHandler ) {
 			NSMutableSet *new_permissions = [NSMutableSet setWithSet:_permissions];
 			[new_permissions addObjectsFromArray:permissions];
@@ -1129,7 +1129,7 @@ lastRequestedPermissions = _lastRequestedPermissions;
 
 #pragma mark - Handlers
 
-- (void)addLoginHandler:(void(^)(Facebook*, FacebookLoginState))handler {
+- (void)addLoginHandler:(void(^)(Facebook*, FBLoginState))handler {
 	[self registerEventHandler:kFBLoginBlockHandlerKey handler:handler];
 }
 - (void)addExtendTokenHandler:(void(^)(Facebook *facebook, NSString *token, NSDate *expiresAt))handler {

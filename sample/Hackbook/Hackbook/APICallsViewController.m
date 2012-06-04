@@ -377,7 +377,7 @@
 	[[Facebook shared] dialog:@"feed" 
 				   parameters:params 
 					 finalize:^(FBDialog *dialog) {
-						 [dialog addCompletionURLHandler:^(FBDialog *dialog, NSURL *url, FacebookDialogState state) {
+						 [dialog addCompletionURLHandler:^(FBDialog *dialog, NSURL *url, FBDialogState state) {
 							 if (![url query]) {
 								 NSLog(@"User canceled dialog or there was an error");
 								 return;
@@ -442,7 +442,7 @@
 	[[Facebook shared] dialog:@"feed" 
 				   parameters:params
 					 finalize:^(FBDialog *dialog) {
-						 [dialog addCompletionURLHandler:^(FBDialog *dialog, NSURL *url, FacebookDialogState state) {
+						 [dialog addCompletionURLHandler:^(FBDialog *dialog, NSURL *url, FBDialogState state) {
 							 if (![url query]) {
 								 NSLog(@"User canceled dialog or there was an error");
 								 return;
@@ -485,7 +485,7 @@
 	[[Facebook shared] dialog:@"apprequests" 
 				   parameters:params 
 					 finalize:^(FBDialog *dialog) {
-						 [dialog addCompletionURLHandler:^(FBDialog *dialog, NSURL *url, FacebookDialogState state) {
+						 [dialog addCompletionURLHandler:^(FBDialog *dialog, NSURL *url, FBDialogState state) {
 							 if (![url query]) {
 								 NSLog(@"User canceled dialog or there was an error");
 								 return;
@@ -526,7 +526,7 @@
     [[Facebook shared] dialog:@"apprequests"
                       parameters:params
                     finalize:^(FBDialog *dialog) {
-						[dialog addCompletionURLHandler:^(FBDialog *dialog, NSURL *url, FacebookDialogState state) {
+						[dialog addCompletionURLHandler:^(FBDialog *dialog, NSURL *url, FBDialogState state) {
 							if (![url query]) {
 								NSLog(@"User canceled dialog or there was an error");
 								return;
@@ -566,7 +566,7 @@
     [[Facebook shared] dialog:@"apprequests"
 					 parameters:params
 					   finalize:^(FBDialog *dialog) {
-						   [dialog addCompletionURLHandler:^(FBDialog *dialog, NSURL *url, FacebookDialogState state) {
+						   [dialog addCompletionURLHandler:^(FBDialog *dialog, NSURL *url, FBDialogState state) {
 							   if (![url query]) {
 								   NSLog(@"User canceled dialog or there was an error");
 								   return;
@@ -604,7 +604,7 @@
     [[Facebook shared] dialog:@"apprequests"
 					 parameters:params
 					   finalize:^(FBDialog *dialog) {
-						   [dialog addCompletionURLHandler:^(FBDialog *dialog, NSURL *url, FacebookDialogState state) {
+						   [dialog addCompletionURLHandler:^(FBDialog *dialog, NSURL *url, FBDialogState state) {
 							   if (![url query]) {
 								   NSLog(@"User canceled dialog or there was an error");
 								   return;

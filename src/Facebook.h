@@ -34,7 +34,7 @@ typedef enum {
 	kFBLoginCancelled,
 	kFBLoginFailed,
 	kFBLoginRevoked
-} FacebookLoginState;
+} FBLoginState;
 
 @class FBFrictionlessRequestSettings;
 @protocol FBSessionDelegate;
@@ -146,7 +146,7 @@ typedef enum {
 
 - (BOOL)isFrictionlessEnabledForRecipients:(NSArray*)fbids;
 
-- (void)addLoginHandler:(void(^)(Facebook*facebook, FacebookLoginState state))handler;
+- (void)addLoginHandler:(void(^)(Facebook*facebook, FBLoginState state))handler;
 - (void)addExtendTokenHandler:(void(^)(Facebook *facebook, NSString *token, NSDate *expiresAt))handler;
 - (void)addLogoutHandler:(void(^)(Facebook*facebook))handler;
 - (void)addSessionInvalidatedHandler:(void(^)(Facebook*facebook))handler;

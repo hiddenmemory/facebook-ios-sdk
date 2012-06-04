@@ -26,13 +26,12 @@
  * It start pop-ups prompting for credentials and permissions.
  */
 
-@interface FBLoginDialog : FBDialog {
-}
+@interface FBLoginDialog : FBDialog 
 
 - (id)initWithURL:(NSString *) loginURL
       loginParams:(NSMutableDictionary *) params;
 
-- (void)addLoginHandler:(void(^)( FacebookDialogState state, NSString *token, NSDate *expirationDate ))handler;
+- (void)addLoginHandler:(void(^)( FBDialogState state, NSString *token, NSDate *expirationDate ))handler;
 
 @end
 

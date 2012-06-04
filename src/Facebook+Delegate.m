@@ -28,7 +28,7 @@
 	
 	if (oldDelegate) return;
 
-	[self addLoginHandler:^(Facebook *facebook, FacebookLoginState state) {
+	[self addLoginHandler:^(Facebook *facebook, FBLoginState state) {
 		switch (state) {
 			case kFBLoginSuccess:
 				[weakSelf.delegate facebookDidLogin:facebook];

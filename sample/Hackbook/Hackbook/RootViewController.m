@@ -69,7 +69,7 @@
 	[super viewDidLoad];
 	
 	[[Facebook shared] addLoginHandler:^(Facebook *facebook, FBLoginState state) {
-		if( state == kFBDialogSuccess ) {
+		if( state == kFBLoginSuccess ) {
 			[self updateLoggedIn];
 		}
 		else {
@@ -119,8 +119,7 @@
     // is clicked the button is passed along in the sender object.
     // From this object we can then read the tag property to determine
     // which menu button was clicked.
-    APICallsViewController *controller = [[APICallsViewController alloc]
-                                          initWithIndex:[sender tag]];
+    APICallsViewController *controller = [[APICallsViewController alloc] initWithIndex:[sender tag]];
     pendingApiCallsController = controller;
     [self.navigationController pushViewController:controller animated:YES];
 }

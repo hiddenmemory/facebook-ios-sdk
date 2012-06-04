@@ -31,8 +31,8 @@ static NSString* kRedirectURL = @"fbconnect://success";
 
 static NSString* kLogin = @"oauth";
 static NSString* kApprequests = @"apprequests";
-static NSString* kSDK = @"ios";
-static NSString* kSDKVersion = @"2";
+static NSString* kSDK = @"ios-remix";
+static NSString* kSDKVersion = @"2.1";
 
 // If the last time we extended the access token was more than 24 hours ago
 // we try to refresh the access token again.

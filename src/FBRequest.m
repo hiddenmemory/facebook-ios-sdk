@@ -22,7 +22,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // global
 
-static NSString* kUserAgent = @"FacebookConnect";
+static NSString* kUserAgent = @"FacebookConnectRemix";
 static NSString* kStringBoundary = @"3i2ndDfv2rTHiSisAbouNdArYfORhtTPEefj3q2f";
 static const int kGeneralErrorCode = 10000;
 static const int kRESTAPIAccessTokenErrorCode = 190;

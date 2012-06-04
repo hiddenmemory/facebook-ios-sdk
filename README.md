@@ -133,9 +133,12 @@ Make sure you've edited your application's .plist file properly, so that your ap
 
 Edit your build settings and add i386 to the list of valid architectures for the app. Click the project icon in the project navigator, select the Hackbook project, Build Settings tab, Architecture section, Valid Architectures option. Then click the grey arrow to expand, and double-click on right of Debug. After "armv6 armv7" add "i386".
 
-
 Report Issues/Bugs
 ===============
 [Bugs](https://developers.facebook.com/bugs)
 
 [Questions](http://facebook.stackoverflow.com/questions/tagged/ios)
+
+#Usage
+
+If you use this SDK in one of your apps - please let us know - we are planning on compiling a list and adding it here.

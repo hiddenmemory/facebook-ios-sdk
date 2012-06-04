@@ -42,8 +42,6 @@ static NSString* kAppId = @"210849718975311";
                                                               alpha:1.0]];
     [navController.navigationBar setBarStyle:UIBarStyleBlackTranslucent];
     self.navigationController = navController;
-    
-	[Facebook bind];
 
     // Initialize API data (for views, etc.)
     apiData = [[DataSet alloc] init];

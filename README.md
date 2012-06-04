@@ -57,7 +57,7 @@ If you want to issue a pull request to fix/clean/add that would be great.
  - Setup your application in facebook as per normal with single sign on
  - Make sure you have setup your URL handler with the scheme `fb`APPID as this is used not only on sign on but also to automatically bind the Facebook singleton object to your APPID
  - If you do not wish to implement the URL handlers in the app delegate, then include `FBConnect.h` in your app delegate's header file and change the parent class from `UIResponder` to `FBAppDelegate`
- - Now you just need to access facebook how you want to using the `[Facebook shared]` accessor. Please note, at the moment there is an issue with autobind that if you try using `[Facebook shared]` before `applicationDidFinishLaunching:` has finished running it will be null, you can always call `[Facebook bind]` in that case (say in the `viewDidLoad` method in the root view controller)
+ - Now you just need to access facebook how you want to using the `[Facebook shared]` accessor.
  
 If you want examples on how to use the new API, take a look at the `Facebook+Graph.m` code. There you will find how:
 

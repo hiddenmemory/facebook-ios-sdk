@@ -113,6 +113,9 @@ lastRequestedPermissions = _lastRequestedPermissions;
 	}
 }
 + (Facebook*)shared {
+	if( !facebookSharedObject ) {
+		return [self bind];
+	}
 	return facebookSharedObject;
 }
 + (void)load {

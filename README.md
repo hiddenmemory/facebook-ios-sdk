@@ -1,11 +1,17 @@
-#Facebook iOS SDK [OverTheAir2012 DUB REMIX]
+#Facebook iOS SDK [OverTheAir2012 REMIX]
 
-Product of the OverTheAir 2012 Hack, this will be more throughly sanity checked soon - looking for feedback
+Product of the OverTheAir 2012 Hack. The task was to rewrite the Facebook iOS client SDK into something that helped more than it hindered.
+
+Since the initial hack, there has been a number of cleanups and sanity checks to ensure it is doing the right thing.
+
+If you have any questions, feedback or issues - please use the issue tracker.
+
+If you want to issue a pull request to fix/clean/add that would be great.
 
 ##OverTheAir: Changes:
 
  - Runs on iOS5 only with ARC support for better memory management
- - Massive cleanup of API naming convention to be a better iOS citizen. e.g.:
+ - Massive cleanup of API naming convention to be a better iOS citizen and be more consistent to the developer e.g.:
 
     	- (FBRequest*)requestWithMethodName:(NSString *)methodName
                              parameters:(NSDictionary *)params
@@ -13,7 +19,7 @@ Product of the OverTheAir 2012 Hack, this will be more throughly sanity checked 
                                finalize:(void(^)(FBRequest*request))finalize;
                                
  - Removed SBJSON to use the iOS native NSJSONSerialization methods
- - Swapped the delegate patterns to be a flexible block based API system resulting in less verbosity and better code locality (removes a big requirement on object globals to track requests in user code)
+ - Swapped the delegate patterns to be a flexible block based API system resulting in less verbosity and better code locality (removes a big requirement on object globals to track requests in user code).
 
     	[[Facebook shared] requestWithGraphPath:@"me/permissions"
                       finalize:^(FBRequest *request) {
@@ -23,15 +29,15 @@ Product of the OverTheAir 2012 Hack, this will be more throughly sanity checked 
                           }];
                       }];
 
- - Automatic storage of the session tokens and expiration date to NSUserDefaults
- - Flag to automatically refresh the token on application launch without user code (turned on by default)
+ - Automatic storage of the session tokens and expiration date to NSUserDefaults to a key that will not collide
+ - Flag to automatically refresh the token, if needed, on application launch without user code (turned on by default)
  - Removed various class instance variables where property exists to remove duplication
  - Made the Facebook object a singleton object to reduce complexity:
 
 		[Facebook shared]
-		[Facebook bind:APPID]
+		[Facebook bind]
     
- - Added quality of life change requestStarted and requestFinished block that will fire once for each request start and finish (whether error or not). Useful for UI setup and teardown like progress or wait views.
+ - Added quality of life change requestStarted and requestFinished block that will fire once for each request start and finish (whether error or not). Useful for UI setup and teardown like progress or wait views, or enabling request debug handlers.
  - Added validation of URL schemes to the backend as it is required for successful authentication
  - Added persistent tracking of the permissions the client and helpers to make requesting new permission access and then running operations against it trivial:
 

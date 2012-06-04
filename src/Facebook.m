@@ -572,16 +572,13 @@ lastRequestedPermissions = _lastRequestedPermissions;
 	
 	if( mustAuthorise ) {
 		void (^request)() = [_request copy];
-		void (^action)() = ^{
+		
+		if( _permissions ) {
 			[[Facebook shared] authorize:permissions
 								 granted:^(Facebook *facebook) {
 									 request();
 								 }
 								  denied:nil];
-		};
-		
-		if( _permissions ) {
-			action();
 		}
 		else {
 			[pendingPermissionRequests addObject:[^{

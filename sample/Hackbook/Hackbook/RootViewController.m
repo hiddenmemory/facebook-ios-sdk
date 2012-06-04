@@ -162,17 +162,17 @@
     
     // Login Button
     loginButton = [UIButton buttonWithType:UIButtonTypeCustom];
-    CGFloat xLoginButtonOffset = self.view.center.x - (318/2);
-    CGFloat yLoginButtonOffset = self.view.bounds.size.height - (58 + 13);
-    loginButton.frame = CGRectMake(xLoginButtonOffset,yLoginButtonOffset,318,58);
+    CGFloat xLoginButtonOffset = self.view.center.x - (159/2);
+    CGFloat yLoginButtonOffset = self.view.bounds.size.height - (29 + 13);
+    loginButton.frame = CGRectMake(xLoginButtonOffset,yLoginButtonOffset,159,29);
     [loginButton addTarget:self
                     action:@selector(login)
           forControlEvents:UIControlEventTouchUpInside];
     [loginButton setImage:
-     [UIImage imageNamed:@"FBConnect.bundle/images/LoginWithFacebookNormal@2x.png"]
+     [UIImage imageNamed:@"FBConnect.bundle/images/LoginWithFacebookNormal"]
                  forState:UIControlStateNormal];
     [loginButton setImage:
-     [UIImage imageNamed:@"FBConnect.bundle/images/LoginWithFacebookPressed@2x.png"]
+     [UIImage imageNamed:@"FBConnect.bundle/images/LoginWithFacebookPressed"]
                  forState:UIControlStateHighlighted];
     [loginButton sizeToFit];
     [self.view addSubview:loginButton];

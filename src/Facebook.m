@@ -228,7 +228,18 @@ lastRequestedPermissions = _lastRequestedPermissions;
 		}
 	}];
 }
-
+- (void)_applyLoginHandlers:(FacebookLoginState)state {
+	[self enumerateEventHandlers:kFBLoginBlockHandlerKey block:^(id _handler) {
+		void (^handler)(Facebook*,FacebookLoginState) = _handler;
+		handler(self, state);
+	}];
+}
+- (void)_applyCoreHandlers:(NSString*)event {
+	[self enumerateEventHandlers:event block:^(id _handler) {
+		void (^handler)(Facebook*) = _handler;
+		handler(self);
+	}];
+}
 
 /**
  * Initialize the Facebook object with application ID.
@@ -379,12 +390,6 @@ lastRequestedPermissions = _lastRequestedPermissions;
     return _request;
 }
 
-- (void)_applyCoreHandlers:(NSString*)event {
-	[self enumerateEventHandlers:event block:^(id _handler) {
-		void (^handler)(Facebook*) = _handler;
-		handler(self);
-	}];
-}
 
 /**
  * A private function for getting the app's base url.
@@ -754,7 +759,7 @@ lastRequestedPermissions = _lastRequestedPermissions;
  */
 - (void)logout {
     [self invalidateSession];
-	[self _applyCoreHandlers:kFBLogoutBlockHandlerKey];
+	[self _applyLoginHandlers:FacebookLoginFailed];
 }
 
 #pragma mark - Requests
@@ -1097,12 +1102,6 @@ lastRequestedPermissions = _lastRequestedPermissions;
 /**
  * Set the authToken and expirationDate after login succeed
  */
-- (void)_applyLoginHandlers:(FacebookLoginState)state {
-	[self enumerateEventHandlers:kFBLoginBlockHandlerKey block:^(id _handler) {
-		void (^handler)(Facebook*,FacebookLoginState) = _handler;
-		handler(self, state);
-	}];
-}
 
 #pragma mark - Friction
 

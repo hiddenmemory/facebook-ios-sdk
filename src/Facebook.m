@@ -1088,9 +1088,7 @@ lastRequestedPermissions = _lastRequestedPermissions;
  * @return boolean - whether this object has an non-expired session token
  */
 - (BOOL)isSessionValid {
-    return (self.accessToken != nil && self.expirationDate != nil
-            && NSOrderedDescending == [self.expirationDate compare:[NSDate date]]);
-    
+    return (self.accessToken != nil && self.expirationDate != nil && NSOrderedDescending == [self.expirationDate compare:[NSDate date]]);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

@@ -19,7 +19,6 @@
 #import "FBConnect.h"
 
 @interface RootViewController : UIViewController <
-	FBSessionDelegate,
 	UITableViewDataSource,
 	UITableViewDelegate
 > {

@@ -536,8 +536,7 @@
                                    selectIDsStr, @"suggestions",
                                    nil];
 
-    HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
-    [[delegate facebook] dialog:@"apprequests"
+    [[Facebook shared] dialog:@"apprequests"
                       parameters:params
                     finalize:^(FBDialog *dialog) {
 						[dialog addCompletionURLHandler:^(FBDialog *dialog, NSURL *url, FacebookDialogState state) {
@@ -577,8 +576,7 @@
                                    selectIDsStr, @"suggestions",
                                    nil];
 
-    HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
-    [[delegate facebook] dialog:@"apprequests"
+    [[Facebook shared] dialog:@"apprequests"
 					 parameters:params
 					   finalize:^(FBDialog *dialog) {
 						   [dialog addCompletionURLHandler:^(FBDialog *dialog, NSURL *url, FacebookDialogState state) {
@@ -616,8 +614,7 @@
                                    friend, @"to",
                                    nil];
 
-    HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
-    [[delegate facebook] dialog:@"apprequests"
+    [[Facebook shared] dialog:@"apprequests"
 					 parameters:params
 					   finalize:^(FBDialog *dialog) {
 						   [dialog addCompletionURLHandler:^(FBDialog *dialog, NSURL *url, FacebookDialogState state) {

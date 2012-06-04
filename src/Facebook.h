@@ -145,10 +145,10 @@ typedef enum {
 
 - (BOOL)isFrictionlessEnabledForRecipients:(NSArray*)fbids;
 
-- (void)addLoginHandler:(void(^)(Facebook*, FacebookLoginState state))handler;
+- (void)addLoginHandler:(void(^)(Facebook*facebook, FacebookLoginState state))handler;
 - (void)addExtendTokenHandler:(void(^)(Facebook *facebook, NSString *token, NSDate *expiresAt))handler;
-- (void)addLogoutHandler:(void(^)(Facebook*))handler;
-- (void)addSessionInvalidatedHandler:(void(^)(Facebook*))handler;
+- (void)addLogoutHandler:(void(^)(Facebook*facebook))handler;
+- (void)addSessionInvalidatedHandler:(void(^)(Facebook*facebook))handler;
 
 @end
 

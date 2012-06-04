@@ -26,12 +26,9 @@ static NSString* kAppId = @"210849718975311";
 
 @implementation HackbookAppDelegate
 
-
 @synthesize window=_window;
 
 @synthesize navigationController=_navigationController;
-
-@synthesize facebook;
 
 @synthesize apiData;
 
@@ -46,10 +43,8 @@ static NSString* kAppId = @"210849718975311";
     [navController.navigationBar setBarStyle:UIBarStyleBlackTranslucent];
     self.navigationController = navController;
     
-    // Initialize Facebook
-    facebook = [Facebook bind:kAppId];
-	facebook.delegate = rootViewController;
-	
+	[Facebook bind];
+
     // Initialize API data (for views, etc.)
     apiData = [[DataSet alloc] init];
     
@@ -83,14 +78,6 @@ static NSString* kAppId = @"210849718975311";
     // it's a good practice to refresh the access token also when the app becomes active.
     // This gives apps that seldom make api calls a higher chance of having a non expired
     // access token.
-}
-
-- (BOOL)application:(UIApplication *)application handleOpenURL:(NSURL *)url {
-    return [self.facebook handleOpenURL:url];
-}
-
-- (BOOL)application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication annotation:(id)annotation {
-    return [self.facebook handleOpenURL:url];
 }
 
 #pragma mark - UIAlertViewDelegate methods

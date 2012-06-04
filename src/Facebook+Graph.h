@@ -24,7 +24,7 @@
 
 #pragma mark - me
 - (void)fetchMe:(void(^)(NSDictionary *me))completionHandler
-	 error:(void(^)(NSError *error))errorHandler;
+		  error:(void(^)(NSError *error))errorHandler;
 
 - (void)deletePermissions:(void(^)(Facebook*))completionHandler;
 
@@ -35,32 +35,37 @@
 #pragma mark - friends
 // ID, Name, Picture URL
 - (void)fetchFriends:(void(^)(NSArray *friends))completionHandler
-		  error:(void(^)(NSError *error))errorHandler;
+			   error:(void(^)(NSError *error))errorHandler;
 
 - (void)fetchFriendsWithKeys:(NSArray*)keys 
-			 completion:(void(^)(NSArray *friends))completionHandler
-				  error:(void(^)(NSError *error))errorHandler;
+				  completion:(void(^)(NSArray *friends))completionHandler
+					   error:(void(^)(NSError *error))errorHandler;
 
 - (void)fetchFriendsWithApp:(void(^)(NSArray *friends))completionHandler
-				 error:(void(^)(NSError *error))errorHandler;
+					  error:(void(^)(NSError *error))errorHandler;
 
 
 #pragma mark - fetching content
 - (void)fetchAlbums:(void(^)(NSArray *albums))completionHandler
-		 error:(void(^)(NSError *error))errorHandler;
+			  error:(void(^)(NSError *error))errorHandler;
 
 - (void)fetchPhotosInAlbum:(NSString*)album
-		   completion:(void(^)(NSArray *photos))completionHandler
-				error:(void(^)(NSError *error))errorHandler;
+				completion:(void(^)(NSArray *photos))completionHandler
+					 error:(void(^)(NSError *error))errorHandler;
 
 - (void)fetchVideos:(void(^)(NSArray *photos))completionHandler
-		 error:(void(^)(NSError *error))errorHandler;
+			  error:(void(^)(NSError *error))errorHandler;
 
 #pragma mark - post to wall
 
--(void)postWithParameters:(NSDictionary*)parameters
-               completion:(void(^)(NSString *postID))completionHandler
-                    error:(void(^)(NSError *error))errorHandler;
+#define kFBPostMessageKey @"message"
+#define kFBPostLinkKey @"link"
+#define kFBPostNameKey @"name"
+#define kFBPostPictureKey @"picture"
+
+- (void)postWithParameters:(NSDictionary*)parameters
+				completion:(void(^)(NSString *postID))completionHandler
+					 error:(void(^)(NSError *error))errorHandler;
 
 #pragma mark - sharing content
 
@@ -68,10 +73,10 @@
 	   completion:(void(^)(NSString *status))completionHandler
 			error:(void(^)(NSError *error))errorHandler;
 
--(void)shareLink:(NSString*)link
-     withMessage:(NSString*)message
-      completion:(void(^)(NSString *linkID))completionHandler
-           error:(void(^)(NSError *error))errorHandler;
+- (void)shareLink:(NSString*)link
+		  message:(NSString*)message
+	   completion:(void(^)(NSString *linkID))completionHandler
+			error:(void(^)(NSError *error))errorHandler;
 
 - (void)sharePhoto:(UIImage*)image
 			 title:(NSString*)title
@@ -92,10 +97,10 @@
 #pragma mark - OpenGraph
 
 -(void)shareOpenGraphActivityWithNamespace:(NSString*)namespace
-                                    action:(NSString*)action
-                                parameters:(NSDictionary*)parameters
-                                completion:(void(^)(NSString *response))completionHandler
-                                     error:(void(^)(NSError *error))errorHandler;
+action:(NSString*)action
+parameters:(NSDictionary*)parameters
+completion:(void(^)(NSString *response))completionHandler
+error:(void(^)(NSError *error))errorHandler;
 
 #pragma mark - search
 - (void)searchLocation:(NSString *)query
@@ -139,10 +144,10 @@
 #pragma mark - id query
 
 - (void)fetchIDsQuery:(NSArray *)query   
-		  fields:(NSArray *)fields
-		   range:(NSUInteger)range
-	  completion:(void(^)(NSDictionary *objectMap))completionHandler
-		   error:(void(^)(NSError *error))errorHandler;
+			   fields:(NSArray *)fields
+				range:(NSUInteger)range
+		   completion:(void(^)(NSDictionary *objectMap))completionHandler
+				error:(void(^)(NSError *error))errorHandler;
 
 
 

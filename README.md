@@ -73,7 +73,7 @@ This is currently our best estimate on how we want the Facebook client SDK to wo
 
 The aim is to polish and refine the core API code but we think the API interface is pretty much solid so you can start using it. There are also plans to expand more of `Facebook+Graph.m` to abstract out the need to ask for permissions and write requests for common Facebook tasks (along with some stubs to group a list of permissions together to allow the app to request a group of them).
 
-We chatted a lot with Facebook at OverTheAir and they liked what we did and hoping that some of the ideas make their way in the official SDK.
+We chatted a lot with Facebook at OverTheAir and they liked what we did and we are hoping that as many of the changes make their way in the official SDK.
 
 Stay tuned.
 

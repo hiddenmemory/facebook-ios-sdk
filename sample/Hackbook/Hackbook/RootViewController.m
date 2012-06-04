@@ -90,8 +90,6 @@
 												UIImage *imgThumb = UIGraphicsGetImageFromCurrentImageContext();
 												UIGraphicsEndImageContext();
 												[profilePhotoImageView setImage:imgThumb];
-												
-												[self apiGraphUserPermissions];
 											}
 											else {
 												NSLog(@"Something went wrong.");
@@ -99,20 +97,6 @@
 										}];
 									}];
 }
-
-- (void)apiGraphUserPermissions {
-	[[Facebook shared] requestWithGraphPath:@"me/permissions"
-								   finalize:^(FBRequest *request) {
-									   [request addCompletionHandler:^(FBRequest *request, id result) {
-										   if ([result isKindOfClass:[NSArray class]]) {
-											   result = [result objectAtIndex:0];
-										   }
-										   HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
-										   [delegate setUserPermissions:[[result objectForKey:@"data"] objectAtIndex:0]];
-									   }];
-								   }];
-}
-
 
 #pragma - Private Helper Methods
 
@@ -354,8 +338,6 @@
  */
 - (void)facebookDidLogin:(Facebook*)facebook {
     [self showLoggedIn];
-        
-    [pendingApiCallsController userDidGrantPermission];
 }
 
 -(void)facebook:(Facebook*)facebook didExtendToken:(NSString *)accessToken expiresAt:(NSDate *)expiresAt {

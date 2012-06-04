@@ -32,6 +32,4 @@
 
 @property (nonatomic, retain) DataSet *apiData;
 
-@property (nonatomic, retain) NSMutableDictionary *userPermissions;
-
 @end

@@ -35,8 +35,6 @@ static NSString* kAppId = @"210849718975311";
 
 @synthesize apiData;
 
-@synthesize userPermissions;
-
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Setup view controllers
     RootViewController *rootViewController = [[RootViewController alloc] init];

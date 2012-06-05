@@ -8,7 +8,7 @@ If you have any questions, feedback or issues - please use the issue tracker.
 
 If you want to issue a pull request to fix/clean/add that would be great.
 
-#PLEASE NOTE, THIS IS NOT AN OFFICIAL SDK, IF YOU HAVE ISSUES, PLEASE USE THE ISSUE TRACKER ON THE GITHUB PROJECT
+###PLEASE NOTE, this is not an official SDK so don't bug Facebook for support. If you've issues then please use the github issue tracker - thanks!
 
 ##OverTheAir: Changes:
 

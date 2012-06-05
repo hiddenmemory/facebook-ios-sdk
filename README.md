@@ -79,7 +79,7 @@ Stay tuned.
 
 ##OverTheAir: Authors:
 
- - Chris Ross @darkrock
+ - Chris Ross @darkrock (@hiddenmemory, hiddenmemory on github)
  - Kieran Gutteridge @kgutteridge 
 
 Special mention to Daniel Tull @danielctull and @chrisbanes
@@ -135,7 +135,7 @@ Edit your build settings and add i386 to the list of valid architectures for the
 
 Report Issues/Bugs
 ===============
-[Bugs](https://developers.facebook.com/bugs)
+[Bugs](https://github.com/hiddenmemory/facebook-ios-sdk/issues)
 
 [Questions](http://facebook.stackoverflow.com/questions/tagged/ios)
 

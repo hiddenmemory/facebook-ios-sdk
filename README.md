@@ -8,6 +8,8 @@ If you have any questions, feedback or issues - please use the issue tracker.
 
 If you want to issue a pull request to fix/clean/add that would be great.
 
+#PLEASE NOTE, THIS IS NOT AN OFFICIAL SDK, IF YOU HAVE ISSUES, PLEASE USE THE ISSUE TRACKER ON THE GITHUB PROJECT
+
 ##OverTheAir: Changes:
 
  - Runs on iOS5 only with ARC support for better memory management
@@ -137,7 +139,7 @@ Report Issues/Bugs
 ===============
 [Bugs](https://github.com/hiddenmemory/facebook-ios-sdk/issues)
 
-[Questions](http://facebook.stackoverflow.com/questions/tagged/ios)
+[Questions](https://github.com/hiddenmemory/facebook-ios-sdk/issue)
 
 #Usage
 

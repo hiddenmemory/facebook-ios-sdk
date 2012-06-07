@@ -22,7 +22,45 @@
 
 - (NSArray*)permissionsRequired;
 
+#define kFBFieldName @"name"
+#define kFBFieldFirstName @"first_name"
+#define kFBFieldMiddleName @"middle_name"
+#define kFBFieldLastName @"last_name"
+#define kFBFieldGender @"gender"
+#define kFBFieldLocale @"locale"
+#define kFBFieldLanguages @"languages"
+#define kFBFieldLink @"link"
+#define kFBFieldUsername @"username"
+#define kFBFieldThirdPartyID @"third_party_id"
+#define kFBFieldnstalled @"installed"
+#define kFBFieldTimeZone @"timezone"
+#define kFBFieldUpdatedTime @"updated_time"
+#define kFBFieldVerified @"verified"
+#define kFBFieldBio @"bio"
+#define kFBFieldBirthday @"birthday"
+#define kFBFieldCover @"cover"
+#define kFBFieldEducation @"education"
+#define kFBFieldEmail @"email"
+#define kFBFieldHomeTown @"hometown"
+#define kFBFieldInterestedIn @"interested_in"
+#define kFBFieldLocation @"location"
+#define kFBFieldPolitical @"political"
+#define kFBFieldFavoriteAthletes @"favorite_athletes"
+#define kFBFieldFavoriteTeams @"favorite_teams"
+#define kFBFieldPicture @"picture"
+#define kFBFieldQuotes @"quotes"
+#define kFBFieldRelationshipStatus @"relationship_status"
+#define kFBFieldReligion @"religion"
+#define kFBFieldSignificantOther @"significant_other"
+#define kFBFieldVideoUploadLimits @"video_upload_limits"
+#define kFBFieldWebsite @"website"
+#define kFBFieldWork @"work"
+
 #pragma mark - me
+- (void)fetchMeWithParameters:(NSDictionary*)parameters
+                   completion:(void(^)(NSDictionary *me))completionHandler
+                        error:(void(^)(NSError *error))errorHandler;
+
 - (void)fetchMe:(void(^)(NSDictionary *me))completionHandler
 		  error:(void(^)(NSError *error))errorHandler;
 

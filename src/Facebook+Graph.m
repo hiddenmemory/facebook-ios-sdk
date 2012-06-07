@@ -39,8 +39,8 @@ static NSString *const kFBSearchTypeGroup = @"group";
 static NSString *const kFBSearchTypePlace = @"place";
 static NSString *const kFBSearchTypeCheckIn = @"checkin";
 
-static NSString *const kFBFieldName = @"name";
-static NSString *const kFBFieldPicture = @"picture";
+//static NSString *const kFBFieldName = @"name";
+//static NSString *const kFBFieldPicture = @"picture";
 
 - (NSArray*)permissionsRequired {
 	return [NSArray arrayWithObjects:
@@ -53,13 +53,14 @@ static NSString *const kFBFieldPicture = @"picture";
 }
 
 #pragma mark - me
-- (void)fetchMe:(void(^)(NSDictionary *me))completionHandler
-		  error:(void(^)(NSError *error))errorHandler {
+- (void)fetchMeWithParameters:(NSDictionary*)parameters
+                   completion:(void(^)(NSDictionary *me))completionHandler
+                        error:(void(^)(NSError *error))errorHandler {
 	
 	[self usingPermission:@"user_about_me" request:^( BOOL success ) {
 		if( success ) {
 			[self requestWithGraphPath:@"me"
-							parameters:[NSDictionary dictionaryWithObjectsAndKeys:@"name,picture", @"fields", nil]
+							parameters:parameters
 							completion:^(FBRequest *request, id result) {	
 								if( completionHandler ) {
 									completionHandler(result);
@@ -77,6 +78,14 @@ static NSString *const kFBFieldPicture = @"picture";
 			}
 		}
 	}];
+}
+
+- (void)fetchMe:(void(^)(NSDictionary *me))completionHandler
+		  error:(void(^)(NSError *error))errorHandler {
+    
+    [self fetchMeWithParameters:[NSDictionary dictionaryWithObjectsAndKeys:[NSString stringWithFormat:@"%@,%@", kFBFieldName, kFBFieldPicture], @"fields", nil]
+                     completion:completionHandler
+                          error:errorHandler];
 }
 
 - (void)fetchProfilePictureWithID:(NSString *)ID
